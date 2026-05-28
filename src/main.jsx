@@ -33,12 +33,14 @@ import {
   Fingerprint,
   Gauge,
   Gem,
+  Keyboard,
   KeyRound,
   LockKeyhole,
   Mail,
   Menu,
   Network,
   PackageCheck,
+  Printer,
   RadioTower,
   Route,
   ScanLine,
@@ -472,6 +474,53 @@ const alerts = [];
 const shipments = [];
 
 const feed = [];
+
+const KEYBOARD_SHORTCUTS = [
+  {
+    section: 'Navigation',
+    shortcuts: [
+      { keys: ['⌘', 'K'], action: 'Command palette', desc: 'Open the global command palette' },
+      { keys: ['⌘', '/'], action: 'Focus search', desc: 'Jump to the search input' },
+      { keys: ['⌘', 'B'], action: 'Toggle sidebar', desc: 'Collapse or expand the sidebar' },
+      { keys: ['G', 'H'], action: 'Go to Home', desc: 'Navigate to Executive Command Deck' },
+      { keys: ['G', 'A'], action: 'Go to Analytics', desc: 'Open analytics dashboard' },
+      { keys: ['G', 'S'], action: 'Go to Shipments', desc: 'Open shipment tracking' },
+    ],
+  },
+  {
+    section: 'Actions',
+    shortcuts: [
+      { keys: ['⌘', 'N'], action: 'New command', desc: 'Create a new executive command' },
+      { keys: ['⌘', 'E'], action: 'Export CSV', desc: 'Export current view as CSV' },
+      { keys: ['⌘', 'Enter'], action: 'Submit / Approve', desc: 'Submit form or approve selected item' },
+      { keys: ['⌘', 'Z'], action: 'Undo', desc: 'Undo last action' },
+    ],
+  },
+  {
+    section: 'Selection & Lists',
+    shortcuts: [
+      { keys: ['↑', '↓'], action: 'Navigate list', desc: 'Move focus up or down in any list' },
+      { keys: ['Space'], action: 'Select row', desc: 'Toggle selection of focused row' },
+      { keys: ['⌘', 'A'], action: 'Select all', desc: 'Select all rows in current view' },
+      { keys: ['Esc'], action: 'Clear selection', desc: 'Deselect all / close panel' },
+    ],
+  },
+  {
+    section: 'Filters',
+    shortcuts: [
+      { keys: ['F'], action: 'Focus filter bar', desc: 'Jump to the filter search input' },
+      { keys: ['⌘', 'Shift', 'X'], action: 'Clear filters', desc: 'Reset all active filters' },
+    ],
+  },
+  {
+    section: 'System',
+    shortcuts: [
+      { keys: ['?'], action: 'Shortcuts', desc: 'Show this keyboard shortcuts reference' },
+      { keys: ['⌘', 'D'], action: 'Toggle dark mode', desc: 'Switch between dark and light theme' },
+      { keys: ['⌘', 'Shift', 'L'], action: 'Logout', desc: 'Securely end current session' },
+    ],
+  },
+];
 
 const executiveCommandDeck = [
   {
@@ -1881,14 +1930,200 @@ function OnboardingTour({ onDone }) {
   );
 }
 
+function KeyboardShortcutsModal({ onClose }) {
+  const ref = React.useRef(null);
+
+  React.useEffect(() => {
+    ref.current?.focus();
+  }, []);
+
+  React.useEffect(() => {
+    function handleKey(e) {
+      if (e.key === 'Escape') onClose();
+    }
+    window.addEventListener('keydown', handleKey);
+    return () => window.removeEventListener('keydown', handleKey);
+  }, [onClose]);
+
+  return (
+    <div
+      className="kbd-modal-backdrop"
+      role="dialog"
+      aria-modal="true"
+      aria-label="Keyboard shortcuts"
+      onClick={(e) => e.target === e.currentTarget && onClose()}
+    >
+      <div className="kbd-modal" ref={ref} tabIndex={-1}>
+        <div className="kbd-modal-header">
+          <div>
+            <h2 className="kbd-modal-title">Keyboard Shortcuts</h2>
+            <p className="kbd-modal-sub">Press <kbd className="kbd">?</kbd> anytime to open this panel</p>
+          </div>
+          <button className="kbd-modal-close" onClick={onClose} aria-label="Close shortcuts panel">
+            <X size={18} />
+          </button>
+        </div>
+
+        <div className="kbd-modal-body">
+          {KEYBOARD_SHORTCUTS.map((group) => (
+            <section key={group.section} className="kbd-section">
+              <h3 className="kbd-section-title">{group.section}</h3>
+              <div className="kbd-rows">
+                {group.shortcuts.map((item) => (
+                  <div key={item.action} className="kbd-row">
+                    <div className="kbd-row-left">
+                      <span className="kbd-action">{item.action}</span>
+                      <span className="kbd-desc">{item.desc}</span>
+                    </div>
+                    <div className="kbd-keys" aria-label={item.keys.join(' + ')}>
+                      {item.keys.map((key, i) => (
+                        <React.Fragment key={`${item.action}-${key}-${i}`}>
+                          <kbd className="kbd">{key}</kbd>
+                          {i < item.keys.length - 1 && (
+                            <span className="kbd-plus" aria-hidden="true">+</span>
+                          )}
+                        </React.Fragment>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </section>
+          ))}
+        </div>
+
+        <div className="kbd-modal-footer">
+          <span>Mac: use <kbd className="kbd">⌘</kbd> &nbsp;·&nbsp; Windows/Linux: use <kbd className="kbd">Ctrl</kbd></span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function useGlobalHotkeys({ onOpenCommandPalette, onToggleSidebar, onExportCSV, onOpenShortcuts, onNewCommand }) {
+  React.useEffect(() => {
+    let ghBuffer = '';
+    let ghTimer = null;
+
+    function navigateHotkey(path) {
+      window.history.pushState({}, '', path);
+      window.dispatchEvent(new PopStateEvent('popstate'));
+      announceToSR?.(`Navigated to ${getRouteAnnouncement(path)}`);
+    }
+
+    function handleKey(e) {
+      const meta = e.metaKey || e.ctrlKey;
+      const tag = e.target.tagName;
+      const inInput = tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT' || e.target.isContentEditable;
+
+      if (meta && e.key.toLowerCase() === 'k') {
+        e.preventDefault();
+        onOpenCommandPalette?.();
+        return;
+      }
+      if (meta && e.key === '/') {
+        e.preventDefault();
+        document.querySelector('.filter-search-input, [aria-label*="search" i], .search-shell input')?.focus();
+        return;
+      }
+      if (meta && e.key.toLowerCase() === 'b') {
+        e.preventDefault();
+        onToggleSidebar?.();
+        return;
+      }
+      if (meta && e.key.toLowerCase() === 'n') {
+        e.preventDefault();
+        onNewCommand?.();
+        return;
+      }
+      if (meta && e.key.toLowerCase() === 'e') {
+        e.preventDefault();
+        onExportCSV?.();
+        return;
+      }
+      if (!inInput && e.key === '?') {
+        e.preventDefault();
+        onOpenShortcuts?.();
+        return;
+      }
+      if (!inInput && e.key.toLowerCase() === 'f') {
+        document.querySelector('.filter-search-input')?.focus();
+        return;
+      }
+      if (!inInput && e.key.toLowerCase() === 'g') {
+        ghBuffer = 'g';
+        clearTimeout(ghTimer);
+        ghTimer = setTimeout(() => { ghBuffer = ''; }, 1200);
+        return;
+      }
+      if (ghBuffer === 'g' && !inInput) {
+        ghBuffer = '';
+        clearTimeout(ghTimer);
+        if (e.key.toLowerCase() === 'h') navigateHotkey('/export-os');
+        if (e.key.toLowerCase() === 'a') navigateHotkey('/export-os/analytics');
+        if (e.key.toLowerCase() === 's') navigateHotkey('/export-os/shipments');
+      }
+    }
+
+    window.addEventListener('keydown', handleKey);
+    return () => { window.removeEventListener('keydown', handleKey); clearTimeout(ghTimer); };
+  }, [onOpenCommandPalette, onToggleSidebar, onExportCSV, onOpenShortcuts, onNewCommand]);
+}
+
+function usePrintReady() {
+  React.useEffect(() => {
+    function onBeforePrint() {
+      document.documentElement.setAttribute('data-printing', 'true');
+    }
+
+    function onAfterPrint() {
+      document.documentElement.removeAttribute('data-printing');
+    }
+
+    window.addEventListener('beforeprint', onBeforePrint);
+    window.addEventListener('afterprint', onAfterPrint);
+
+    return () => {
+      window.removeEventListener('beforeprint', onBeforePrint);
+      window.removeEventListener('afterprint', onAfterPrint);
+    };
+  }, []);
+}
+
+function PrintButton({ label = 'Print / Save PDF', className = '' }) {
+  const [printing, setPrinting] = React.useState(false);
+
+  function handlePrint() {
+    setPrinting(true);
+    setTimeout(() => {
+      window.print();
+      setPrinting(false);
+    }, 120);
+  }
+
+  return (
+    <button
+      className={`btn btn-ghost btn-sm print-btn ${className}`}
+      onClick={handlePrint}
+      disabled={printing}
+      aria-label="Print or save as PDF"
+    >
+      <Printer size={15} aria-hidden="true" />
+      {printing ? 'Preparing...' : label}
+    </button>
+  );
+}
+
 function App() {
   useRipple();
+  usePrintReady();
   const [route, setRoute] = useState(() => window.location.pathname);
   const [authState, setAuthState] = useState({ ready: backendStatus.mode !== 'Connected', session: null });
   const [activePage, setActivePage] = useState('dashboard');
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [activeCommand, setActiveCommand] = useState('repricing');
   const [showSearch, setShowSearch] = useState(false);
+  const [showShortcuts, setShowShortcuts] = React.useState(false);
   const [showTour, setShowTour] = React.useState(() => {
     try {
       return typeof window !== 'undefined' && localStorage.getItem('gopuos_tour_done') !== 'true';
@@ -1926,8 +2161,19 @@ function App() {
         </motion.div>
       </AnimatePresence>
       {sessionWarning}
+      {showShortcuts && (
+        <KeyboardShortcutsModal onClose={() => setShowShortcuts(false)} />
+      )}
     </>
   );
+
+  useGlobalHotkeys({
+    onOpenCommandPalette: () => window.dispatchEvent(new Event('gopu:open-command-palette')),
+    onToggleSidebar: () => window.dispatchEvent(new Event('gopu:toggle-sidebar')),
+    onExportCSV: () => exportCSV([], [], 'current-view'),
+    onOpenShortcuts: () => setShowShortcuts(true),
+    onNewCommand: () => navigate('/export-os/director-console'),
+  });
 
   React.useEffect(() => {
     function handleKey(e) {
@@ -2229,7 +2475,7 @@ function App() {
 
   return withSessionWarning(
     <>
-      <ExecutiveCommandDeck navigate={navigate} showSearch={showSearch} setShowSearch={setShowSearch} session={authState.session} onLogout={async () => {
+      <ExecutiveCommandDeck navigate={navigate} showSearch={showSearch} setShowSearch={setShowSearch} setShowShortcuts={setShowShortcuts} session={authState.session} onLogout={async () => {
         await signOut();
         window.sessionStorage.removeItem('selectedOS');
         window.sessionStorage.removeItem('executiveSessionState');
@@ -2583,6 +2829,14 @@ function OSSelectionCard({ id, title, subtitle, description, icon: Icon, selecte
 
 function Sidebar({ activePage, setActivePage, drawerOpen, setDrawerOpen }) {
   const [sidebarCollapsed, setSidebarCollapsed] = React.useState(false);
+
+  React.useEffect(() => {
+    function toggleSidebar() {
+      setSidebarCollapsed((prev) => !prev);
+    }
+    window.addEventListener('gopu:toggle-sidebar', toggleSidebar);
+    return () => window.removeEventListener('gopu:toggle-sidebar', toggleSidebar);
+  }, []);
 
   return (
     <>
@@ -3857,7 +4111,7 @@ const TrendIndicator = React.memo(function TrendIndicator({ value, suffix = '%',
   );
 });
 
-class ErrorBoundary extends React.Component {
+class GlobalErrorBoundary extends React.Component {
   constructor(props) {
     super(props);
     this.state = { hasError: false, error: null };
@@ -3866,28 +4120,109 @@ class ErrorBoundary extends React.Component {
     return { hasError: true, error };
   }
   componentDidCatch(error, info) {
-    console.error('GOPU OS Error:', error, info);
+    console.error('Gopu OS runtime error:', error, info);
   }
   render() {
-    if (this.state.hasError) {
-      return (
-        <div className="error-boundary-screen">
-          <div className="error-boundary-card">
+    if (!this.state.hasError) return this.props.children;
+    return (
+      <div className="error-boundary-screen" role="alert">
+        <div className="error-boundary-inner">
+          <div className="error-boundary-icon" aria-hidden="true">
             <AlertTriangle size={40} />
-            <h2>Something went wrong</h2>
-            <p>{this.state.error?.message || 'An unexpected error occurred.'}</p>
+          </div>
+          <h1 className="error-boundary-title">Something went wrong</h1>
+          <p className="error-boundary-desc">
+            An unexpected error occurred in Gopu OS. Your session data is safe.
+          </p>
+          <details className="error-boundary-details">
+            <summary>Technical details</summary>
+            <pre>{this.state.error?.message}</pre>
+          </details>
+          <div style={{ display: 'flex', gap: 'var(--space-3)', justifyContent: 'center' }}>
             <button
-              className="tactical-button"
+              className="btn btn-primary"
               onClick={() => this.setState({ hasError: false, error: null })}
             >
               Try again
             </button>
+            <button
+              className="btn btn-ghost"
+              onClick={() => window.location.reload()}
+            >
+              Reload page
+            </button>
           </div>
         </div>
-      );
-    }
-    return this.props.children;
+      </div>
+    );
   }
+}
+
+function SkeletonBlock({ width = '100%', height = '16px', radius = 'var(--radius-sm)', className = '', style = {} }) {
+  return (
+    <div
+      className={`skeleton ${className}`}
+      style={{ width, height, borderRadius: radius, ...style }}
+      aria-hidden="true"
+    />
+  );
+}
+
+function SkeletonCard({ rows = 3, showAvatar = false }) {
+  return (
+    <div className="skeleton-card" aria-busy="true" aria-label="Loading content">
+      {showAvatar && (
+        <div style={{ display: 'flex', gap: 'var(--space-3)', alignItems: 'center', marginBottom: 'var(--space-4)' }}>
+          <SkeletonBlock width="40px" height="40px" radius="50%" />
+          <div style={{ flex: 1 }}>
+            <SkeletonBlock width="60%" height="14px" />
+            <SkeletonBlock width="40%" height="11px" style={{ marginTop: 6 }} />
+          </div>
+        </div>
+      )}
+      {Array.from({ length: rows }).map((_, i) => (
+        <SkeletonBlock
+          key={i}
+          width={i === rows - 1 ? '65%' : '100%'}
+          height="13px"
+          className="skeleton-row"
+        />
+      ))}
+    </div>
+  );
+}
+
+function SkeletonTable({ cols = 4, rows = 5 }) {
+  return (
+    <div className="skeleton-table" role="status" aria-label="Loading table data" style={{ '--skeleton-cols': cols }}>
+      <div className="skeleton-table-row skeleton-table-header">
+        {Array.from({ length: cols }).map((_, i) => (
+          <SkeletonBlock key={i} height="12px" width={i === 0 ? '40%' : '70%'} />
+        ))}
+      </div>
+      {Array.from({ length: rows }).map((_, r) => (
+        <div key={r} className="skeleton-table-row">
+          {Array.from({ length: cols }).map((_, c) => (
+            <SkeletonBlock key={c} height="13px" width={c === 0 ? '55%' : c === cols - 1 ? '30%' : '80%'} />
+          ))}
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function SkeletonKpiBar({ count = 6 }) {
+  return (
+    <div className="skeleton-kpi-bar" role="status" aria-label="Loading KPIs">
+      {Array.from({ length: count }).map((_, i) => (
+        <div key={i} className="skeleton-kpi-item">
+          <SkeletonBlock width="70%" height="10px" />
+          <SkeletonBlock width="50%" height="20px" />
+          <SkeletonBlock width="40%" height="9px" />
+        </div>
+      ))}
+    </div>
+  );
 }
 
 function ConfirmDialog({ open, title, message, confirmLabel = 'Confirm', confirmClass = 'tactical-button', onConfirm, onCancel }) {
@@ -4800,6 +5135,19 @@ function useFilterState(storageKey, defaults = {}) {
   return { filters, updateFilter, clearAll, activeCount };
 }
 
+function useLoadingState(initialLoading = true, minDuration = 400) {
+  const [loading, setLoading] = React.useState(initialLoading);
+  const startRef = React.useRef(Date.now());
+
+  function done() {
+    const elapsed = Date.now() - startRef.current;
+    const remaining = Math.max(0, minDuration - elapsed);
+    setTimeout(() => setLoading(false), remaining);
+  }
+
+  return [loading, done];
+}
+
 function FilterBar({
   storageKey = 'gopuos_filters',
   searchPlaceholder = 'Search...',
@@ -5173,6 +5521,9 @@ const InvoiceDocument = React.memo(function InvoiceDocument({ invoice }) {
 
   return (
     <div className="invoice-doc-wrap" id="invoice-print-area">
+      <div className="no-print invoice-print-actions">
+        <PrintButton label="Print Invoice / Save PDF" />
+      </div>
       <header className="invoice-doc-header">
         <div className="invoice-doc-brand">
           <strong>GOPU EXPORTS</strong>
@@ -5311,19 +5662,11 @@ function ExportOSShell({ children, className = '', liveDataConnected = backendSt
   }, [prefs.theme, prefs.accent, prefs.reducedMotion]);
 
   React.useEffect(() => {
-    function handleKey(e) {
-      if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
-        e.preventDefault();
-        setShowSearch((prev) => !prev);
-      }
-    }
     function openPalette() {
       setShowSearch(true);
     }
-    window.addEventListener('keydown', handleKey);
     window.addEventListener('gopu:open-command-palette', openPalette);
     return () => {
-      window.removeEventListener('keydown', handleKey);
       window.removeEventListener('gopu:open-command-palette', openPalette);
     };
   }, []);
@@ -5515,14 +5858,14 @@ const operationalStatusGroups = [
   }
 ];
 
-function ExecutiveCommandDeck({ navigate, onLogout, showSearch, setShowSearch, session }) {
+function ExecutiveCommandDeck({ navigate, onLogout, showSearch, setShowSearch, setShowShortcuts, session }) {
   const { rates, status: forexStatus } = useLiveForexRates();
   const { items: newsItems, status: newsStatus } = useLiveExportNews();
 
   return (
     <ExportOSShell className="executive-home-shell">
       <ForexTicker items={rates} status={forexStatus} />
-      <CommandDeckHeader navigate={navigate} onLogout={onLogout} showSearch={showSearch} setShowSearch={setShowSearch} session={session} />
+      <CommandDeckHeader navigate={navigate} onLogout={onLogout} showSearch={showSearch} setShowSearch={setShowSearch} setShowShortcuts={setShowShortcuts} session={session} />
       <ExecutiveKpiTicker rates={rates} forexStatus={forexStatus} />
       <section className="deck-hero executive-command-zone" aria-labelledby="deck-title">
         <HeroCommandPanel navigate={navigate} />
@@ -5547,7 +5890,7 @@ function ExecutiveKpiTicker({ rates = [], forexStatus }) {
   ];
 
   return (
-    <section className="executive-kpi-ticker" aria-label="Live executive KPI ticker" data-tour="analytics-tab">
+    <section className="executive-kpi-ticker" aria-label="Live executive KPI ticker" aria-live="polite" aria-atomic="false" data-tour="analytics-tab">
       {kpis.map(([label, value, status]) => (
         <article key={label}>
           <span>{label}</span>
@@ -5576,10 +5919,10 @@ function HeroCommandPanel({ navigate }) {
       </div>
       <div className="hero-command-actions">
         <button className="tactical-button" onClick={() => navigate('/export-os/director')}>
-          Open Director Command
+          Open Director Console
           <kbd className="kbd-hint">⌘K</kbd>
         </button>
-        <button className="ghost-button" onClick={() => navigate('/export-os/workflows')}>View Workflow Journey</button>
+        <button className="ghost-button" onClick={() => navigate('/export-os/workflows')}>View Workflows</button>
       </div>
     </section>
   );
@@ -5618,7 +5961,7 @@ const executiveHealthRows = [
   { executive: 'CIO', status: 'Opportunity Detected', summary: 'Country pending and GCC importer demand signals are active.', route: '/export-os/cio', state: 'success' }
 ];
 
-function CommandDeckHeader({ navigate, onLogout, showSearch = false, setShowSearch, session }) {
+function CommandDeckHeader({ navigate, onLogout, showSearch = false, setShowSearch, setShowShortcuts, session }) {
   const [now, setNow] = useState(() => new Date());
   const [activePanel, setActivePanel] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
@@ -5686,6 +6029,14 @@ function CommandDeckHeader({ navigate, onLogout, showSearch = false, setShowSear
         <Tooltip text="Global operational command search">
           <button className="icon-button top-icon-button" aria-label="Global operational command search" onClick={() => shellControls?.openCommandPalette?.()} aria-expanded={false} data-tour="cmd-palette-trigger"><Search size={18} /></button>
         </Tooltip>
+        <button
+          className="icon-button top-icon-button"
+          aria-label="Keyboard shortcuts"
+          title="Keyboard shortcuts (?)"
+          onClick={() => setShowShortcuts?.(true)}
+        >
+          <Keyboard size={18} />
+        </button>
         <Tooltip text="Director AI command console">
           <button className="icon-button top-icon-button director-command-icon" aria-label="Director AI command console" onClick={() => openRoute('/export-os/director-console')}><Fingerprint size={18} /></button>
         </Tooltip>

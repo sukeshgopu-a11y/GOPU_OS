@@ -28711,3 +28711,291 @@ select {
   .filter-date-range { flex-wrap: wrap; }
   .filter-bar-actions { margin-left: 0; }
 }
+
+/* -- Print button (screen only) -- */
+.print-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.invoice-print-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: var(--space-4);
+}
+
+/* -- Print header (hidden on screen, shown when printing) -- */
+#print-header {
+  display: none;
+}
+
+.no-print {
+  /* Visible on screen, hidden when printing. */
+}
+
+.print-show {
+  display: none;
+}
+
+/* ========================================
+   PRINT / PDF STYLES
+   ======================================== */
+@media print {
+  @page {
+    size: A4 portrait;
+    margin: 18mm 16mm 18mm 16mm;
+  }
+
+  @page :first {
+    margin-top: 12mm;
+  }
+
+  #print-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding-bottom: 8pt;
+    border-bottom: 1pt solid #ccc;
+    margin-bottom: 14pt;
+    position: running(header);
+  }
+
+  .print-header-brand strong {
+    font-size: 12pt;
+    font-weight: 800;
+    letter-spacing: 0.06em;
+    color: #000;
+    text-transform: uppercase;
+  }
+
+  .print-header-brand span {
+    display: block;
+    font-size: 7pt;
+    color: #666;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+
+  .print-header-meta {
+    text-align: right;
+    font-size: 7pt;
+    color: #666;
+    line-height: 1.6;
+  }
+
+  .print-header-meta span {
+    display: block;
+  }
+
+  *,
+  *::before,
+  *::after {
+    background: transparent !important;
+    color: #000 !important;
+    box-shadow: none !important;
+    text-shadow: none !important;
+    filter: none !important;
+    backdrop-filter: none !important;
+    animation: none !important;
+    transition: none !important;
+  }
+
+  html,
+  body {
+    width: 100%;
+    height: auto;
+    overflow: visible;
+    font-size: 10pt;
+    line-height: 1.5;
+    color: #000 !important;
+    background: #fff !important;
+  }
+
+  .sidebar,
+  .drawer-scrim,
+  .system-header,
+  .forex-ticker,
+  .executive-kpi-ticker,
+  .top-loading-bar,
+  .toast-container,
+  .cmd-palette,
+  .notif-panel,
+  .settings-panel,
+  .bulk-bar,
+  .mobile-bottom-nav,
+  .scroll-top-btn,
+  .skip-link,
+  .kbd-modal-backdrop,
+  .tour-overlay,
+  .tour-welcome,
+  .filter-bar,
+  .no-print,
+  .invoice-print-actions,
+  nav,
+  [role="navigation"],
+  [aria-label="Primary navigation"],
+  .deck-hero,
+  .hero-command-panel,
+  .founder-gateway,
+  .login-gateway,
+  .btn,
+  button:not(.print-show),
+  .icon-button,
+  .ghost-button,
+  .tactical-button {
+    display: none !important;
+  }
+
+  .print-show {
+    display: block !important;
+  }
+
+  #root,
+  .export-os-shell,
+  .executive-home-shell,
+  main,
+  .page-content,
+  .invoice-doc-wrap,
+  .invoice-document {
+    width: 100% !important;
+    max-width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    display: block !important;
+    overflow: visible !important;
+    position: static !important;
+    height: auto !important;
+    min-height: 0 !important;
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 9pt;
+  }
+
+  th {
+    background: #f0f0f0 !important;
+    color: #000 !important;
+    border: 0.5pt solid #bbb;
+    padding: 5pt 7pt;
+    font-weight: 700;
+    text-align: left;
+  }
+
+  td {
+    border: 0.5pt solid #ddd;
+    padding: 4pt 7pt;
+    vertical-align: top;
+  }
+
+  tr:nth-child(even) td {
+    background: #fafafa !important;
+  }
+
+  .invoice-doc-wrap,
+  .invoice-document {
+    border: none !important;
+    padding: 0 !important;
+  }
+
+  .invoice-header {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 14pt;
+    padding-bottom: 10pt;
+    border-bottom: 1pt solid #ccc;
+  }
+
+  .invoice-title {
+    font-size: 22pt;
+    font-weight: 800;
+    letter-spacing: 0.04em;
+    color: #000 !important;
+  }
+
+  .invoice-badge,
+  .status-badge,
+  [class*="badge"] {
+    border: 0.5pt solid #999 !important;
+    color: #333 !important;
+    padding: 2pt 5pt;
+    border-radius: 3pt;
+    font-size: 7.5pt;
+  }
+
+  .page-break-before {
+    page-break-before: always;
+  }
+
+  .page-break-after {
+    page-break-after: always;
+  }
+
+  .no-page-break {
+    page-break-inside: avoid;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4 {
+    page-break-after: avoid;
+  }
+
+  tr {
+    page-break-inside: avoid;
+  }
+
+  .invoice-totals-block,
+  .invoice-footer-block,
+  .invoice-bank-details {
+    page-break-inside: avoid;
+  }
+
+  a[href]::after {
+    content: " (" attr(href) ")";
+    font-size: 8pt;
+    color: #666 !important;
+  }
+
+  a[href^="#"]::after,
+  a[href^="javascript"]::after {
+    content: "";
+  }
+
+  * {
+    border-radius: 0 !important;
+  }
+
+  h1 {
+    font-size: 18pt;
+  }
+
+  h2 {
+    font-size: 14pt;
+  }
+
+  h3 {
+    font-size: 11pt;
+  }
+
+  p,
+  li {
+    font-size: 10pt;
+    orphans: 3;
+    widows: 3;
+  }
+
+  body::after {
+    content: "CONFIDENTIAL - Generated by GOPU OS Export Command Platform. For authorized use only.";
+    display: block;
+    margin-top: 24pt;
+    padding-top: 8pt;
+    border-top: 0.5pt solid #ccc;
+    font-size: 7pt;
+    color: #999 !important;
+    text-align: center;
+  }
+}
