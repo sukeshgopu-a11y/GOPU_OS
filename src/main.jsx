@@ -3838,6 +3838,12 @@ function LearningCentrePage({ navigate, onBack, reportMode = false }) {
   const cards = status.cards || {};
   const run = status.run || {};
   const health = cards.system_health || 'green';
+  const learningCentreBackendReady = backendStatus.mode === 'Connected' && !setupRequired;
+  const learningCentreStatusMessage = setupRequired
+    ? setupRequired.message
+    : backendStatus.mode === 'Connected'
+      ? 'Learning Centre backend connected.'
+      : backendStatus.message;
   const cardRows = [
     ['Total Sources Scanned', cards.total_sources_scanned ?? 0],
     ['Knowledge Items Stored', cards.knowledge_items_stored ?? 0],
@@ -3850,16 +3856,16 @@ function LearningCentrePage({ navigate, onBack, reportMode = false }) {
   ];
 
   return (
-    <ExportOSShell className="cmo-command-shell">
+    <ExportOSShell className="cmo-command-shell" liveDataConnected={learningCentreBackendReady} statusMessage={learningCentreStatusMessage}>
       <header className="deck-header">
         <div className="deck-header-copy">
           <span>Executive AI Command Centre</span>
-          <Breadcrumb items={[{ label: 'Command Deck', onClick: onBack }, { label: 'CMO Command' }]} />
+          <Breadcrumb items={[{ label: 'Command Deck', onClick: onBack }, { label: 'Learning Centre' }]} />
           <h1>Learning Centre</h1>
           <p>Read-only public research ingestion for executive summaries, source-traced findings, and vector memory storage.</p>
         </div>
         <div className="deck-header-controls">
-          <button className="ghost-button deck-logout" onClick={onBack}><ArrowLeft size={15} />? Command Deck</button>
+          <button className="ghost-button deck-logout" onClick={onBack}><ArrowLeft size={15} />Command Deck</button>
           <button className="ghost-button" onClick={() => navigate('/export-os/learning-centre')}>Live Stream</button>
           {run.status === 'completed' && <button className="tactical-button" onClick={() => navigate('/export-os/learning-centre/report')}>Intelligence Report</button>}
         </div>
@@ -3896,7 +3902,7 @@ function LearningCentrePage({ navigate, onBack, reportMode = false }) {
       {setupRequired && (
         <section className="cmo-panel">
           <div className="approval-section-header">
-            <div><span>Setup Required</span><h2>Database migration not applied</h2></div>
+            <div><span>Setup Required</span><h2>{setupRequired.status === 'server_env_missing' ? 'Server Supabase env missing' : 'Database migration not applied'}</h2></div>
             <TriangleAlert size={18} />
           </div>
           <p>{setupRequired.message}</p>
@@ -4011,6 +4017,17 @@ function formatLearningPhase(phase = '') {
 
 function normalizeLearningCentreSetupError(response) {
   const message = response?.error || response?.data?.message || '';
+  if (response?.data?.status === 'server_env_missing' || String(message).includes('Supabase server env is missing')) {
+    return {
+      status: 'server_env_missing',
+      message: 'Supabase server env is missing. Add SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY to the server/deployment environment.',
+      migration: response?.data?.migration || 'supabase/migrations/20260527162207_learning_centre_research_ingestion.sql',
+      migration_applied: Boolean(response?.data?.migration_applied),
+      missing_tables: response?.data?.missing_tables || [],
+      redis_configured: Boolean(response?.data?.redis_configured),
+      worker_ready: false
+    };
+  }
   if (response?.data?.status === 'database_setup_required' || response?.data?.migration_applied === false || String(message).includes('research_ingestion_runs') || String(message).includes('schema cache')) {
     return {
       status: 'database_setup_required',
@@ -5591,12 +5608,41 @@ function HBarChart({ rows = [], colorFn }) {
   );
 }
 
+function getNotificationSection(item) {
+  const type = String(item.notification_type || item.source_module || '').toLowerCase();
+  const severity = String(item.severity || '').toLowerCase();
+  const status = String(item.status || '').toLowerCase();
+  if (severity === 'critical') return 'Critical Alerts';
+  if (type.includes('approval') || status.includes('review') || status.includes('approval')) return 'Pending Reviews';
+  if (type.includes('shipment') || type.includes('logistic')) return 'Shipment Risks';
+  if (type.includes('payment') || type.includes('financial') || type.includes('cfo')) return 'Payment Alerts';
+  if (type.includes('technical') || type.includes('cto')) return 'Technical Incidents';
+  if (type.includes('opportunity') || type.includes('lead') || type.includes('cmo') || type.includes('cio')) return 'Strategic Opportunities';
+  if (status.includes('escalated')) return 'Executive Escalations';
+  return 'Executive Escalations';
+}
+
+function normalizeTopNotification(item) {
+  return {
+    id: item.id,
+    section: getNotificationSection(item),
+    title: item.title || item.message || 'Notification',
+    message: item.message || item.description || 'Workflow notification requires review.',
+    severity: item.severity || item.priority || 'Attention',
+    owner: item.owner || item.source_module || item.notification_type || 'GOPU OS',
+    route: item.linked_route || item.route || '/export-os/notification-center',
+    status: item.status || 'Monitoring',
+    created_at: item.created_at,
+    viewed_by_founder: item.viewed_by_founder
+  };
+}
+
 function NotificationCentre({ open, onClose, notifications = [] }) {
   const ref = React.useRef(null);
   useFocusTrap(ref, open);
   const groups = React.useMemo(() => {
-    const critical = notifications.filter((n) => n.severity === 'critical' || n.type === 'error');
-    const warnings = notifications.filter((n) => n.severity === 'warning' || n.type === 'warning');
+    const critical = notifications.filter((n) => ['critical', 'high risk'].includes(String(n.severity || n.type || '').toLowerCase()) || n.type === 'error');
+    const warnings = notifications.filter((n) => ['warning', 'attention', 'review required', 'high'].includes(String(n.severity || n.type || '').toLowerCase()) || n.type === 'warning');
     const info = notifications.filter((n) => !critical.includes(n) && !warnings.includes(n));
     return [
       { key: 'critical', label: 'Critical', items: critical, cls: 'error' },
@@ -6554,6 +6600,7 @@ function ExportOSShell({ children, className = '', liveDataConnected = backendSt
   const backendMessage = statusMessage || (isCtoShell && liveDataConnected ? 'Supabase live connected' : isCtoShell && !liveDataConnected ? 'No live data connected' : backendStatus.message);
   const [settingsOpen, setSettingsOpen] = React.useState(false);
   const [notifOpen, setNotifOpen] = React.useState(false);
+  const [notifications, setNotifications] = React.useState([]);
   const [showSearch, setShowSearch] = React.useState(false);
   const [prefs, setPrefs] = React.useState(() => {
     const defaults = {
@@ -6578,12 +6625,37 @@ function ExportOSShell({ children, className = '', liveDataConnected = backendSt
     try { localStorage.setItem('gopu-os-prefs', JSON.stringify(next)); } catch {}
     return next;
   });
+  const refreshNotifications = React.useCallback(async () => {
+    const result = await getNotificationCenterData(demoTenantId);
+    setNotifications(result.data?.notifications || []);
+  }, []);
+
   const shellControls = React.useMemo(() => ({
     prefs,
+    notifications,
+    notificationCount: notifications.filter((item) => !item.viewed_by_founder).length,
+    refreshNotifications,
     openNotifications: () => setNotifOpen(true),
     openSettings: () => setSettingsOpen(true),
     openCommandPalette: () => setShowSearch(true)
-  }), [prefs]);
+  }), [notifications, prefs, refreshNotifications]);
+
+  React.useEffect(() => {
+    refreshNotifications();
+    const events = [
+      'gopu:task-created',
+      'gopu:task-updated',
+      'gopu:task-audit',
+      'gopu:approval-updated',
+      'gopu:slack-notification-activity'
+    ];
+    events.forEach((eventName) => window.addEventListener(eventName, refreshNotifications));
+    const timer = window.setInterval(refreshNotifications, 30000);
+    return () => {
+      events.forEach((eventName) => window.removeEventListener(eventName, refreshNotifications));
+      window.clearInterval(timer);
+    };
+  }, [refreshNotifications]);
 
   React.useEffect(() => {
     document.documentElement.setAttribute('data-theme', prefs.theme);
@@ -6683,7 +6755,7 @@ function ExportOSShell({ children, className = '', liveDataConnected = backendSt
       <NotificationCentre
         open={notifOpen}
         onClose={() => setNotifOpen(false)}
-        notifications={[]}
+        notifications={notifications}
       />
       <SettingsPanel
         open={settingsOpen}
@@ -6755,11 +6827,12 @@ function getGlobalBackContext(pathname) {
     ['/export-os/pricing-engine', 'Back to Pricing'],
     ['/export-os/director', 'Back to Director'],
     ['/export-os/notification', 'Back to Notifications'],
+    ['/export-os/learning-centre', 'Back to Learning Centre'],
     ['/export-os/workflow-engine', 'Back to Workflow Engine'],
     ['/export-os/workflow-dependencies', 'Back to Workflow Engine']
   ];
   const match = pairs.find(([prefix]) => pathname.startsWith(prefix));
-  const label = match?.[1] || '? Command Deck';
+  const label = match?.[1] || 'Command Deck';
   return { label, aria: `${label} previous operational context`, fallback: '/export-os' };
 }
 
@@ -7186,10 +7259,14 @@ function CommandDeckHeader({ navigate, onLogout, showSearch = false, setShowSear
     return () => mediaQuery.removeEventListener?.('change', handleChange);
   }, []);
 
-  const unreadCount = topBarNotifications.filter((item) => ['Critical', 'High Risk', 'Attention'].includes(item.severity)).length;
-  const systemStatus = topBarNotifications.some((item) => item.severity === 'Critical')
+  const liveTopNotifications = React.useMemo(
+    () => (shellControls?.notifications || []).map(normalizeTopNotification),
+    [shellControls?.notifications]
+  );
+  const unreadCount = liveTopNotifications.filter((item) => !item.viewed_by_founder).length;
+  const systemStatus = liveTopNotifications.some((item) => item.severity === 'Critical')
     ? 'Critical Escalation Active'
-    : topBarNotifications.some((item) => item.severity === 'High Risk')
+    : liveTopNotifications.some((item) => item.severity === 'High Risk')
       ? 'Executive Attention Required'
       : 'Monitoring Risks';
 
@@ -7216,7 +7293,7 @@ function CommandDeckHeader({ navigate, onLogout, showSearch = false, setShowSear
     if (activePanel === 'notifications') {
       return (
         <TopNotificationPanel
-          notifications={topBarNotifications}
+          notifications={liveTopNotifications}
           filter={notificationFilter}
           setFilter={setNotificationFilter}
           navigate={openRoute}
@@ -7263,7 +7340,7 @@ function CommandDeckHeader({ navigate, onLogout, showSearch = false, setShowSear
         </button>
         <Tooltip text="Notifications">
           <button className="icon-button top-icon-button notification-button" aria-label="Notifications" onClick={() => togglePanel('notifications')} aria-expanded={activePanel === 'notifications'}>
-            <Bell size={18} /><span>{unreadCount}</span>
+            <Bell size={18} />{unreadCount > 0 && <span>{unreadCount}</span>}
           </button>
         </Tooltip>
         <Tooltip text="Global operational command search">
@@ -7538,7 +7615,9 @@ function TopNotificationPanel({ notifications, filter, setFilter, navigate }) {
         {sections.map((section) => <button key={section} className={filter === section ? 'active' : ''} onClick={() => setFilter(section)}>{section}</button>)}
       </div>
       <div className="top-alert-list" aria-live="polite" aria-relevant="additions removals">
-        {visible.map((item) => {
+        {visible.length === 0 ? (
+          <EmptyState icon={Bell} title="All clear" description="No live notifications match this filter." />
+        ) : visible.map((item) => {
           const delivery = getOperationalDeliveryChannel(item);
           return (
             <article key={item.id}>
