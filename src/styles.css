@@ -12616,6 +12616,13 @@ input[type="range"] {
   outline: none;
 }
 
+.founder-decision-action-bar button:disabled {
+  cursor: not-allowed;
+  opacity: 0.48;
+  transform: none;
+  box-shadow: none;
+}
+
 .founder-decision-action-bar .approve {
   border-color: rgba(68,230,143,0.32);
   background: linear-gradient(180deg, rgba(68,230,143,0.18), rgba(68,230,143,0.08));
@@ -12639,6 +12646,28 @@ input[type="range"] {
 
 .founder-decision-action-bar .hold {
   background: rgba(255,255,255,0.035);
+}
+
+.founder-decision-toast {
+  padding: 12px 13px;
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 8px;
+  background: rgba(255,255,255,0.035);
+  color: var(--muted);
+  font-size: 0.8rem;
+  line-height: 1.45;
+}
+
+.founder-decision-toast.status-live {
+  border-color: rgba(68,230,143,0.22);
+  background: rgba(68,230,143,0.07);
+  color: #a6f5c8;
+}
+
+.founder-decision-toast.status-error {
+  border-color: rgba(255,94,94,0.22);
+  background: rgba(255,94,94,0.07);
+  color: #ffb2b2;
 }
 
 .cmo-step-infra-panel,

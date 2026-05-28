@@ -19154,6 +19154,11 @@ function FounderDecisionCommandCenter({ step, content, steps, controlState, proc
 function CMOWorkflowStepDetail({ step, steps, content, onClose }) {
   const [controlState, setControlState] = useState({ status: 'idle', message: '' });
   const [manualOutput, setManualOutput] = useState(null);
+  const [localDecisionContent, setLocalDecisionContent] = useState(content || null);
+  const [processingAction, setProcessingAction] = useState('');
+  useEffect(() => {
+    setLocalDecisionContent(content || null);
+  }, [content]);
   if (!step) return null;
   const Logo = cmoAutomationLogoMap[step.logoKey] || Workflow;
   const infrastructureRows = buildCmoStepInfrastructureRows(step);
@@ -19211,31 +19216,37 @@ function CMOWorkflowStepDetail({ step, steps, content, onClose }) {
   };
 
   const handleFounderDecisionControl = async (label) => {
-    setControlState({ status: 'pending', message: `${label} requested. Recording decision context...` });
+    if (!localDecisionContent?.id) {
+      setControlState({ status: 'error', message: 'No real content package is selected for founder decision.', toast: 'No content package available.' });
+      return;
+    }
+    setProcessingAction(label);
+    setControlState({ status: 'pending', message: `${label} is updating Supabase...`, toast: '' });
     try {
-      const auditResult = await createAuditLog({
-        action_type: `CMO founder decision control: ${label}`,
-        module: 'AI CMO Workflow',
-        related_table: 'content_history',
-        related_record_id: content?.id || null,
-        actor: 'Founder OS',
-        description: `${label} selected in Step 6 Founder Decision. Publishing remains backend-gated and no external platform action is executed by this UI control.`,
-        risk_level: label.includes('Approve') ? 'Medium' : 'Low',
-        metadata: {
-          step_id: step.id,
-          content_history_id: content?.id || null,
-          approval_status: content?.approval_status || null,
-          publish_status: content?.publish_status || null
-        }
+      const result = await updateFounderContentDecision(localDecisionContent.id, label, {
+        tenant_id: localDecisionContent.tenant_id,
+        timezone: localDecisionContent.timezone
       });
+      if (!result.ok) {
+        setControlState({ status: 'error', message: result.error || `${label} failed safely. No publishing was attempted.`, toast: 'Decision update failed.' });
+        return;
+      }
+      setLocalDecisionContent((current) => ({
+        ...(current || {}),
+        ...(result.data.content_history || {}),
+        content_approvals: result.data.content_history?.content_approvals || current?.content_approvals || []
+      }));
       setControlState({
-        status: auditResult?.ok ? 'live' : 'pending',
+        status: 'live',
         message: label.includes('Approve')
-          ? 'Approval intent recorded. Publishing queue still requires backend approval confirmation and provider credentials before any public post.'
-          : `${label} recorded. Content remains blocked from publishing.`
+          ? 'Approved in Supabase. Item is queued for publishing guardrails; no public post was triggered by this click.'
+          : `${label} saved in Supabase. Content remains blocked from publishing.`,
+        toast: label.includes('Approve') ? 'Founder decision saved: Approved.' : label.includes('Edit') ? 'Founder decision saved: Needs edit.' : 'Founder decision saved: Hold queue.'
       });
     } catch (error) {
-      setControlState({ status: 'error', message: error?.message || `${label} failed safely. No publishing was attempted.` });
+      setControlState({ status: 'error', message: error?.message || `${label} failed safely. No publishing was attempted.`, toast: 'Decision update failed.' });
+    } finally {
+      setProcessingAction('');
     }
   };
 
@@ -19243,9 +19254,10 @@ function CMOWorkflowStepDetail({ step, steps, content, onClose }) {
     return (
       <FounderDecisionCommandCenter
         step={step}
-        content={content}
+        content={localDecisionContent}
         steps={steps}
         controlState={controlState}
+        processingAction={processingAction}
         onDecision={handleFounderDecisionControl}
         onClose={onClose}
       />
