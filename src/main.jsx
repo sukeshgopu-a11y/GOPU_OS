@@ -3580,6 +3580,7 @@ function ExportOSShell({ children, className = '', liveDataConnected = backendSt
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.52, ease: [0.16, 1, 0.3, 1] }}
     >
+      <a href="#main-content" className="skip-link">Skip to main content</a>
       <div className="background-grid" />
       <GlobalBackNavigation />
       <div className={`backend-status-banner ${liveDataConnected ? 'connected' : 'pending'}`}>
@@ -3679,14 +3680,14 @@ const operationalStatusGroups = [
   }
 ];
 
-function ExecutiveCommandDeck({ navigate, onLogout }) {
+function ExecutiveCommandDeck({ navigate, onLogout, showSearch, setShowSearch }) {
   const { rates, status: forexStatus } = useLiveForexRates();
   const { items: newsItems, status: newsStatus } = useLiveExportNews();
 
   return (
     <ExportOSShell className="executive-home-shell">
       <ForexTicker items={rates} status={forexStatus} />
-      <CommandDeckHeader navigate={navigate} onLogout={onLogout} />
+      <CommandDeckHeader navigate={navigate} onLogout={onLogout} showSearch={showSearch} setShowSearch={setShowSearch} />
       <ExecutiveKpiTicker rates={rates} forexStatus={forexStatus} />
       <section className="deck-hero executive-command-zone" aria-labelledby="deck-title">
         <HeroCommandPanel navigate={navigate} />
@@ -3739,7 +3740,10 @@ function HeroCommandPanel({ navigate }) {
         ].map(([label, value]) => <div key={label}><span>{label}</span><strong>{value}</strong></div>)}
       </div>
       <div className="hero-command-actions">
-        <button className="tactical-button" onClick={() => navigate('/export-os/director')}>Open Director Command</button>
+        <button className="tactical-button" onClick={() => navigate('/export-os/director')}>
+          Open Director Command
+          <kbd className="kbd-hint">⌘K</kbd>
+        </button>
         <button className="ghost-button" onClick={() => navigate('/export-os/workflows')}>View Workflow Journey</button>
       </div>
     </section>
@@ -3779,7 +3783,7 @@ const executiveHealthRows = [
   { executive: 'CIO', status: 'Opportunity Detected', summary: 'Country pending and GCC importer demand signals are active.', route: '/export-os/cio', state: 'success' }
 ];
 
-function CommandDeckHeader({ navigate, onLogout }) {
+function CommandDeckHeader({ navigate, onLogout, showSearch = false, setShowSearch }) {
   const [now, setNow] = useState(() => new Date());
   const [activePanel, setActivePanel] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
@@ -3790,6 +3794,14 @@ function CommandDeckHeader({ navigate, onLogout }) {
     return () => window.clearInterval(timer);
   }, []);
 
+  useEffect(() => {
+    if (showSearch) {
+      setActivePanel('search');
+      return;
+    }
+    setActivePanel((current) => current === 'search' ? null : current);
+  }, [showSearch]);
+
   const unreadCount = topBarNotifications.filter((item) => ['Critical', 'High Risk', 'Attention'].includes(item.severity)).length;
   const systemStatus = topBarNotifications.some((item) => item.severity === 'Critical')
     ? 'Critical Escalation Active'
@@ -3799,11 +3811,18 @@ function CommandDeckHeader({ navigate, onLogout }) {
 
   function togglePanel(panel) {
     setActivePanel((current) => current === panel ? null : panel);
+    if (panel === 'search') setShowSearch?.((current) => !current);
   }
 
   function openRoute(route) {
     setActivePanel(null);
+    setShowSearch?.(false);
     navigate(route);
+  }
+
+  function closePanel() {
+    setActivePanel(null);
+    setShowSearch?.(false);
   }
 
   return (
@@ -3832,7 +3851,7 @@ function CommandDeckHeader({ navigate, onLogout }) {
       </div>
       <AnimatePresence>
         {activePanel && (
-          <TopCommandPanel panel={activePanel} onClose={() => setActivePanel(null)}>
+          <TopCommandPanel panel={activePanel} onClose={closePanel}>
             {activePanel === 'session' && <SessionSecurityPanel now={now} navigate={openRoute} />}
             {activePanel === 'status' && <SystemHealthPanel rows={executiveHealthRows} navigate={openRoute} />}
             {activePanel === 'clock' && <GlobalOperationsClock now={now} />}
