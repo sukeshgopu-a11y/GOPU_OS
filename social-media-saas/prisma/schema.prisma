@@ -1,0 +1,152 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  passwordHash String   @map("password_hash")
+  role         String   @default("admin")
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  approvalActions ApprovalAction[]
+
+  @@map("users")
+}
+
+model Campaign {
+  id               String   @id @default(cuid())
+  name             String
+  productFocus     String   @map("product_focus")
+  isActive         Boolean  @default(true) @map("is_active")
+  scheduleCountry  String?  @map("schedule_country")
+  scheduleTimezone String?  @map("schedule_timezone")
+  postingTimeLocal String?  @map("posting_time_local")
+  nextRunAtUtc     DateTime? @map("next_run_at_utc")
+  createdAt        DateTime @default(now()) @map("created_at")
+  updatedAt        DateTime @updatedAt @map("updated_at")
+
+  runs CampaignRun[]
+
+  @@map("campaigns")
+}
+
+model CampaignRun {
+  id              String   @id @default(cuid())
+  campaignId      String   @map("campaign_id")
+  status          String   @default("pending")
+  scheduledFor    DateTime @map("scheduled_for")
+  startedAt       DateTime? @map("started_at")
+  completedAt     DateTime? @map("completed_at")
+  failureReason   String?  @map("failure_reason")
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+
+  campaign         Campaign          @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  contentVariants  ContentVariant[]
+  approvalRequests ApprovalRequest[]
+  publishJobs      PublishJob[]
+  auditLogs        AuditLog[]
+
+  @@index([campaignId])
+  @@index([status])
+  @@map("campaign_runs")
+}
+
+model ContentVariant {
+  id          String   @id @default(cuid())
+  runId       String   @map("run_id")
+  platform    String
+  caption     String
+  hashtags    String[]
+  imagePrompt String   @map("image_prompt")
+  imageUrl    String?  @map("image_url")
+  status      String   @default("pending")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  run         CampaignRun @relation(fields: [runId], references: [id], onDelete: Cascade)
+  publishJobs PublishJob[]
+
+  @@unique([runId, platform])
+  @@index([platform])
+  @@map("content_variants")
+}
+
+model ApprovalRequest {
+  id        String   @id @default(cuid())
+  runId     String   @map("run_id")
+  status    String   @default("pending")
+  provider  String   @default("slack")
+  messageTs String?  @map("message_ts")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  run     CampaignRun      @relation(fields: [runId], references: [id], onDelete: Cascade)
+  actions ApprovalAction[]
+
+  @@index([runId])
+  @@index([status])
+  @@map("approval_requests")
+}
+
+model ApprovalAction {
+  id                String   @id @default(cuid())
+  approvalRequestId String   @map("approval_request_id")
+  userId            String?  @map("user_id")
+  action            String
+  provider          String   @default("slack")
+  payload           Json?
+  createdAt         DateTime @default(now()) @map("created_at")
+
+  approvalRequest ApprovalRequest @relation(fields: [approvalRequestId], references: [id], onDelete: Cascade)
+  user            User?           @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([approvalRequestId])
+  @@index([action])
+  @@map("approval_actions")
+}
+
+model PublishJob {
+  id              String   @id @default(cuid())
+  runId           String   @map("run_id")
+  contentVariantId String  @map("content_variant_id")
+  platform        String
+  status          String   @default("pending")
+  idempotencyKey  String   @unique @map("idempotency_key")
+  externalPostId  String?  @map("external_post_id")
+  error           String?
+  attempts        Int      @default(0)
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+
+  run            CampaignRun    @relation(fields: [runId], references: [id], onDelete: Cascade)
+  contentVariant ContentVariant @relation(fields: [contentVariantId], references: [id], onDelete: Cascade)
+
+  @@index([runId])
+  @@index([platform])
+  @@index([status])
+  @@map("publish_jobs")
+}
+
+model AuditLog {
+  id        String   @id @default(cuid())
+  runId     String?  @map("run_id")
+  level     String
+  event     String
+  payload   Json?
+  createdAt DateTime @default(now()) @map("created_at")
+
+  run CampaignRun? @relation(fields: [runId], references: [id], onDelete: SetNull)
+
+  @@index([runId])
+  @@index([level])
+  @@index([event])
+  @@map("audit_logs")
+}

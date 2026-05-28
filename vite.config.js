@@ -1,0 +1,17 @@
+import { defineConfig } from 'vite';
+import react from '@vitejs/plugin-react';
+import tailwindcss from '@tailwindcss/vite';
+
+export default defineConfig({
+  plugins: [react(), tailwindcss()],
+  envPrefix: ['VITE_', 'NEXT_PUBLIC_'],
+  server: {
+    proxy: {
+      '/api/integrations': 'http://127.0.0.1:8787',
+      '/api/learning-centre': 'http://127.0.0.1:8787',
+      '/api/cmo': 'http://127.0.0.1:8787',
+      '/api/slack': 'http://127.0.0.1:8787',
+      '/api/lead-email': 'http://127.0.0.1:8787'
+    }
+  }
+});
