@@ -1539,8 +1539,23 @@ function App() {
   const [activePage, setActivePage] = useState('dashboard');
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [activeCommand, setActiveCommand] = useState('repricing');
+  const [showSearch, setShowSearch] = useState(false);
   const current = pages[activePage];
   const isProtectedRoute = route === '/plant-os' || route === '/export-os' || route.startsWith('/export-os/');
+
+  React.useEffect(() => {
+    function handleKey(e) {
+      if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+        e.preventDefault();
+        setShowSearch((prev) => !prev);
+      }
+      if (e.key === 'Escape') {
+        setShowSearch(false);
+      }
+    }
+    window.addEventListener('keydown', handleKey);
+    return () => window.removeEventListener('keydown', handleKey);
+  }, []);
 
   useEffect(() => {
     window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
@@ -1829,7 +1844,7 @@ function App() {
     return <OSGateway onSelectOS={(osId) => navigate(`/login/${osId}`)} />;
   }
 
-  return <ExecutiveCommandDeck navigate={navigate} onLogout={async () => {
+  return <ExecutiveCommandDeck navigate={navigate} showSearch={showSearch} setShowSearch={setShowSearch} onLogout={async () => {
     await signOut();
     window.sessionStorage.removeItem('selectedOS');
     window.sessionStorage.removeItem('executiveSessionState');
@@ -2236,9 +2251,12 @@ function PlantCommandIcon() {
 }
 
 function Sidebar({ activePage, setActivePage, drawerOpen, setDrawerOpen }) {
+  const [sidebarCollapsed, setSidebarCollapsed] = React.useState(false);
+
   return (
     <>
-      <aside className={`sidebar ${drawerOpen ? 'open' : ''}`} aria-label="Primary navigation">
+      <a href="#main-content" className="skip-link">Skip to main content</a>
+      <aside className={`sidebar ${drawerOpen ? 'open' : ''} ${sidebarCollapsed ? 'collapsed' : ''}`} aria-label="Primary navigation">
         <div className="brand-block">
           <div className="brand-mark"><Network size={22} /></div>
           <div>
@@ -2261,6 +2279,15 @@ function Sidebar({ activePage, setActivePage, drawerOpen, setDrawerOpen }) {
             );
           })}
         </nav>
+        <button
+          className="sidebar-collapse-btn"
+          onClick={() => setSidebarCollapsed((prev) => !prev)}
+          aria-label={sidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+          title={sidebarCollapsed ? 'Expand' : 'Collapse'}
+        >
+          <Menu size={14} />
+          {!sidebarCollapsed && <span>Collapse</span>}
+        </button>
         <div className="secure-core">
           <div className="core-orbit"><ShieldCheck size={28} /></div>
           <span>SECURE CORE</span>
@@ -2268,6 +2295,23 @@ function Sidebar({ activePage, setActivePage, drawerOpen, setDrawerOpen }) {
           <small>18 nodes synced</small>
         </div>
       </aside>
+      <nav className="mobile-bottom-nav" aria-label="Mobile navigation">
+        {navItems.slice(0, 5).map((item) => {
+          const Icon = item.icon;
+          return (
+            <button
+              key={item.id}
+              className={`mobile-nav-btn ${activePage === item.id ? 'active' : ''}`}
+              onClick={() => { setActivePage(item.id); setDrawerOpen(false); }}
+              aria-label={item.label}
+              aria-current={activePage === item.id ? 'page' : undefined}
+            >
+              <Icon size={20} />
+              <span>{item.label}</span>
+            </button>
+          );
+        })}
+      </nav>
       <button className={`drawer-scrim ${drawerOpen ? 'visible' : ''}`} aria-label="Close navigation" onClick={() => setDrawerOpen(false)} />
     </>
   );
@@ -2288,6 +2332,7 @@ function Header({ current, setDrawerOpen }) {
         <input aria-label="Command search" placeholder="Search orders, lanes, CO records..." />
       </div>
       <div className="header-cluster">
+        <LiveClock />
         <StatusPill icon={LockKeyhole} label="Encrypted" tone="cyan" />
         <StatusPill icon={RadioTower} label="Syncing" tone="blue" />
       </div>
@@ -2305,6 +2350,7 @@ function PageHero({ current }) {
       <button className="tactical-button">
         <Zap size={16} />
         Execute Command
+        <kbd className="kbd-hint">⌘K</kbd>
       </button>
     </div>
   );
@@ -2411,6 +2457,7 @@ function LearningCentrePage({ navigate, onBack, reportMode = false }) {
       <header className="deck-header">
         <div className="deck-header-copy">
           <span>Executive AI Command Centre</span>
+          <Breadcrumb items={[{ label: 'Command Deck', onClick: onBack }, { label: 'CMO Command' }]} />
           <h1>Learning Centre</h1>
           <p>Read-only public research ingestion for executive summaries, source-traced findings, and vector memory storage.</p>
         </div>
@@ -2588,7 +2635,7 @@ function MetricGrid() {
         <article className={`metric-panel tone-${metric.tone}`} key={metric.label} style={{ '--delay': `${index * 70}ms` }}>
           <span>{metric.label}</span>
           <strong>{metric.value}</strong>
-          <small>{metric.delta}</small>
+          <small><TrendIndicator value={metric.delta} suffix="" /></small>
           <div className="metric-line" />
         </article>
       ))}
@@ -2653,15 +2700,17 @@ function ShipmentTable() {
         <div className="table-row table-head" role="row">
           <span>Order</span><span>Lane</span><span>Stage</span><span>Risk</span><span>Value</span>
         </div>
-        {shipments.map((shipment) => (
-          <div className="table-row" role="row" key={shipment.id}>
-            <span>{shipment.id}<small>{shipment.cargo}</small></span>
-            <span>{shipment.lane}</span>
-            <span><StateChip label={shipment.stage} /></span>
-            <span className={`risk-${shipment.risk.toLowerCase()}`}>{shipment.risk}</span>
-            <span>{shipment.value}</span>
-          </div>
-        ))}
+        {shipments.length === 0
+          ? <EmptyState icon={PackageCheck} title="No shipments" description="No active shipments found." />
+          : shipments.map((shipment) => (
+            <div className="table-row" role="row" key={shipment.id}>
+              <span>{shipment.id}<small>{shipment.cargo}</small></span>
+              <span>{shipment.lane}</span>
+              <span><StateChip label={shipment.stage} /></span>
+              <span className={`risk-${shipment.risk.toLowerCase()}`}>{shipment.risk}</span>
+              <span>{shipment.value}</span>
+            </div>
+          ))}
       </div>
     </Panel>
   );
@@ -3046,6 +3095,8 @@ function ShipmentTrackerCard({ shipment, onOpen }) {
 }
 
 function ShipmentDetailModal({ shipment, onClose, onChangeStage }) {
+  const modalRef = React.useRef(null);
+  useFocusTrap(modalRef, true);
   const completedDocuments = new Set(shipment.documents || []);
   const timeline = shipmentStages.map((stage) => {
     const currentIndex = shipmentStages.indexOf(shipment.current_stage);
@@ -3054,9 +3105,9 @@ function ShipmentDetailModal({ shipment, onClose, onChangeStage }) {
   });
   return (
     <div className="shipment-modal-backdrop" role="presentation" onClick={onClose}>
-      <section className="shipment-modal" role="dialog" aria-modal="true" aria-label="Shipment detail" onClick={(event) => event.stopPropagation()}>
+      <section ref={modalRef} className="shipment-modal" role="dialog" aria-modal="true" aria-labelledby="shipment-modal-title" onClick={(event) => event.stopPropagation()}>
         <header>
-          <div><span>Shipment Detail</span><h2>{shipment.shipment_reference}</h2><p>{getNextShipmentAction(shipment)}</p></div>
+          <div><span>Shipment Detail</span><h2 id="shipment-modal-title">{shipment.shipment_reference}</h2><p>{getNextShipmentAction(shipment)}</p></div>
           <button className="ghost-button" onClick={onClose}>Close</button>
         </header>
         <div className="shipment-detail-grid">
@@ -3306,12 +3357,225 @@ function EmptyState({ icon: Icon, title, description, action }) {
   );
 }
 
+function StatusBadge({ status, size = 'md', label, state }) {
+  const displayStatus = status || label || 'Draft';
+  const map = {
+    'Active':           { color: '#3ddc84', bg: 'rgba(61,220,132,0.1)',  border: 'rgba(61,220,132,0.3)'  },
+    'Completed':        { color: '#3ddc84', bg: 'rgba(61,220,132,0.1)',  border: 'rgba(61,220,132,0.3)'  },
+    'Done':             { color: '#3ddc84', bg: 'rgba(61,220,132,0.1)',  border: 'rgba(61,220,132,0.3)'  },
+    'Approved':         { color: '#3ddc84', bg: 'rgba(61,220,132,0.1)',  border: 'rgba(61,220,132,0.3)'  },
+    'Pending':          { color: '#ffb547', bg: 'rgba(255,181,71,0.1)',  border: 'rgba(255,181,71,0.3)'  },
+    'Pending Approval': { color: '#ffb547', bg: 'rgba(255,181,71,0.1)',  border: 'rgba(255,181,71,0.3)'  },
+    'In Progress':      { color: '#5b8cff', bg: 'rgba(91,140,255,0.1)', border: 'rgba(91,140,255,0.3)' },
+    'Needs Review':     { color: '#5b8cff', bg: 'rgba(91,140,255,0.1)', border: 'rgba(91,140,255,0.3)' },
+    'Blocked':          { color: '#ff5a5a', bg: 'rgba(255,90,90,0.1)',  border: 'rgba(255,90,90,0.3)'  },
+    'Rejected':         { color: '#ff5a5a', bg: 'rgba(255,90,90,0.1)',  border: 'rgba(255,90,90,0.3)'  },
+    'Overdue':          { color: '#ff5a5a', bg: 'rgba(255,90,90,0.1)',  border: 'rgba(255,90,90,0.3)'  },
+    'Draft':            { color: '#aab6c5', bg: 'rgba(170,182,197,0.1)', border: 'rgba(170,182,197,0.2)' },
+  };
+  const stateMap = {
+    online: map.Active,
+    success: map.Active,
+    progress: map['In Progress'],
+    attention: map.Pending,
+    warning: map.Pending,
+    error: map.Blocked,
+    idle: map.Draft
+  };
+  const normalizedStatus = String(displayStatus).replace(/_/g, ' ');
+  const titleStatus = normalizedStatus.replace(/\b\w/g, (letter) => letter.toUpperCase());
+  const style = map[displayStatus] || map[titleStatus] || stateMap[state] || map.Draft;
+  return (
+    <span
+      className={`status-badge state-${state || 'unified'}`}
+      style={{
+        display: 'inline-flex',
+        alignItems: 'center',
+        padding: size === 'sm' ? '2px 7px' : '4px 10px',
+        fontSize: size === 'sm' ? '0.68rem' : '0.72rem',
+        fontWeight: 700,
+        textTransform: 'uppercase',
+        letterSpacing: '0.06em',
+        borderRadius: '4px',
+        border: `1px solid ${style.border}`,
+        background: style.bg,
+        color: style.color,
+        whiteSpace: 'nowrap',
+      }}
+    >
+      {displayStatus}
+    </span>
+  );
+}
+
+function TrendIndicator({ value, suffix = '%', invert = false }) {
+  if (value === null || value === undefined) return null;
+  const numericValue = typeof value === 'number' ? value : Number(String(value).replace(/[^0-9.-]/g, ''));
+  if (Number.isNaN(numericValue)) return <span className="trend-indicator neutral">{value}</span>;
+  const positive = invert ? numericValue < 0 : numericValue > 0;
+  const neutral = numericValue === 0;
+  const color = neutral ? 'var(--muted)' : positive ? '#3ddc84' : '#ff5a5a';
+  const arrow = neutral ? '→' : positive ? '↑' : '↓';
+  const displaySuffix = typeof value === 'string' && /[%a-zA-Z]/.test(value) ? '' : suffix;
+  return (
+    <span style={{ color, fontSize: '0.75rem', fontWeight: 700, display: 'inline-flex', alignItems: 'center', gap: 3 }}>
+      {arrow} {Math.abs(numericValue)}{displaySuffix}
+    </span>
+  );
+}
+
+class ErrorBoundary extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = { hasError: false, error: null };
+  }
+  static getDerivedStateFromError(error) {
+    return { hasError: true, error };
+  }
+  componentDidCatch(error, info) {
+    console.error('GOPU OS Error:', error, info);
+  }
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div className="error-boundary-screen">
+          <div className="error-boundary-card">
+            <AlertTriangle size={40} />
+            <h2>Something went wrong</h2>
+            <p>{this.state.error?.message || 'An unexpected error occurred.'}</p>
+            <button
+              className="tactical-button"
+              onClick={() => this.setState({ hasError: false, error: null })}
+            >
+              Try again
+            </button>
+          </div>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
+
+function useToast() {
+  const [toast, setToast] = React.useState(null);
+  const show = React.useCallback((message, type = 'success') => {
+    setToast({ message, type });
+    setTimeout(() => setToast(null), 3000);
+  }, []);
+  const ToastUI = toast ? (
+    <div className={`toast-strip ${toast.type}`} role="status" aria-live="polite">
+      {toast.type === 'success' && <CheckCircle2 size={15} />}
+      {toast.type === 'error' && <AlertTriangle size={15} />}
+      {toast.type === 'warning' && <TriangleAlert size={15} />}
+      {toast.message}
+    </div>
+  ) : null;
+  return { show, ToastUI };
+}
+
+function LiveClock() {
+  const [time, setTime] = React.useState(new Date());
+  React.useEffect(() => {
+    const id = setInterval(() => setTime(new Date()), 1000);
+    return () => clearInterval(id);
+  }, []);
+  return (
+    <time
+      className="live-clock"
+      dateTime={time.toISOString()}
+      aria-label={`Current time: ${time.toLocaleTimeString()}`}
+    >
+      {time.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+    </time>
+  );
+}
+
+function useFocusTrap(ref, isActive) {
+  React.useEffect(() => {
+    if (!isActive || !ref.current) return;
+    const focusable = ref.current.querySelectorAll(
+      'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+    );
+    const first = focusable[0];
+    const last = focusable[focusable.length - 1];
+    const previouslyFocused = document.activeElement;
+    if (first) first.focus();
+    function handleKeyDown(e) {
+      if (e.key !== 'Tab') return;
+      if (focusable.length === 1) { e.preventDefault(); return; }
+      if (e.shiftKey) {
+        if (document.activeElement === first) { e.preventDefault(); last.focus(); }
+      } else {
+        if (document.activeElement === last) { e.preventDefault(); first.focus(); }
+      }
+    }
+    document.addEventListener('keydown', handleKeyDown);
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown);
+      if (previouslyFocused) previouslyFocused.focus();
+    };
+  }, [isActive, ref]);
+}
+
+function ScrollToTop() {
+  const [visible, setVisible] = React.useState(false);
+
+  React.useEffect(() => {
+    const workspace = document.querySelector('.workspace');
+    const target = workspace || document.scrollingElement || document.documentElement;
+    if (!target) return undefined;
+
+    const readScrollTop = () => (workspace ? workspace.scrollTop : window.scrollY || document.documentElement.scrollTop);
+    const onScroll = () => setVisible(readScrollTop() > 400);
+    const listenerTarget = workspace || window;
+    listenerTarget.addEventListener('scroll', onScroll);
+    onScroll();
+    return () => listenerTarget.removeEventListener('scroll', onScroll);
+  }, []);
+
+  if (!visible) return null;
+  return (
+    <button
+      className="scroll-top-btn"
+      onClick={() => {
+        const workspace = document.querySelector('.workspace');
+        if (workspace) {
+          workspace.scrollTo({ top: 0, behavior: 'smooth' });
+          return;
+        }
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }}
+      aria-label="Scroll to top"
+    >
+      ↑
+    </button>
+  );
+}
+
+function MetricSkeletonGrid() {
+  return (
+    <div className="metric-grid">
+      {[1, 2, 3, 4].map((i) => (
+        <div key={i} className="metric-panel" style={{ gap: 8 }}>
+          <div className="skeleton skeleton-text w-1/2" />
+          <div className="skeleton skeleton-text w-full" style={{ height: '2em' }} />
+          <div className="skeleton skeleton-text w-3/4" />
+        </div>
+      ))}
+    </div>
+  );
+}
+
 function ExportOSShell({ children, className = '', liveDataConnected = backendStatus.mode === 'Connected', statusMessage }) {
   const isCtoShell = className.includes('cto-shell');
   const backendMessage = statusMessage || (isCtoShell && liveDataConnected ? 'Supabase live connected' : isCtoShell && !liveDataConnected ? 'No live data connected' : backendStatus.message);
   return (
     <motion.div
       className={`export-os-shell ${className}`}
+      id="main-content"
+      role="main"
+      aria-label="Main content"
       initial={{ opacity: 0, y: 18 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.52, ease: [0.16, 1, 0.3, 1] }}
@@ -3323,6 +3587,7 @@ function ExportOSShell({ children, className = '', liveDataConnected = backendSt
         <span>{backendMessage}</span>
       </div>
       {children}
+      <ScrollToTop />
     </motion.div>
   );
 }
@@ -4421,15 +4686,6 @@ function ArticleReaderModal({ article, onClose }) {
   );
 }
 
-function StatusBadge({ label, state = 'online' }) {
-  return (
-    <span className={`status-badge state-${state}`}>
-      <StatusPulse />
-      {label}
-    </span>
-  );
-}
-
 function RiskBadge({ label }) {
   const normalized = String(label || 'Monitoring').toLowerCase();
   const state = normalized.includes('critical') || normalized.includes('high') ? 'error' : normalized.includes('medium') || normalized.includes('attention') ? 'attention' : normalized.includes('opportunity') ? 'progress' : 'online';
@@ -4761,6 +5017,7 @@ function DirectorExecutiveHeader({ now, summary, onBack, onOpenTasks }) {
       <div className="director-title-block">
         <button className="director-back-link" onClick={onBack}><ArrowLeft size={15} />Command Deck</button>
         <span>GOPU Export OS</span>
+        <Breadcrumb items={[{ label: 'Command Deck', onClick: onBack }, { label: 'Director Console' }]} />
         <h1>Director Command Center</h1>
         <p>Founder-level approvals, escalations, blocked workflows, and business-critical decision control.</p>
       </div>
@@ -5583,6 +5840,7 @@ function FounderApprovalWall({ onBack, onOpenTasks }) {
   const [modalAction, setModalAction] = useState(null);
   const [auditExpanded, setAuditExpanded] = useState(false);
   const [approvalStatusMessage, setApprovalStatusMessage] = useState('Approval engine loading...');
+  const { show, ToastUI } = useToast();
   const selectedRequest = requests.find((request) => request.id === selectedId) || requests[0];
 
   useEffect(() => {
@@ -5625,21 +5883,30 @@ function FounderApprovalWall({ onBack, onOpenTasks }) {
 
   async function runApprovalAction(action) {
     if (!selectedRequest) return;
-    let result;
-    if (action === 'Approve Selected') result = await approveRequest(demoTenantId, selectedRequest, founderNote);
-    else if (action === 'Reject Selected') result = await rejectRequest(demoTenantId, selectedRequest, founderNote);
-    else if (action === 'Needs Review') result = await needsReviewRequest(demoTenantId, selectedRequest, founderNote);
-    else if (action === 'Request Revision') result = await requestRevision(demoTenantId, selectedRequest, founderNote);
-    else if (action === 'Escalate to Executive') result = await escalateRequest(demoTenantId, selectedRequest, founderNote);
-    else if (action === 'Add Founder Note') result = await addApprovalComment(demoTenantId, selectedRequest.id, founderNote || 'Founder note added.', 'Founder');
+    try {
+      let result;
+      if (action === 'Approve Selected') result = await approveRequest(demoTenantId, selectedRequest, founderNote);
+      else if (action === 'Reject Selected') result = await rejectRequest(demoTenantId, selectedRequest, founderNote);
+      else if (action === 'Needs Review') result = await needsReviewRequest(demoTenantId, selectedRequest, founderNote);
+      else if (action === 'Request Revision') result = await requestRevision(demoTenantId, selectedRequest, founderNote);
+      else if (action === 'Escalate to Executive') result = await escalateRequest(demoTenantId, selectedRequest, founderNote);
+      else if (action === 'Add Founder Note') result = await addApprovalComment(demoTenantId, selectedRequest.id, founderNote || 'Founder note added.', 'Founder');
 
-    if (result?.ok && result.data?.id) {
-      replaceRequest(result.data);
-      setApprovalStatusMessage(`${action.replace(' Selected', '')} recorded. Originating workflow sync event emitted.`);
-    } else if (result?.ok) {
-      setApprovalStatusMessage('Founder note saved to approval comments.');
-    } else {
-      setApprovalStatusMessage(result?.error?.message || 'Approval action failed.');
+      if (result?.ok && result.data?.id) {
+        replaceRequest(result.data);
+        setApprovalStatusMessage(`${action.replace(' Selected', '')} recorded. Originating workflow sync event emitted.`);
+        if (action === 'Approve Selected') show('Approved successfully');
+        if (action === 'Reject Selected') show('Rejected', 'warning');
+        if (action === 'Escalate to Executive') show('Escalated to Director', 'warning');
+      } else if (result?.ok) {
+        setApprovalStatusMessage('Founder note saved to approval comments.');
+      } else {
+        setApprovalStatusMessage(result?.error?.message || 'Approval action failed.');
+        show('Action failed — please retry', 'error');
+      }
+    } catch (error) {
+      setApprovalStatusMessage(error?.message || 'Approval action failed.');
+      show('Action failed — please retry', 'error');
     }
     setModalAction(null);
   }
@@ -5698,6 +5965,7 @@ function FounderApprovalWall({ onBack, onOpenTasks }) {
           onConfirm={() => runApprovalAction(modalAction)}
         />
       )}
+      {ToastUI}
     </ExportOSShell>
   );
 }
@@ -5713,6 +5981,7 @@ function ApprovalWallHeader({ onBack, onOpenTasks, pendingCount, highRiskCount }
     <header className="deck-header approval-wall-header">
       <div className="deck-header-copy">
         <span>GOPU Export OS</span>
+        <Breadcrumb items={[{ label: 'Command Deck', onClick: onBack }, { label: 'Director Console' }]} />
         <h1>Director Command Center</h1>
         <p>Executive Decision Layer</p>
       </div>
@@ -5747,9 +6016,11 @@ function ApprovalQueueList({ requests, filters, activeFilter, setActiveFilter, s
         ))}
       </div>
       <div className="approval-queue-list">
-        {requests.map((request) => (
-          <ApprovalQueueCard key={request.id} request={request} selected={selectedId === request.id} onSelect={() => onSelect(request.id)} />
-        ))}
+        {requests.length === 0
+          ? <EmptyState icon={CheckCircle2} title="All clear" description="No pending approvals at this time." />
+          : requests.map((request) => (
+            <ApprovalQueueCard key={request.id} request={request} selected={selectedId === request.id} onSelect={() => onSelect(request.id)} />
+          ))}
       </div>
     </section>
   );
@@ -8661,7 +8932,7 @@ const cfoFinanceData = {
 
 function CfoTabWorkspace({ tab, data, reportOutput, onOpenPricing, onOpenPaymentVault, onGenerateReport, onGenerateFounderSummary }) {
   if (data.loading) {
-    return <section className="pricing-panel cfo-loading-panel"><StatusPulse /><strong>Loading CFO financial workspace...</strong><span>Service layer is preparing finance, margin, renewal, and Payment Vault data.</span></section>;
+    return <section className="pricing-panel cfo-loading-panel"><MetricSkeletonGrid /></section>;
   }
   if (tab === 'Overview') return <CfoOverviewWorkspace data={data} onOpenPricing={onOpenPricing} onOpenPaymentVault={onOpenPaymentVault} onGenerateFounderSummary={onGenerateFounderSummary} />;
   if (tab === 'Cash') return <CfoCashWorkspace data={data} />;
@@ -9359,7 +9630,12 @@ function CFOCommandPage({ onBack, onOpenPricing, onOpenApprovalWall, onOpenPayme
   return (
     <ExportOSShell className="operational-export-shell pricing-engine-shell">
       <header className="deck-header pricing-header">
-        <div className="deck-header-copy"><span>GOPU Export OS</span><h1>CFO Command</h1><p>Chief Financial Officer - commercial discipline, margins, pricing safety, and approval control.</p></div>
+        <div className="deck-header-copy">
+          <span>GOPU Export OS</span>
+          <Breadcrumb items={[{ label: 'Command Deck', onClick: onBack }, { label: 'CFO Finance' }]} />
+          <h1>CFO Command</h1>
+          <p>Chief Financial Officer - commercial discipline, margins, pricing safety, and approval control.</p>
+        </div>
         <div className="deck-header-controls">
           <div className="coo-verified"><ShieldCheck size={16} /><span>Founder session verified</span></div>
           <div className="coo-status"><StatusPulse /><strong>Status: Margin Risk Monitoring</strong></div>
@@ -9396,7 +9672,7 @@ function CFOCommandPage({ onBack, onOpenPricing, onOpenApprovalWall, onOpenPayme
 }
 
 function MarginHealthDashboard({ metrics }) {
-  return <section className="pricing-panel"><div className="approval-section-header"><div><span>Margin Health Dashboard</span><h2>CFO operating picture</h2></div><Gauge size={18} /></div><div className="cfo-metric-grid">{metrics.map((metric) => <div key={metric.label}><span>{metric.label}</span><strong>{metric.value}</strong><small>{metric.status}</small></div>)}</div></section>;
+  return <section className="pricing-panel"><div className="approval-section-header"><div><span>Margin Health Dashboard</span><h2>CFO operating picture</h2></div><Gauge size={18} /></div><div className="cfo-metric-grid">{metrics.map((metric) => <div key={metric.label}><span>{metric.label}</span><strong>{metric.value}</strong>{metric.change || metric.trend || metric.delta ? <TrendIndicator value={metric.change ?? metric.trend ?? metric.delta} /> : null}<small>{metric.status}</small></div>)}</div></section>;
 }
 
 function PendingQuoteApprovals({ onOpenApprovalWall }) {
@@ -9408,7 +9684,7 @@ function PricingRiskAlerts({ alerts }) {
 }
 
 function FXExposureMonitor({ rates, status }) {
-  return <section className="pricing-panel"><div className="approval-section-header"><div><span>FX Exposure Monitor</span><h2>{status}</h2></div><CircleDollarSign size={18} /></div><div className="forex-snapshot-grid">{rates.map((rate) => <div className={rate.direction} key={rate.pair}><strong>{rate.pair}</strong><span>{rate.rate}</span><small>{rate.change}</small></div>)}</div></section>;
+  return <section className="pricing-panel"><div className="approval-section-header"><div><span>FX Exposure Monitor</span><h2>{status}</h2></div><CircleDollarSign size={18} /></div><div className="forex-snapshot-grid">{rates.map((rate) => <div className={rate.direction} key={rate.pair}><strong>{rate.pair}</strong><span>{rate.rate}</span><small><TrendIndicator value={rate.change} suffix="" /></small></div>)}</div></section>;
 }
 
 function CashFlowWatch() {
@@ -10341,6 +10617,9 @@ function TaskFilters({ filters, activeFilter, setActiveFilter, search, setSearch
 function TaskBoard({ tasks, selectedId, onSelect }) {
   const columns = ['New', 'In Progress', 'Waiting Review', 'Blocked', 'Escalated', 'Done'];
   const columnTasks = (column) => tasks.filter((task) => column === 'Escalated' ? ['Escalated', 'Waiting Founder Approval', 'Revision Required'].includes(task.status) : task.status === column);
+  if (tasks.length === 0) {
+    return <section className="task-board"><EmptyState icon={ClipboardCheck} title="No tasks" description="No tasks match the current filters." /></section>;
+  }
   return <section className="task-board">{columns.map((column) => <div className="task-column" key={column}><header><strong>{column}</strong><span>{columnTasks(column).length}</span></header>{columnTasks(column).map((task) => <TaskCard key={task.id} task={task} selected={selectedId === task.id} onSelect={() => onSelect(task.id)} />)}</div>)}</section>;
 }
 
@@ -11684,6 +11963,7 @@ function CTOCommandPage({ navigate, onBack }) {
     >
       <header className="deck-header cto-header">
         <div className="deck-header-copy">
+          <Breadcrumb items={[{ label: 'Command Deck', onClick: onBack }, { label: 'CTO Command' }]} />
           <h1>CTO Command</h1>
           <p>Operational reliability workspace for integrations, workflows, incidents, payment risk, deployment readiness, and audit control.</p>
         </div>
@@ -12123,6 +12403,7 @@ const ctoProviderCatalog = {
 };
 
 function CTOSummaryBar({ health, summary, lastSync, liveConnected }) {
+  if (!summary) return <MetricSkeletonGrid />;
   const items = [
     ['System Health', health.label, health.state],
     ['Active Incidents', liveConnected ? summary.activeIncidents : 'Awaiting', liveConnected && summary.activeIncidents ? 'attention' : 'progress'],
@@ -15252,7 +15533,7 @@ function MobileQuickActions({ navigate, setView }) {
 }
 
 function MobileApprovalCards({ approvals, onAction }) {
-  return <div className="mobile-screen-stack"><section className="mobile-card"><div className="mobile-section-title"><span>Mobile Approvals</span><strong>Founder decision queue</strong></div><div className="mobile-approval-stack">{approvals.map((approval) => <article key={approval.id} className="mobile-approval-card"><div><strong>{approval.title}</strong><SeverityBadge severity={approval.risk_level} /></div><span>{approval.department} / {approval.amount || approval.category || 'Workflow approval'}</span><p>{approval.summary}</p><small>Next action: {approval.details?.next_action || 'Approve, reject, or request revision.'}</small><div className="mobile-card-actions">{['Approve', 'Reject', 'Request Revision'].map((action) => <button key={action} onClick={() => onAction(action, approval)}>{action}</button>)}</div></article>)}</div></section></div>;
+  return <div className="mobile-screen-stack"><section className="mobile-card"><div className="mobile-section-title"><span>Mobile Approvals</span><strong>Founder decision queue</strong></div><div className="mobile-approval-stack">{approvals.length === 0 ? <EmptyState icon={CheckCircle2} title="All clear" description="No pending approvals at this time." /> : approvals.map((approval) => <article key={approval.id} className="mobile-approval-card"><div><strong>{approval.title}</strong><SeverityBadge severity={approval.risk_level} /></div><span>{approval.department} / {approval.amount || approval.category || 'Workflow approval'}</span><p>{approval.summary}</p><small>Next action: {approval.details?.next_action || 'Approve, reject, or request revision.'}</small><div className="mobile-card-actions">{['Approve', 'Reject', 'Request Revision'].map((action) => <button key={action} onClick={() => onAction(action, approval)}>{action}</button>)}</div></article>)}</div></section></div>;
 }
 
 function MobileOperationsPanel({ data, navigate }) {
@@ -16785,14 +17066,16 @@ function BuyerDirectory({ buyers, selectedId, filter, search, onFilter, onSearch
       <label className="buyer-search"><Search size={15} /><input value={search} onChange={(event) => onSearch(event.target.value)} placeholder="Search buyer, company, country, product..." /></label>
       <div className="buyer-filter-row">{filters.map((item) => <button key={item} className={filter === item ? 'active' : ''} onClick={() => onFilter(item)}>{item}</button>)}</div>
       <div className="buyer-directory-list">
-        {buyers.map((buyer) => (
-          <button key={buyer.id} className={selectedId === buyer.id ? 'selected' : ''} onClick={() => onOpen(buyer.id)}>
-            <div><strong>{buyer.buyerName}</strong><StatusBadge label={buyer.status} state={getBuyerState(buyer.status)} /></div>
-            <span>{buyer.company} / {buyer.country} / {buyer.interests.join(', ')}</span>
-            <small>Last contact: {buyer.lastContact} / Open enquiries: {buyer.openEnquiries} / Quote value: {buyer.quoteValue}</small>
-            <footer><SeverityBadge severity={buyer.risk} /><b>{buyer.relationshipValue}</b></footer>
-          </button>
-        ))}
+        {buyers.length === 0
+          ? <EmptyState icon={UsersRound} title="No leads" description="No leads match the current search." />
+          : buyers.map((buyer) => (
+            <button key={buyer.id} className={selectedId === buyer.id ? 'selected' : ''} onClick={() => onOpen(buyer.id)}>
+              <div><strong>{buyer.buyerName}</strong><StatusBadge label={buyer.status} state={getBuyerState(buyer.status)} /></div>
+              <span>{buyer.company} / {buyer.country} / {buyer.interests.join(', ')}</span>
+              <small>Last contact: {buyer.lastContact} / Open enquiries: {buyer.openEnquiries} / Quote value: {buyer.quoteValue}</small>
+              <footer><SeverityBadge severity={buyer.risk} /><b>{buyer.relationshipValue}</b></footer>
+            </button>
+          ))}
       </div>
     </section>
   );
@@ -16837,7 +17120,7 @@ function InvoiceHistoryPanel({ invoices }) {
 }
 
 function ShipmentHistoryPanel({ shipments }) {
-  return <section className="buyer-panel"><div className="approval-section-header"><div><span>Shipment History</span><h2>Export execution linkage</h2></div><Route size={18} /></div><div className="buyer-table-list">{shipments.map((shipment) => <article key={shipment.id}><div><strong>{shipment.shipmentId}</strong><StatusBadge label={shipment.status} state={getBuyerState(shipment.status)} /></div><span>{shipment.product} / {shipment.quantity} / {shipment.destination}</span><small>ETA: {shipment.eta} / Risk: {shipment.riskState}</small></article>)}</div></section>;
+  return <section className="buyer-panel"><div className="approval-section-header"><div><span>Shipment History</span><h2>Export execution linkage</h2></div><Route size={18} /></div><div className="buyer-table-list">{shipments.length === 0 ? <EmptyState icon={PackageCheck} title="No shipments" description="No active shipments found." /> : shipments.map((shipment) => <article key={shipment.id}><div><strong>{shipment.shipmentId}</strong><StatusBadge label={shipment.status} state={getBuyerState(shipment.status)} /></div><span>{shipment.product} / {shipment.quantity} / {shipment.destination}</span><small>ETA: {shipment.eta} / Risk: {shipment.riskState}</small></article>)}</div></section>;
 }
 
 function BuyerFollowupQueue({ followups, onCreate }) {
@@ -18139,6 +18422,7 @@ function CMOCommandPage({ view = 'command', navigate, onBack }) {
       <header className="deck-header cmo-header cmo-clean-header">
         <div className="deck-header-copy">
           <span>GOPU Export OS</span>
+          <Breadcrumb items={[{ label: 'Command Deck', onClick: onBack }, { label: 'CMO Command' }]} />
           <h1>CMO Command</h1>
           <p>Marketing Intelligence & Growth Operating Center</p>
         </div>
@@ -20324,7 +20608,7 @@ function CMOContentInsightPanel({ growthAnalytics }) {
                 </div>
                 <GrowthSparkline status={card.status} />
                 <small>Prev {formatGrowthMetricValue(card.previous, card.formatter)}</small>
-                <b><i className="ai-growth-arrow" aria-hidden="true" /> {formatGrowthChange(card.change)} | {card.status}</b>
+                <b><TrendIndicator value={card.change} /> | {card.status}</b>
               </motion.article>
             ))}
           </div>
@@ -20341,7 +20625,7 @@ function CMOContentInsightPanel({ growthAnalytics }) {
                 <span>Likes {formatGrowthMetricValue(item.likes)}</span>
                 <span>Comments {formatGrowthMetricValue(item.comments)}</span>
                 <span>Eng {formatGrowthMetricValue(item.engagementRate, 'percent')}</span>
-                <b><i className="ai-growth-arrow" aria-hidden="true" /> {formatGrowthChange(item.change)}</b>
+                <b><TrendIndicator value={item.change} /></b>
               </div>
             ))}
           </div>
@@ -20806,7 +21090,7 @@ function CMOContentEngineStrip({ data, onOpenRunbook }) {
 }
 
 function CMOLoadingPanel() {
-  return <section className="cmo-panel cmo-loading-panel"><StatusPulse /><strong>Loading CMO growth workspace...</strong><span>Preparing OpenAI content intelligence, Buyer CRM outreach, campaigns, competitors, calendar, and brand risk data.</span></section>;
+  return <section className="cmo-panel cmo-loading-panel"><MetricSkeletonGrid /></section>;
 }
 
 function CMOTabWorkspace({ tab, data, output, navigate, onGenerateTodayPlan, onGenerateReport, onGenerateFounderSummary, onRouteBrandRisk }) {
@@ -21836,14 +22120,16 @@ function FounderApprovalSummary({ approvals, navigate }) {
     <section className="briefing-panel">
       <div className="approval-section-header"><div><span>Pending Founder Approvals</span><h2>{approvals.length} waiting</h2></div><FileCheck2 size={18} /></div>
       <div className="briefing-approval-list">
-        {approvals.map((approval) => (
-          <article key={approval.id}>
-            <strong>{approval.title}</strong>
-            <span>{approval.department} - {approval.created_time}</span>
-            <p>{approval.reason}</p>
-            <PriorityBadge priority={approval.risk_level} />
-          </article>
-        ))}
+        {approvals.length === 0
+          ? <EmptyState icon={CheckCircle2} title="All clear" description="No pending approvals at this time." />
+          : approvals.map((approval) => (
+            <article key={approval.id}>
+              <strong>{approval.title}</strong>
+              <span>{approval.department} - {approval.created_time}</span>
+              <p>{approval.reason}</p>
+              <PriorityBadge priority={approval.risk_level} />
+            </article>
+          ))}
       </div>
       <button className="tactical-button" onClick={() => navigate('/export-os/director')}>Open Director Command Center</button>
     </section>
@@ -23757,6 +24043,7 @@ function COOOperationsHeader({ onBack, summary }) {
     <header className="deck-header coo-ops-header">
       <div className="deck-header-copy">
         <span>GOPU Export OS</span>
+        <Breadcrumb items={[{ label: 'Command Deck', onClick: onBack }, { label: 'COO Operations' }]} />
         <h1>COO Command</h1>
         <p>Executive operations workspace for blockers, approvals, shipments, and next actions.</p>
       </div>
@@ -23793,6 +24080,7 @@ function COOTabBar({ activeTab, onSelect }) {
 }
 
 function COOOperationalSummary({ summary, inspect }) {
+  if (!summary) return <MetricSkeletonGrid />;
   const rows = [
     ['Active Workflows', summary?.activeWorkflows ?? 0, 'Active workflow queue', '/export-os/tasks', 'blue'],
     ['Blocked Items', summary?.blockedWorkflows ?? 0, 'Needs owner action', '/export-os/tasks', 'red'],
@@ -24236,6 +24524,7 @@ function COOIdentityPanel({ executive }) {
 }
 
 function OperationsMetricCard({ metric, index }) {
+  const trendValue = metric.change ?? metric.delta ?? metric.trend ?? metric.growth ?? null;
   return (
     <motion.article
       className={`coo-metric-card tone-${metric.tone}`}
@@ -24246,6 +24535,7 @@ function OperationsMetricCard({ metric, index }) {
       <div>
         <span>{metric.label}</span>
         <strong>{metric.value}</strong>
+        {trendValue !== null ? <TrendIndicator value={trendValue} /> : null}
       </div>
       <p><span className="live-pulse" />{metric.status}</p>
     </motion.article>
@@ -24264,21 +24554,23 @@ function ActiveTasksPanel({ tasks, onOpenTasks, onCreateFollowup, onEscalate }) 
       </div>
       <div className="task-action-grid coo-task-actions"><button onClick={onCreateFollowup}>Create Follow-up</button><button onClick={onOpenTasks}>Open Task Engine</button></div>
       <div className="task-grid">
-        {tasks.map((task) => (
-          <article className="task-card" key={task.id}>
-            <div>
-              <h3>{task.title}</h3>
-              <span>{task.owner || task.owner_command}</span>
-            </div>
-            <div className="task-meta">
-              <StateChip label={task.priority} />
-              <StateChip label={task.deadline || task.due_date} />
-              <StateChip label={task.status} />
-            </div>
-            <p>{task.escalation_level}</p>
-            <div className="task-action-grid"><button onClick={() => onEscalate(task)}>Escalate Blocker</button><button onClick={onOpenTasks}>Open Task</button></div>
-          </article>
-        ))}
+        {tasks.length === 0
+          ? <EmptyState icon={ClipboardCheck} title="No tasks" description="No tasks match the current filters." />
+          : tasks.map((task) => (
+            <article className="task-card" key={task.id}>
+              <div>
+                <h3>{task.title}</h3>
+                <span>{task.owner || task.owner_command}</span>
+              </div>
+              <div className="task-meta">
+                <StateChip label={task.priority} />
+                <StateChip label={task.deadline || task.due_date} />
+                <StateChip label={task.status} />
+              </div>
+              <p>{task.escalation_level}</p>
+              <div className="task-action-grid"><button onClick={() => onEscalate(task)}>Escalate Blocker</button><button onClick={onOpenTasks}>Open Task</button></div>
+            </article>
+          ))}
       </div>
     </section>
   );
@@ -24353,22 +24645,24 @@ function ApprovalRequestsPanel({ requests, onOpenApprovalWall }) {
         <FileCheck2 size={20} />
       </div>
       <div className="approval-grid">
-        {requests.map((request) => (
-          <article className="approval-card" key={request.id}>
-            <div>
-              <h3>{request.title}</h3>
-              <StateChip label={request.risk_level} />
-            </div>
-            <p>{request.reason}</p>
-            <small>{request.suggested_next_action}</small>
-            <button className="ghost-button" onClick={() => setQueuedId(request.id)}>
-              {queuedId === request.id ? 'Founder Review Queued' : 'Send to Founder Review'}
-            </button>
-            <button className="ghost-button" onClick={onOpenApprovalWall}>
-              Open Director Queue
-            </button>
-          </article>
-        ))}
+        {requests.length === 0
+          ? <EmptyState icon={CheckCircle2} title="All clear" description="No pending approvals at this time." />
+          : requests.map((request) => (
+            <article className="approval-card" key={request.id}>
+              <div>
+                <h3>{request.title}</h3>
+                <StateChip label={request.risk_level} />
+              </div>
+              <p>{request.reason}</p>
+              <small>{request.suggested_next_action}</small>
+              <button className="ghost-button" onClick={() => setQueuedId(request.id)}>
+                {queuedId === request.id ? 'Founder Review Queued' : 'Send to Founder Review'}
+              </button>
+              <button className="ghost-button" onClick={onOpenApprovalWall}>
+                Open Director Queue
+              </button>
+            </article>
+          ))}
       </div>
     </section>
   );
@@ -24508,7 +24802,7 @@ function PlantDashboard({ onBack }) {
             <article className={`metric-panel tone-${metric.tone}`} key={metric.label} style={{ '--delay': `${index * 70}ms` }}>
               <span>{metric.label}</span>
               <strong>{metric.value}</strong>
-              <small>{metric.delta}</small>
+              <small><TrendIndicator value={metric.delta} suffix="" /></small>
               <div className="metric-line" />
             </article>
           ))}
@@ -24624,4 +24918,4 @@ function MiniBars({ values }) {
 const rootElement = document.getElementById('root');
 const appRoot = window.__gopuRoot ?? createRoot(rootElement);
 window.__gopuRoot = appRoot;
-appRoot.render(<App />);
+appRoot.render(<ErrorBoundary><App /></ErrorBoundary>);
