@@ -1180,7 +1180,177 @@ function handleCtoIntegrationsStatus(_request, response) {
   sendJson(response, 200, { ok: true, data });
 }
 
+// ── CFO Wallet ──────────────────────────────────────────────────────────────
+
+async function getOrCreateWallet(client) {
+  const { data } = await client.from('cfo_wallet').select('*').eq('tenant_id', demoTenantId).maybeSingle();
+  if (data) return data;
+  const seed = { tenant_id: demoTenantId, balance: 1000.00, auto_topup_threshold: 100.00, auto_topup_amount: 500.00, transactions: [] };
+  const { data: created } = await client.from('cfo_wallet').insert(seed).select('*').maybeSingle();
+  return created || seed;
+}
+
+async function handleGetWallet(_request, response, origin) {
+  const client = getSupabaseClient();
+  if (!client) return sendJson(response, 200, { ok: true, wallet: { balance: 1000, transactions: [], auto_topup_threshold: 100, auto_topup_amount: 500, _fallback: true } }, origin);
+  const wallet = await getOrCreateWallet(client);
+  return sendJson(response, 200, { ok: true, wallet }, origin);
+}
+
+async function handleWalletTopup(request, response, origin) {
+  const body = await readBody(request);
+  const amount = Number(body.amount);
+  if (!amount || amount <= 0) return sendJson(response, 400, { ok: false, message: 'amount must be positive' }, origin);
+  const client = getSupabaseClient();
+  if (!client) return sendJson(response, 503, { ok: false, message: 'Supabase not configured' }, origin);
+  const wallet = await getOrCreateWallet(client);
+  const newBalance = Number(wallet.balance) + amount;
+  const tx = { id: crypto.randomUUID(), type: 'topup', amount, description: body.note || 'Manual top-up', at: new Date().toISOString() };
+  const transactions = [...(wallet.transactions || []), tx];
+  await client.from('cfo_wallet').update({ balance: newBalance, transactions, updated_at: new Date().toISOString() }).eq('tenant_id', demoTenantId);
+  return sendJson(response, 200, { ok: true, balance: newBalance, transaction: tx }, origin);
+}
+
+// ── CMO Campaigns ────────────────────────────────────────────────────────────
+
+async function handleGetCampaigns(_request, response, origin) {
+  const client = getSupabaseClient();
+  if (!client) return sendJson(response, 200, { ok: true, campaigns: [], _fallback: true }, origin);
+  const { data, error } = await client.from('cmo_campaigns').select('*').order('created_at', { ascending: false }).limit(20);
+  if (error) return sendJson(response, 500, { ok: false, message: error.message }, origin);
+  return sendJson(response, 200, { ok: true, campaigns: data || [] }, origin);
+}
+
+async function handleUpdateCampaignProgress(request, response, origin, routePath) {
+  const campaignId = routePath.split('/')[4];
+  if (!campaignId) return sendJson(response, 400, { ok: false, message: 'Campaign ID required' }, origin);
+  const body = await readBody(request);
+  const currentValue = Number(body.current_value);
+  if (!Number.isFinite(currentValue)) return sendJson(response, 400, { ok: false, message: 'current_value required' }, origin);
+  const client = getSupabaseClient();
+  if (!client) return sendJson(response, 503, { ok: false, message: 'Supabase not configured' }, origin);
+  const { data: campaign } = await client.from('cmo_campaigns').select('target_value').eq('id', campaignId).maybeSingle();
+  const updates = { current_value: currentValue };
+  if (campaign && currentValue >= campaign.target_value) updates.status = 'completed', updates.completed_at = new Date().toISOString();
+  await client.from('cmo_campaigns').update(updates).eq('id', campaignId);
+  return sendJson(response, 200, { ok: true, current_value: currentValue, completed: updates.status === 'completed' }, origin);
+}
+
+// ── Budget Approval via Slack reply (APPROVE/REJECT text) ────────────────────
+
+async function handleBudgetAction(request, response, origin) {
+  const body = await readBody(request);
+  const { campaign_id, action, topup_amount } = body;
+  if (!campaign_id || !action) return sendJson(response, 400, { ok: false, message: 'campaign_id and action required' }, origin);
+  const client = getSupabaseClient();
+  if (!client) return sendJson(response, 503, { ok: false, message: 'Supabase not configured' }, origin);
+
+  if (topup_amount > 0) {
+    const wallet = await getOrCreateWallet(client);
+    const newBalance = Number(wallet.balance) + Number(topup_amount);
+    const tx = { id: crypto.randomUUID(), type: 'topup', amount: topup_amount, description: 'Founder top-up via approval', at: new Date().toISOString() };
+    await client.from('cfo_wallet').update({ balance: newBalance, transactions: [...(wallet.transactions || []), tx], updated_at: new Date().toISOString() }).eq('tenant_id', demoTenantId);
+  }
+
+  if (action === 'reject') {
+    await client.from('cmo_campaigns').update({ status: 'rejected' }).eq('id', campaign_id);
+    return sendJson(response, 200, { ok: true, status: 'rejected' }, origin);
+  }
+
+  const { data: campaign } = await client.from('cmo_campaigns').select('*').eq('id', campaign_id).maybeSingle();
+  if (!campaign) return sendJson(response, 404, { ok: false, message: 'Campaign not found' }, origin);
+
+  const wallet = await getOrCreateWallet(client);
+  const budget = Number(campaign.budget_requested);
+  const newBalance = Math.max(0, Number(wallet.balance) - budget);
+  const spendTx = { id: crypto.randomUUID(), type: 'spend', amount: -budget, description: `${campaign.platform} ${campaign.goal_type} campaign`, campaign_id, at: new Date().toISOString() };
+  await client.from('cfo_wallet').update({ balance: newBalance, transactions: [...(wallet.transactions || []), spendTx], updated_at: new Date().toISOString() }).eq('tenant_id', demoTenantId);
+  await client.from('cmo_campaigns').update({ status: 'active', budget_allocated: budget, started_at: new Date().toISOString() }).eq('id', campaign_id);
+  await client.from('agent_messages').insert({ tenant_id: demoTenantId, campaign_id, from_agent: 'CFO', to_agent: 'CMO', message_type: 'budget_approved', payload: { budget_allocated: budget }, status: 'processed', processed_at: new Date().toISOString() });
+
+  return sendJson(response, 200, { ok: true, status: 'active', budget_allocated: budget, wallet_balance: newBalance }, origin);
+}
+
+// ── Daily Briefing ───────────────────────────────────────────────────────────
+
+async function sendDailyBriefing(period) {
+  const client = getSupabaseClient();
+  const botToken = env('SLACK_BOT_TOKEN');
+  const channel = env('SLACK_CHANNEL_ID');
+  if (!botToken || !channel) return;
+
+  let campaigns = [], wallet = { balance: 0, auto_topup_threshold: 100 }, approvals = [];
+
+  if (client) {
+    const [cRes, wRes, aRes] = await Promise.all([
+      client.from('cmo_campaigns').select('id,platform,goal_type,target_value,current_value,status,budget_spent,budget_requested').in('status', ['active', 'paused', 'pending_founder_approval']).order('created_at', { ascending: false }).limit(10),
+      client.from('cfo_wallet').select('balance,auto_topup_threshold').eq('tenant_id', demoTenantId).maybeSingle(),
+      client.from('founder_approvals').select('title,amount,status').eq('status', 'Pending Approval').limit(5)
+    ]);
+    campaigns = cRes.data || [];
+    wallet = wRes.data || wallet;
+    approvals = aRes.data || [];
+
+    // Store briefing in agent_messages for the UI to display
+    await client.from('agent_messages').insert({ tenant_id: demoTenantId, from_agent: 'CMO', to_agent: 'Founder', message_type: 'daily_briefing', payload: { period, campaigns, wallet_balance: Number(wallet.balance), approvals_count: approvals.length, generated_at: new Date().toISOString() }, status: 'processed', processed_at: new Date().toISOString() });
+  }
+
+  const active = campaigns.filter(c => c.status === 'active');
+  const pending = campaigns.filter(c => c.status === 'pending_founder_approval');
+  const balance = Number(wallet.balance);
+  const low = balance < Number(wallet.auto_topup_threshold || 100);
+  const today = new Date().toLocaleDateString('en-IN', { weekday: 'short', day: 'numeric', month: 'short' });
+
+  const lines = [
+    `*GOPU OS ${period} Briefing* | ${today}`,
+    '',
+    active.length
+      ? ['*Active Campaigns*', ...active.map(c => `  - ${c.platform}: ${c.current_value || 0}/${c.target_value} ${c.goal_type} | Spent: ₹${c.budget_spent || 0}`)].join('\n')
+      : 'No active campaigns.',
+    '',
+    pending.length ? `*Awaiting Your Approval* (${pending.length})\n${pending.map(c => `  - ${c.platform} — get ${c.target_value} ${c.goal_type} | Budget: ₹${c.budget_requested}`).join('\n')}` : '',
+    `*CFO Creative Wallet*: ₹${balance.toFixed(0)}${low ? ' ⚠️ Low balance' : ''}`,
+    approvals.length ? `*Founder Approvals Pending*: ${approvals.length}\n${approvals.map(a => `  - ${a.title}`).join('\n')}` : ''
+  ].filter(Boolean).join('\n');
+
+  await fetch('https://slack.com/api/chat.postMessage', {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${botToken}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ channel, text: lines })
+  });
+  console.log(`[briefing] ${period} briefing sent`);
+}
+
+async function handleGetBriefing(_request, response, origin) {
+  const client = getSupabaseClient();
+  if (!client) return sendJson(response, 200, { ok: true, briefings: [], _fallback: true }, origin);
+  const { data } = await client.from('agent_messages').select('id,payload,created_at').eq('message_type', 'daily_briefing').order('created_at', { ascending: false }).limit(5);
+  return sendJson(response, 200, { ok: true, briefings: data || [] }, origin);
+}
+
+function scheduleIST(hourIST, minuteIST, fn) {
+  function msUntilNext() {
+    const now = new Date();
+    const target = new Date(now);
+    target.setUTCHours(hourIST - 5, minuteIST - 30, 0, 0);
+    if (target <= now) target.setUTCDate(target.getUTCDate() + 1);
+    return target.getTime() - now.getTime();
+  }
+  function loop() {
+    setTimeout(() => {
+      fn();
+      setInterval(fn, 24 * 60 * 60 * 1000);
+    }, msUntilNext());
+  }
+  loop();
+}
+
 loadLocalEnv();
+
+// Schedule 3x daily briefings at 8am, 1pm, 7pm IST
+scheduleIST(8, 0, () => sendDailyBriefing('Morning'));
+scheduleIST(13, 0, () => sendDailyBriefing('Afternoon'));
+scheduleIST(19, 0, () => sendDailyBriefing('Evening'));
 
 const server = http.createServer((request, response) => {
   const routePath = new URL(request.url || '/', 'http://127.0.0.1').pathname;
@@ -1270,6 +1440,30 @@ const server = http.createServer((request, response) => {
   }
   if (request.method === 'GET' && routePath === '/api/cto/integrations/status') {
     handleCtoIntegrationsStatus(request, response);
+    return;
+  }
+  if (request.method === 'GET' && routePath === '/api/cfo/wallet') {
+    handleGetWallet(request, response, origin);
+    return;
+  }
+  if (request.method === 'POST' && routePath === '/api/cfo/wallet/topup') {
+    handleWalletTopup(request, response, origin);
+    return;
+  }
+  if (request.method === 'GET' && routePath === '/api/cmo/campaigns') {
+    handleGetCampaigns(request, response, origin);
+    return;
+  }
+  if (request.method === 'POST' && routePath.startsWith('/api/cmo/campaigns/') && routePath.endsWith('/progress')) {
+    handleUpdateCampaignProgress(request, response, origin, routePath);
+    return;
+  }
+  if (request.method === 'POST' && routePath === '/api/slack/budget-action') {
+    handleBudgetAction(request, response, origin);
+    return;
+  }
+  if (request.method === 'GET' && routePath === '/api/cmo/briefing') {
+    handleGetBriefing(request, response, origin);
     return;
   }
   sendJson(response, 404, { ok: false, status: 'not_found', message: 'Route not found.' });

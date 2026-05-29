@@ -130,6 +130,117 @@ function isLeadMessage(text = "") {
   return /(?:^|\n)\s*(?:new\s+lead|lead\b|buyer\b|product\b|quote|enquiry|inquiry|pricing)/i.test(text);
 }
 
+function isMarketingCommand(text = "") {
+  return /\b(promote|grow|boost|campaign|get\s+\d+\s+followers|increase\s+followers|social\s+media|run\s+ads?|digital\s+marketing|get\s+likes|grow\s+page)\b/i.test(text)
+    && !isLeadMessage(text);
+}
+
+function parseMarketingCommand(text = "") {
+  const lower = text.toLowerCase();
+  const platforms = ['instagram', 'linkedin', 'youtube', 'facebook', 'twitter'];
+  const platform = platforms.find(p => lower.includes(p)) || 'Instagram';
+  const goalTypes = ['followers', 'likes', 'reach', 'engagement', 'views'];
+  const goalType = goalTypes.find(g => lower.includes(g)) || 'followers';
+  const targetMatch = text.match(/(\d[\d,]*)\s*(?:followers?|likes?|reach|views?)/i);
+  const targetValue = targetMatch ? parseInt(targetMatch[1].replace(/,/g, ''), 10) : 1000;
+  const actions = ['promote', 'boost', 'grow', 'increase', 'run'];
+  const action = actions.find(a => lower.includes(a)) || 'promote';
+  const budgetMatch = text.match(/(?:₹|rs\.?|inr)\s*(\d[\d,]*)/i);
+  const budgetHint = budgetMatch ? parseInt(budgetMatch[1].replace(/,/g, ''), 10) : null;
+  return { platform, goalType, targetValue, action, budgetHint, rawText: text };
+}
+
+function estimateBudget(platform: string, targetValue: number) {
+  const cpf: Record<string, number> = { instagram: 0.8, facebook: 0.5, linkedin: 3, youtube: 1.2 };
+  const rate = cpf[platform?.toLowerCase()] || 1;
+  return Math.max(200, Math.min(Math.ceil((targetValue || 1000) * rate), 5000));
+}
+
+async function getOrCreateWallet(client: any) {
+  const { data } = await client.from('cfo_wallet').select('*').eq('tenant_id', demoTenantId).maybeSingle();
+  if (data) return data;
+  const seed = { tenant_id: demoTenantId, balance: 1000.00, auto_topup_threshold: 100.00, auto_topup_amount: 500.00, transactions: [] };
+  const { data: created } = await client.from('cfo_wallet').insert(seed).select('*').maybeSingle();
+  return created || seed;
+}
+
+async function deductWallet(client: any, campaignId: string, amount: number, description: string) {
+  const wallet = await getOrCreateWallet(client);
+  const newBalance = Math.max(0, Number(wallet.balance) - amount);
+  const tx = { id: crypto.randomUUID(), type: 'spend', amount: -amount, description, campaign_id: campaignId, at: new Date().toISOString() };
+  await client.from('cfo_wallet').update({ balance: newBalance, transactions: [...(wallet.transactions || []), tx], updated_at: new Date().toISOString() }).eq('tenant_id', demoTenantId);
+  return newBalance;
+}
+
+async function processMarketingCommand(event: Record<string, any>, text: string) {
+  const client = getSupabaseClient();
+  const cmd = parseMarketingCommand(text);
+  const campaignId = crypto.randomUUID();
+  const budgetRequested = cmd.budgetHint || estimateBudget(cmd.platform, cmd.targetValue);
+
+  if (client) {
+    // Create campaign
+    await client.from('cmo_campaigns').insert({
+      id: campaignId, tenant_id: demoTenantId,
+      platform: cmd.platform, goal_type: cmd.goalType, target_value: cmd.targetValue,
+      action: cmd.action, status: 'pending_budget', budget_requested: budgetRequested,
+      slack_channel: event.channel, slack_thread_ts: event.ts, slack_user_id: event.user,
+      metadata: { raw_text: cmd.rawText }
+    });
+
+    // COO → CMO
+    await client.from('agent_messages').insert({ tenant_id: demoTenantId, campaign_id: campaignId, from_agent: 'COO', to_agent: 'CMO', message_type: 'marketing_command', payload: { cmd }, status: 'processed', processed_at: new Date().toISOString() });
+
+    // CMO → CFO
+    await client.from('agent_messages').insert({ tenant_id: demoTenantId, campaign_id: campaignId, from_agent: 'CMO', to_agent: 'CFO', message_type: 'budget_request', payload: { budget_requested: budgetRequested, platform: cmd.platform, goal_type: cmd.goalType, target_value: cmd.targetValue }, status: 'pending' });
+
+    const wallet = await getOrCreateWallet(client);
+    const balance = Number(wallet.balance);
+    const needsApproval = budgetRequested > 500;
+
+    if (balance >= budgetRequested && !needsApproval) {
+      await deductWallet(client, campaignId, budgetRequested, `${cmd.platform} ${cmd.goalType} campaign`);
+      await client.from('cmo_campaigns').update({ status: 'active', budget_allocated: budgetRequested, started_at: new Date().toISOString() }).eq('id', campaignId);
+      return { campaignId, cmd, budgetRequested, walletStatus: 'auto_approved', balance: balance - budgetRequested };
+    }
+
+    await client.from('cmo_campaigns').update({ status: 'pending_founder_approval' }).eq('id', campaignId);
+    return { campaignId, cmd, budgetRequested, walletStatus: 'pending_approval', balance, needsApproval };
+  }
+
+  return { campaignId, cmd, budgetRequested, walletStatus: 'no_db', balance: 0 };
+}
+
+function buildMarketingReply(result: any) {
+  const { cmd, budgetRequested, walletStatus, balance, campaignId } = result;
+  const lines = [
+    `*GOPU OS Marketing Command Received*`,
+    `COO understood: ${cmd.action} ${cmd.platform} page`,
+    `Goal: Get ${cmd.targetValue.toLocaleString()} ${cmd.goalType}`,
+    `Campaign ID: ${campaignId}`,
+    '',
+    `*Agent Routing*`,
+    `COO -> CMO: Marketing command routed`,
+    `CMO -> CFO: Budget request raised — ₹${budgetRequested}`
+  ];
+
+  if (walletStatus === 'auto_approved') {
+    lines.push(`CFO: Auto-approved from Creative Wallet (balance now ₹${balance.toFixed(0)})`);
+    lines.push(`CMO: Campaign started`);
+    lines.push('');
+    lines.push('CMO is now running the campaign. You will receive morning, afternoon and evening briefings with progress updates.');
+  } else if (walletStatus === 'pending_approval') {
+    lines.push(`CFO: Budget ₹${budgetRequested} requires your approval (>${result.needsApproval ? '₹500 threshold' : 'wallet balance low'})`);
+    lines.push('');
+    lines.push('Reply with *APPROVE* to authorise the spend, or *REJECT* to cancel.');
+    lines.push(`Reference: campaign_id=${campaignId}`);
+  } else {
+    lines.push('Note: Supabase not configured — campaign tracked locally only.');
+  }
+
+  return lines.join('\n');
+}
+
 function formatMoney(value: unknown, currency = "USD") {
   const amount = Number(value || 0);
   if (!Number.isFinite(amount)) return `${currency} 0`;
@@ -385,8 +496,19 @@ export default async function handler(req: any, res: any) {
   if (!["message", "app_mention"].includes(event.type)) {
     return res.status(200).json({ ok: true, status: "ignored_event_type", event_type: event.type });
   }
+  if (isMarketingCommand(text)) {
+    try {
+      const result = await processMarketingCommand(event, text);
+      await sendSlackBotMessage({ channel: event.channel, thread_ts: event.thread_ts || event.ts, text: buildMarketingReply(result) });
+      return res.status(200).json({ ok: true, status: 'marketing_command_routed', campaignId: result.campaignId });
+    } catch (error: any) {
+      await sendSlackBotMessage({ channel: event.channel, thread_ts: event.thread_ts || event.ts, text: `GOPU OS could not process marketing command: ${error?.message || 'Unknown error'}` });
+      return res.status(200).json({ ok: false, status: 'marketing_command_failed', message: error?.message });
+    }
+  }
+
   if (!isLeadMessage(text)) {
-    return res.status(200).json({ ok: true, status: "ignored_not_lead", hint: "Message must contain: lead, buyer, product, quote, enquiry, or pricing" });
+    return res.status(200).json({ ok: true, status: "ignored_not_lead", hint: "Message must contain: lead, buyer, product, quote, enquiry, or pricing. For marketing: promote, grow, boost, campaign, get followers." });
   }
 
   try {

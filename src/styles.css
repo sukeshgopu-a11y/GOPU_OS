@@ -33101,3 +33101,37 @@ a,
   .dm-weekly-row { grid-template-columns: 1fr; }
   .dm-weekly-day { font-size: 0.75rem; }
 }
+
+/* ── CFO Creative Wallet ── */
+.cfo-creative-wallet .wallet-balance-row { display: flex; align-items: baseline; gap: 12px; margin: 8px 0 10px; }
+.wallet-balance { font-size: 1.8rem; font-weight: 800; }
+.wallet-balance-green { color: #4ade80; }
+.wallet-balance-amber { color: #fbbf24; }
+.wallet-balance-red { color: #f87171; }
+.wallet-threshold { font-size: 0.72rem; color: var(--text-muted, #8a8a9a); }
+.wallet-topup-row { display: flex; gap: 8px; margin-bottom: 8px; }
+.wallet-topup-input { flex: 1; padding: 7px 10px; border-radius: 6px; border: 1px solid var(--border, #2a2a3a); background: var(--input-bg, #0e0e18); color: var(--text, #e0e0f0); font-size: 0.8rem; }
+.wallet-msg { font-size: 0.75rem; color: var(--text-muted, #8a8a9a); margin: 4px 0; }
+.wallet-txns { margin-top: 10px; display: flex; flex-direction: column; gap: 4px; }
+.wallet-txn-header { font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.04em; color: var(--text-muted, #8a8a9a); margin-bottom: 2px; }
+.wallet-txn { display: flex; justify-content: space-between; font-size: 0.75rem; padding: 4px 0; border-bottom: 1px solid var(--border, #2a2a3a); }
+.wallet-txn-spend strong { color: #f87171; }
+.wallet-txn-topup strong { color: #4ade80; }
+
+/* ── CMO Active Campaigns ── */
+.campaign-list { display: flex; flex-direction: column; gap: 8px; margin-top: 8px; }
+.campaign-row { display: grid; grid-template-columns: 90px 160px 1fr 130px 70px; gap: 10px; align-items: center; font-size: 0.76rem; padding: 8px 0; border-bottom: 1px solid var(--border, #2a2a3a); }
+.campaign-platform { font-weight: 700; }
+.campaign-goal { color: var(--text-muted, #c0c0d0); }
+.campaign-progress-wrap { display: flex; align-items: center; gap: 8px; background: var(--card-bg, #14141e); border-radius: 4px; height: 18px; padding: 0 8px; position: relative; overflow: hidden; }
+.campaign-progress-bar { position: absolute; left: 0; top: 0; bottom: 0; background: var(--accent, #6366f1); border-radius: 4px; transition: width 0.5s; }
+.campaign-progress-wrap span { position: relative; z-index: 1; font-size: 0.68rem; }
+.campaign-status { padding: 2px 8px; border-radius: 10px; font-size: 0.68rem; font-weight: 600; text-transform: capitalize; }
+.campaign-status-green { background: #14532d; color: #4ade80; }
+.campaign-status-amber { background: #3b2f0a; color: #fbbf24; }
+.campaign-status-muted { background: var(--card-bg, #14141e); color: var(--text-muted, #8a8a9a); }
+.campaign-status-red { background: #3b1a1a; color: #f87171; }
+.campaign-budget { font-size: 0.72rem; color: var(--text-muted, #8a8a9a); text-align: right; }
+
+/* ── Home Briefing timestamp ── */
+.briefing-timestamp { font-size: 0.68rem; color: var(--text-muted, #8a8a9a); margin-top: 4px; }
