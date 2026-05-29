@@ -1,8 +1,6 @@
 name: Auto-merge Claude AI branches to main
 on:
-  push:
-    branches:
-      - 'claude/**'
+  workflow_dispatch:
 jobs:
   auto-merge:
     runs-on: ubuntu-latest
@@ -21,7 +19,7 @@ jobs:
           git config user.email "github-actions[bot]@users.noreply.github.com"
       - name: Merge Claude branch into main
         run: |
-          BRANCH="${{ github.ref_name }}"
+          BRANCH="${{ github.event.inputs.branch || github.ref_name }}"
           git fetch origin "$BRANCH"
-          git merge "origin/$BRANCH" --no-edit --allow-unrelated-histories
-          git push origin main
+          git merge "origin/$BRANCH" --no-edit --allow-unrelated-histories || echo "Nothing to merge."
+          git push origin main || echo "Nothing to push."
