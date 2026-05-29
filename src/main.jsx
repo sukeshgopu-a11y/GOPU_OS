@@ -1129,198 +1129,7 @@ const masterDataModels = [
   'master_data_audit_log'
 ];
 
-const approvalWallRequests = [
-  {
-    id: 'approval-lead-sukesh',
-    request_type: 'New Lead Review',
-    title: 'New lead: Sukesh — Onion 20 MT to Australia',
-    department: 'Sales',
-    executive_owner: 'CIO Command',
-    buyer_name: 'Sukesh',
-    amount: 'Pending quote',
-    risk_level: 'Low',
-    priority: 'Medium',
-    status: 'New Lead',
-    category: 'Lead Intake',
-    summary: 'New buyer enquiry for Onion 20 MT delivery to Australia. Requires COO intake review and CFO pricing before quoting.',
-    details: {
-      buyer: 'Sukesh',
-      product: 'Onion',
-      quantity: '20 MT',
-      destination: 'Australia',
-      shipping_mode: 'Sea freight',
-      price_offered: 'Pending',
-      expected_margin: 'Pending CFO review',
-      market_comparison: 'Australia onion import lane — standard FOB pricing applies',
-      operational_availability: 'Subject to warehouse stock and supplier confirmation',
-      cio_notes: 'Lead created via Director Command. Buyer verification pending.',
-      coo_notes: 'Stock and supplier availability check required before pricing.',
-      risk_summary: 'Low risk new enquiry. Proceed with COO intake review and CFO margin check.'
-    },
-    created_at: 'Today 10:00'
-  },
-  {
-    id: 'approval-quote-dubai',
-    request_type: 'Quotation Approval',
-    title: 'Dubai buyer quotation requires founder approval',
-    department: 'Finance',
-    executive_owner: 'CFO Command',
-    buyer_name: 'Buyer pending',
-    amount: '$42,800',
-    risk_level: 'High',
-    priority: 'High',
-    status: 'Waiting Founder Action',
-    category: 'Financial',
-    summary: 'Quote margin is below target after freight assumption increased.',
-    details: {
-      buyer: 'Buyer pending',
-      product: 'Product pending',
-      quantity: '18 MT',
-      destination: 'Destination pending',
-      shipping_mode: 'Sea freight',
-      price_offered: '$2,378 / MT',
-      expected_margin: '8.4% draft margin',
-      market_comparison: '2.1% below current comparable export lane',
-      freight_assumption: 'Freight estimate pending final carrier confirmation',
-      operational_availability: 'Stock allocation possible after packing confirmation',
-      cfo_notes: 'Recommend founder review because margin is below standard threshold.',
-      coo_notes: 'Supplier packing confirmation still pending.',
-      risk_summary: 'Low-margin quote plus unconfirmed freight may reduce profitability.'
-    },
-    created_at: 'Today 09:20'
-  },
-  {
-    id: 'approval-doc-co',
-    request_type: 'Document Review',
-    title: 'Certificate of Origin field review',
-    department: 'Documentation',
-    executive_owner: 'COO Command',
-    buyer_name: 'Korea Foods Import Co.',
-    amount: 'Document release',
-    risk_level: 'Critical',
-    priority: 'Critical',
-    status: 'High Risk',
-    category: 'Compliance',
-    summary: 'Origin/supporting field requires founder review before document release.',
-    details: {
-      document_type: 'Certificate of Origin draft',
-      company_details_used: 'Company master draft fields',
-      missing_fields: 'Origin support reference and declaration note',
-      legal_sensitive_fields: 'Origin claim, HS code-sensitive field',
-      coo_notes: 'Founder review required before document release.',
-      risk_summary: 'Incorrect origin claim could create compliance exposure.'
-    },
-    created_at: 'Today 10:05'
-  },
-  {
-    id: 'approval-marketing-organic',
-    request_type: 'Marketing Claim Review',
-    title: 'Organic claim needs legal/founder review',
-    department: 'Marketing',
-    executive_owner: 'CMO Command',
-    buyer_name: 'LinkedIn campaign',
-    amount: 'Campaign claim',
-    risk_level: 'High',
-    priority: 'High',
-    status: 'Attention Required',
-    category: 'Marketing',
-    summary: 'Campaign copy proposes “100% Organic” claim before certificate confirmation.',
-    details: {
-      campaign_platform: 'LinkedIn / buyer outreach',
-      proposed_claim: '100% Organic',
-      risk_note: 'Certification evidence must be verified before publishing.',
-      cmo_notes: 'Recommend changing claim to certificate-backed wording.',
-      risk_summary: 'Marketing/legal claim may create buyer and regulatory exposure.'
-    },
-    created_at: 'Today 10:35'
-  },
-  {
-    id: 'approval-payment-terms',
-    request_type: 'Payment Term Approval',
-    title: 'Extended buyer payment terms requested',
-    department: 'Finance',
-    executive_owner: 'CFO Command',
-    buyer_name: 'Buyer pending',
-    amount: '$31,200',
-    risk_level: 'Medium',
-    priority: 'Medium',
-    status: 'Review Pending',
-    category: 'Financial',
-    summary: 'Buyer requested net-45 terms instead of standard advance/balance terms.',
-    details: {
-      buyer: 'Buyer pending',
-      product: 'Product pending',
-      quantity: '12 MT',
-      destination: 'Destination pending',
-      shipping_mode: 'Road + local dispatch',
-      price_offered: '$2,600 / MT',
-      expected_margin: '13.2% draft margin',
-      market_comparison: 'Within current range',
-      freight_assumption: 'Local dispatch estimate stable',
-      operational_availability: 'Available after QC release',
-      cfo_notes: 'Founder approval required for payment term exception.',
-      coo_notes: 'No operational block detected.',
-      risk_summary: 'Cash-flow exposure increases if payment terms are accepted.'
-    },
-    created_at: 'Today 11:00'
-  },
-  {
-    id: 'approval-shipment-risk-wall',
-    request_type: 'Shipment Risk Escalation',
-    title: 'Shipment deadline risk before buyer commitment',
-    department: 'Operations',
-    executive_owner: 'COO Command',
-    buyer_name: 'Nordic Foods AB',
-    amount: 'Shipment commitment',
-    risk_level: 'High',
-    priority: 'High',
-    status: 'Escalated',
-    category: 'Operations',
-    summary: 'Supplier confirmation is pending before buyer delivery promise.',
-    details: {
-      buyer: 'Nordic Foods AB',
-      product: 'Turmeric powder',
-      quantity: '9 MT',
-      destination: 'Gothenburg, Sweden',
-      shipping_mode: 'Sea freight',
-      freight_assumption: 'Vessel cutoff window requires confirmation',
-      operational_availability: 'Packing confirmation pending',
-      cfo_notes: 'No pricing block; operational risk is primary.',
-      coo_notes: 'Do not commit deadline until supplier confirms packing.',
-      risk_summary: 'Buyer promise could be missed if shipment planning proceeds early.'
-    },
-    created_at: 'Today 11:25'
-  },
-  {
-    id: 'approval-discount',
-    request_type: 'Discount Request',
-    title: 'Discount request above threshold',
-    department: 'Sales',
-    executive_owner: 'CFO Command',
-    buyer_name: 'Pacific Retail Group',
-    amount: '$4,900 discount impact',
-    risk_level: 'Medium',
-    priority: 'Medium',
-    status: 'Draft Prepared',
-    category: 'Financial',
-    summary: 'Draft discount request exceeds standard approval threshold.',
-    details: {
-      buyer: 'Pacific Retail Group',
-      product: 'Mixed spice cartons',
-      quantity: '6 MT',
-      destination: 'Auckland, New Zealand',
-      shipping_mode: 'Sea freight',
-      price_offered: 'Discounted draft quote',
-      expected_margin: '10.1% after discount',
-      market_comparison: 'Slightly below target lane margin',
-      freight_assumption: 'Freight estimate stable',
-      cfo_notes: 'Discount can be considered with founder condition.',
-      coo_notes: 'No document or packing block detected.',
-      risk_summary: 'Margin compression and precedent risk.'
-    },
-    created_at: 'Today 12:10'
-  }
-];
+const approvalWallRequests = [];
 
 const approvalFilters = ['All', 'Pending Approval', 'Needs Review', 'Approved', 'Rejected', 'High Risk', 'Financial', 'Compliance', 'Marketing', 'Operations'];
 
@@ -10421,22 +10230,7 @@ const paymentTermRiskProfiles = {
   Escrow: ['Low', 'Funds are controlled by neutral escrow if terms are verified.', 'Verify escrow provider and release conditions.'],
   'Mixed Terms - Manual Review': ['High', 'Custom terms need manual commercial review.', 'CFO must document exact payment sequence.']
 };
-const pricingCostRowsSeed = [
-  ['raw_material_cost', 'Raw Material', 'EXW'],
-  ['packaging_cost', 'Packaging', 'EXW'],
-  ['processing_cost', 'Processing', 'EXW'],
-  ['labor_cost', 'Labor', 'EXW'],
-  ['overhead_cost', 'Overhead', 'EXW'],
-  ['inland_logistics_cost', 'Inland Logistics', 'FOB'],
-  ['export_clearance_cost', 'Export Clearance', 'FOB'],
-  ['cha_charges_cost', 'CHA Charges', 'FOB'],
-  ['documentation_charges_cost', 'Documentation Charges', 'FOB'],
-  ['port_charges_cost', 'Port Charges / Order', 'FOB'],
-  ['freight_cost', 'Freight', 'CFR'],
-  ['insurance_cost', 'Insurance', 'CIF'],
-  ['commission_cost', 'Commission', 'ALWAYS'],
-  ['misc_cost', 'Miscellaneous', 'ALWAYS']
-];
+const pricingCostRowsSeed = [];
 const pricingMarketFallbacks = {
   pepper: 708,
   cardamom: 2419.4,
@@ -12889,14 +12683,14 @@ function CfoPaymentVaultInteractiveTab({ data }) {
     const amountInr = moneyNumber(metadata.amountInr) || 1000;
     const vendorName = metadata.vendorName || 'OpenAI';
     const tokenizedMethod = {
-      ...billingMethodConnectedSeed[0],
+      ...(billingMethodConnectedSeed[0] || {}),
       id: `cfo-pay-method-${Date.now()}`,
       payment_token_reference: `pay_tok_${Math.random().toString(36).slice(2, 8).toUpperCase()}`,
-      provider: metadata.bankName || billingMethodConnectedSeed[0].provider,
-      masked_reference: metadata.maskedReference || billingMethodConnectedSeed[0].masked_reference,
+      provider: metadata.bankName || billingMethodConnectedSeed[0]?.provider || '',
+      masked_reference: metadata.maskedReference || billingMethodConnectedSeed[0]?.masked_reference || '',
       billing_owner: metadata.cardName || 'Founder Office',
-      expiry_month: metadata.expiryMonth || billingMethodConnectedSeed[0].expiry_month,
-      expiry_year: metadata.expiryYear || billingMethodConnectedSeed[0].expiry_year,
+      expiry_month: metadata.expiryMonth || billingMethodConnectedSeed[0]?.expiry_month || '',
+      expiry_year: metadata.expiryYear || billingMethodConnectedSeed[0]?.expiry_year || '',
       monthly_limit_inr: amountInr,
       transaction_limit_inr: amountInr,
       auto_renew_enabled: Boolean(metadata.autoRenewAllowed),
@@ -17030,129 +16824,9 @@ function paymentVaultState(record) {
   return 'Ready';
 }
 
-const paymentRecordsSeed = [
-  {
-    id: 'pay-openai-credits',
-    vendor: 'OpenAI',
-    category: 'Trusted Infrastructure',
-    amountInr: 950,
-    renewalType: 'Credit top-up',
-    paymentStatus: 'OTP Required',
-    approvalStatus: 'Monitoring',
-    cfoConfirmation: 'Validated',
-    cooConfirmation: 'Confirmed',
-    founderApproval: 'Not required',
-    receiptStatus: 'Receipt Pending',
-    paymentDate: 'Pending',
-    reason: 'AI workflow credits for GOPU Export OS modules.',
-    subscriptionPeriod: 'On-demand credit top-up',
-    paymentMethod: 'Provider token required / no raw method stored',
-    riskLevel: 'Low',
-    linkedWorkflows: ['CTO credit watch', 'CFO validation', 'Payment Vault']
-  },
-  {
-    id: 'pay-supabase-cycle',
-    vendor: 'Supabase',
-    category: 'Trusted Infrastructure',
-    amountInr: 1250,
-    renewalType: 'Monthly platform renewal',
-    paymentStatus: 'Pending Approval',
-    approvalStatus: 'COO + CFO Review',
-    cfoConfirmation: 'Review',
-    cooConfirmation: 'Pending',
-    founderApproval: 'Not required if confirmed',
-    receiptStatus: 'Invoice Pending',
-    paymentDate: 'Pending',
-    reason: 'Database and auth platform continuity.',
-    subscriptionPeriod: 'Monthly billing cycle',
-    paymentMethod: 'Provider token required / no raw method stored',
-    riskLevel: 'Medium',
-    linkedWorkflows: ['COO operational necessity', 'CFO budget validation']
-  },
-  {
-    id: 'pay-vercel-renewal',
-    vendor: 'Vercel',
-    category: 'Trusted Infrastructure',
-    amountInr: 780,
-    renewalType: 'Plan renewal',
-    paymentStatus: 'Saved to Vault',
-    approvalStatus: 'Approved',
-    cfoConfirmation: 'Confirmed',
-    cooConfirmation: 'Confirmed',
-    founderApproval: 'Not required',
-    receiptStatus: 'Reviewed',
-    paymentDate: 'May 24, 2026',
-    reason: 'Frontend deployment hosting.',
-    subscriptionPeriod: 'Monthly',
-    paymentMethod: 'Provider token required / no raw method stored',
-    riskLevel: 'Low',
-    linkedWorkflows: ['Deployment monitoring', 'Receipt repository']
-  },
-  {
-    id: 'pay-cloudflare-domain',
-    vendor: 'Cloudflare',
-    category: 'Domain / SSL renewal',
-    amountInr: 1680,
-    renewalType: 'Annual domain renewal',
-    paymentStatus: 'Pending Approval',
-    approvalStatus: 'Founder Approval Required',
-    cfoConfirmation: 'Validated',
-    cooConfirmation: 'Confirmed',
-    founderApproval: 'Required',
-    receiptStatus: 'Missing',
-    paymentDate: 'Pending',
-    reason: 'Domain and SSL continuity.',
-    subscriptionPeriod: 'Annual',
-    paymentMethod: 'Provider token required / no raw method stored',
-    riskLevel: 'High',
-    linkedWorkflows: ['Director Command Center', 'Payment freeze guardrail']
-  },
-  {
-    id: 'pay-resend-email',
-    vendor: 'Resend',
-    category: 'Email provider',
-    amountInr: 640,
-    renewalType: 'Monthly provider invoice',
-    paymentStatus: 'Payment Completed',
-    approvalStatus: 'Approved',
-    cfoConfirmation: 'Confirmed',
-    cooConfirmation: 'Confirmed',
-    founderApproval: 'Not required',
-    receiptStatus: 'Receipt Pending',
-    paymentDate: 'May 23, 2026',
-    reason: 'Transactional email provider.',
-    subscriptionPeriod: 'Monthly',
-    paymentMethod: 'Provider token required / no raw method stored',
-    riskLevel: 'Low',
-    linkedWorkflows: ['Receipt capture', 'CFO vault storage']
-  },
-  {
-    id: 'pay-whatsapp-api',
-    vendor: 'WhatsApp API',
-    category: 'Automation tools',
-    amountInr: 1425,
-    renewalType: 'Usage quota',
-    paymentStatus: 'Payment Processing',
-    approvalStatus: 'CFO + COO Confirmed',
-    cfoConfirmation: 'Confirmed',
-    cooConfirmation: 'Confirmed',
-    founderApproval: 'Not required',
-    receiptStatus: 'Pending',
-    paymentDate: 'Processing',
-    reason: 'Founder command layer message quota.',
-    subscriptionPeriod: 'Usage-based',
-    paymentMethod: 'Provider token required / no raw method stored',
-    riskLevel: 'Medium',
-    linkedWorkflows: ['WhatsApp command layer', 'CFO payment confirmation']
-  }
-];
+const paymentRecordsSeed = [];
 
-const paymentReceiptsSeed = [
-  ['OpenAI', 'Provider invoice', 'May 26, 2026', '₹950', 'pay-openai-credits', 'CTO Command', 'Receipt Pending'],
-  ['Vercel', 'Receipt', 'May 24, 2026', '₹780', 'pay-vercel-renewal', 'CTO Command', 'Reviewed'],
-  ['Resend', 'Subscription bill', 'May 23, 2026', '₹640', 'pay-resend-email', 'CFO Command', 'Pending Review'],
-  ['Supabase', 'Renewal confirmation', 'Pending', '₹1,250', 'pay-supabase-cycle', 'CFO Command', 'Missing']
-].map(([vendor, documentType, date, amount, linkedPayment, uploadedBy, vaultStatus], index) => ({ id: `receipt-${index}`, vendor, documentType, date, amount, linkedPayment, uploadedBy, vaultStatus }));
+const paymentReceiptsSeed = [];
 
 const vendorTrustSeed = [
   ['OpenAI', 'Trusted Infrastructure', 'Trusted', '₹1,000', 'Allowed under cap', 'Low', 'Pending', 'Usage-based'],
@@ -17162,12 +16836,7 @@ const vendorTrustSeed = [
   ['Unknown SaaS vendor', 'Unknown Vendor', 'Blocked', '₹0', 'Not allowed', 'Critical', 'Never paid', 'Unknown']
 ].map(([vendorName, category, trustLevel, monthlyLimit, autoPayEligibility, riskLevel, lastPayment, renewalFrequency], index) => ({ id: `vendor-${index}`, vendorName, category, trustLevel, monthlyLimit, autoPayEligibility, riskLevel, lastPayment, renewalFrequency }));
 
-const paymentForecastSeed = [
-  ['OpenAI credits projected in 5 days', 'OpenAI', 'May 31, 2026', '₹950', 'Credit top-up', 'Attention'],
-  ['Supabase billing cycle in 9 days', 'Supabase', 'June 4, 2026', '₹1,250', 'Monthly renewal', 'Monitoring'],
-  ['Vercel renewal in 14 days', 'Vercel', 'June 9, 2026', '₹780', 'Plan renewal', 'Monitoring'],
-  ['Cloudflare domain renewal', 'Cloudflare', 'June 18, 2026', '₹1,680', 'Annual renewal', 'Founder Approval Required']
-].map(([title, vendor, expectedDate, projectedAmount, forecastType, status], index) => ({ id: `forecast-${index}`, title, vendor, expectedDate, projectedAmount, forecastType, status }));
+const paymentForecastSeed = [];
 
 function getDaysRemaining(expiryDate) {
   const target = new Date(expiryDate);
@@ -17245,24 +16914,7 @@ const paymentProviderConnected = false;
 
 const trustedBillingVendors = ['OpenAI', 'Supabase', 'Vercel', 'Cloudflare', 'Resend', 'WhatsApp API', 'Domain / SSL Provider'];
 
-const billingVendorRuleSeed = [
-  ['OpenAI', 'Trusted infrastructure', true, 1000, 'Safe auto-renew allowed'],
-  ['Supabase', 'Trusted infrastructure', true, 1000, 'Safe auto-renew allowed'],
-  ['Vercel', 'Trusted infrastructure', true, 1500, 'CFO + COO confirmation above ₹1,000'],
-  ['Cloudflare', 'Domain / SSL provider', true, 1500, 'CFO + COO confirmation above ₹1,000'],
-  ['Resend', 'Trusted infrastructure', true, 1000, 'Safe auto-renew allowed'],
-  ['WhatsApp API', 'Trusted infrastructure', true, 1000, 'Safe auto-renew allowed'],
-  ['Unknown vendor', 'Unknown', false, 0, 'Blocked']
-].map(([vendor_name, vendor_type, auto_renew_allowed, vendor_limit_inr, status], index) => ({
-  id: `billing-vendor-rule-${index}`,
-  billing_method_id: 'pay-method-local-token',
-  vendor_name,
-  vendor_type,
-  auto_renew_allowed,
-  vendor_limit_inr,
-  status,
-  created_at: '2026-05-26'
-}));
+const billingVendorRuleSeed = [];
 
 const billingAuditSeed = [
   ['billing_method_connected', 'CFO Command', 'Provider returned token metadata only. Raw payment credentials not received by GOPU OS.'],
@@ -17280,28 +16932,9 @@ const billingAuditSeed = [
   created_at: `2026-05-26 0${index + 9}:12`
 }));
 
-const billingMethodConnectedSeed = [
-  {
-    id: 'pay-method-local-token',
-    tenant_id: demoTenantId,
-    provider: 'Stripe / Razorpay Gateway',
-    payment_token_reference: 'pay_tok_8F29XK',
-    masked_reference: 'Visa •••• 4821',
-    billing_owner: 'Founder Office',
-    expiry_month: '08',
-    expiry_year: '2029',
-    status: 'Active',
-    monthly_limit_inr: 1000,
-    transaction_limit_inr: 1000,
-    auto_renew_enabled: true,
-    linked_vendors: ['OpenAI', 'Supabase', 'Resend'],
-    last_used: 'Not used in GOPU OS',
-    risk_status: 'Low',
-    created_at: '2026-05-26'
-  }
-];
+const billingMethodConnectedSeed = [];
 
-function renewalRequestFromPayment(payment = paymentRecordsSeed[0]) {
+function renewalRequestFromPayment(payment = null) {
   return {
     id: `renewal-${payment.id}`,
     source: payment.linkedWorkflows?.[0] || 'Director queue',
@@ -17374,9 +17007,9 @@ function PaymentVaultDashboard({ navigate, onBack, view = 'payment-vault', payme
   const [billingAudit, setBillingAudit] = useState(billingAuditSeed);
   const [connectModalOpen, setConnectModalOpen] = useState(false);
   const [selectedBillingId, setSelectedBillingId] = useState(() => billingMethodConnectedSeed[0]?.id || '');
-  const [selectedId, setSelectedId] = useState(paymentId || paymentRecordsSeed[0].id);
-  const [expandedForecast, setExpandedForecast] = useState(paymentForecastSeed[0].id);
-  const [selectedRenewalRequest, setSelectedRenewalRequest] = useState(() => renewalRequestFromPayment(paymentRecordsSeed[0]));
+  const [selectedId, setSelectedId] = useState(paymentId || null);
+  const [expandedForecast, setExpandedForecast] = useState(null);
+  const [selectedRenewalRequest, setSelectedRenewalRequest] = useState(null);
   const [auditFilter, setAuditFilter] = useState('All');
   const [activeTab, setActiveTab] = useState(() => {
     if (view === 'payments' || view === 'detail') return 'Payments';
@@ -17443,14 +17076,14 @@ function PaymentVaultDashboard({ navigate, onBack, view = 'payment-vault', payme
     const amountInr = moneyNumber(metadata.amountInr) || 1000;
     const vendorName = metadata.vendorName || selectedRenewalRequest.vendor;
     const tokenizedMethod = {
-      ...billingMethodConnectedSeed[0],
+      ...(billingMethodConnectedSeed[0] || {}),
       id: `pay-method-${Date.now()}`,
       payment_token_reference: `pay_tok_${Math.random().toString(36).slice(2, 8).toUpperCase()}`,
-      provider: metadata.bankName || billingMethodConnectedSeed[0].provider,
-      masked_reference: metadata.maskedReference || billingMethodConnectedSeed[0].masked_reference,
+      provider: metadata.bankName || billingMethodConnectedSeed[0]?.provider || '',
+      masked_reference: metadata.maskedReference || billingMethodConnectedSeed[0]?.masked_reference || '',
       billing_owner: metadata.cardName || 'Founder Office',
-      expiry_month: metadata.expiryMonth || billingMethodConnectedSeed[0].expiry_month,
-      expiry_year: metadata.expiryYear || billingMethodConnectedSeed[0].expiry_year,
+      expiry_month: metadata.expiryMonth || billingMethodConnectedSeed[0]?.expiry_month || '',
+      expiry_year: metadata.expiryYear || billingMethodConnectedSeed[0]?.expiry_year || '',
       monthly_limit_inr: amountInr,
       transaction_limit_inr: amountInr,
       auto_renew_enabled: Boolean(metadata.autoRenewAllowed),
@@ -17843,10 +17476,10 @@ function ConnectBillingMethodModal({ request = renewalRequestFromPayment(), bill
     autoRenewAllowed,
     approvalRequirement: decision.approvalRequirement,
     cardName: billingMethod?.billing_owner || request.billingOwner || 'Founder Office',
-    bankName: billingMethod?.provider || billingMethodConnectedSeed[0].provider,
-    maskedReference: billingMethod?.masked_reference || billingMethodConnectedSeed[0].masked_reference,
-    expiryMonth: billingMethod?.expiry_month || billingMethodConnectedSeed[0].expiry_month,
-    expiryYear: billingMethod?.expiry_year || billingMethodConnectedSeed[0].expiry_year
+    bankName: billingMethod?.provider || billingMethodConnectedSeed[0]?.provider || '',
+    maskedReference: billingMethod?.masked_reference || billingMethodConnectedSeed[0]?.masked_reference || '',
+    expiryMonth: billingMethod?.expiry_month || billingMethodConnectedSeed[0]?.expiry_month || '',
+    expiryYear: billingMethod?.expiry_year || billingMethodConnectedSeed[0]?.expiry_year || ''
   };
 
   return (
@@ -19468,25 +19101,7 @@ function MobileBriefingPanel({ data, navigate }) {
   return <div className="mobile-screen-stack"><MobileExecutiveSummary summaries={data.executiveSummaries} navigate={navigate} /><section className="mobile-card"><div className="mobile-section-title"><span>Founder Action Plan</span><strong>Today’s mobile briefing</strong></div><div className="mobile-brief-list">{data.briefingPlan.map((item) => <span key={item}>{item}</span>)}</div><div className="mobile-card-actions"><button onClick={() => navigate('/export-os/morning-briefing')}>Open Full Briefing</button><button onClick={() => navigate('/export-os/director')}>Open Director Queue</button></div></section></div>;
 }
 
-const warehouseInventorySeed = [
-  ['Product pending', 'Grade A', 'BP2401', 1200, 400, 'KG', 'Warehouse A / Rack 03', 'Healthy', 'Today 09:15'],
-  ['Product pending', 'Premium', 'TF2408', 850, 600, 'KG', 'Warehouse A / Rack 08', 'Reserved', 'Today 09:25'],
-  ['Red Chilli', 'Export Grade', 'RC2410', 180, 0, 'KG', 'Warehouse B / Bin 11', 'Low Stock', 'Yesterday 16:40'],
-  ['Cumin Seeds', 'Sortex', 'CS2404', 0, 300, 'KG', 'Quality Hold Area', 'Quality Hold', 'Today 08:20'],
-  ['Product pending', 'Retail Pack', 'CP2402', 640, 0, 'KG', 'Warehouse C / Pack Zone', 'Dispatch Ready', 'Today 10:05'],
-  ['Cardamom', '7mm', 'CD2405', 90, 0, 'KG', 'Secure Store', 'Review Required', 'Yesterday 13:30']
-].map(([product, grade, batch, available, reserved, unit, location, status, lastUpdated], index) => ({
-  id: `inventory-${index}`,
-  product,
-  grade,
-  batch,
-  available,
-  reserved,
-  unit,
-  location,
-  status,
-  lastUpdated
-}));
+const warehouseInventorySeed = [];
 
 const stockMovementSeed = [
   ['Inward Stock', 'Product pending', 'BP2401', '1,200 KG', 'Warehouse Manager', 'Pending shipment allocation', 'Today 08:50', 'Monitoring'],
@@ -19502,12 +19117,7 @@ const shipmentAllocationSeed = [
   ['VNM-SHP-003', 'Product pending / CP2402', '240 KG', '400 KG', 'Ready', 'Document Factory linked', 'Dispatch Ready']
 ].map(([shipment, allocatedStock, allocated, remaining, packingReadiness, invoiceLinkage, status], index) => ({ id: `allocation-${index}`, shipment, allocatedStock, allocated, remaining, packingReadiness, invoiceLinkage, status }));
 
-const batchTrackingSeed = [
-  ['BP2401', 'May 20, 2026', 'Malabar Spice Supplier', 'Passed', 'Country pending-SHP-001', 'Warehouse A / Rack 03', '6 days', 'Active'],
-  ['TF2408', 'May 18, 2026', 'Nizam Agro', 'Passed', 'OMN-SHP-002', 'Warehouse A / Rack 08', '8 days', 'Reserved'],
-  ['CS2404', 'May 15, 2026', 'Gujarat Seeds Co', 'Hold', 'Blocked shipment', 'Quality Hold Area', '11 days', 'Quality Hold'],
-  ['CD2405', 'April 22, 2026', 'Kerala Cardamom House', 'Review', 'None', 'Secure Store', '34 days', 'Review Required']
-].map(([batch, inwardDate, supplier, qualityStatus, reservedShipments, location, stockAge, reviewStatus], index) => ({ id: `batch-${index}`, batch, inwardDate, supplier, qualityStatus, reservedShipments, location, stockAge, reviewStatus }));
+const batchTrackingSeed = [];
 
 const qualityHoldSeed = [
   ['Damaged stock', 'Medium', 'Outer bag damage found in receiving bay.', 'Review Required'],
@@ -19532,18 +19142,13 @@ const warehouseTimelineSeed = [
   ['COO Command', '10:45', 'shortage escalation draft prepared', 'Review Required']
 ];
 
-const inventoryForecastSeed = [
-  ['Product pending', 'Projected shortage', 'Stock may fall below safe threshold in 5 days if Country pending allocation expands.', 'Medium', 'May 31, 2026'],
-  ['Export bags', 'Procurement alert', 'Packing bags require reorder before Country pending shipment cycle.', 'High', 'May 28, 2026'],
-  ['Cumin Seeds', 'Dispatch impact', 'Quality hold could block shipment allocation.', 'High', 'Today'],
-  ['Cardamom', 'Stock aging', 'Batch CD2405 needs review due to age and value.', 'Medium', 'This week']
-].map(([product, forecastType, projectedIssue, severity, expectedDate], index) => ({ id: `forecast-inventory-${index}`, product, forecastType, projectedIssue, severity, expectedDate }));
+const inventoryForecastSeed = [];
 
 function WarehouseDashboard({ navigate, onBack, view = 'warehouse', inventoryId }) {
   const [inventory, setInventory] = useState(warehouseInventorySeed);
   const [filter, setFilter] = useState('All');
-  const [selectedId, setSelectedId] = useState(inventoryId || warehouseInventorySeed[0].id);
-  const [expandedBatch, setExpandedBatch] = useState(batchTrackingSeed[0].id);
+  const [selectedId, setSelectedId] = useState(inventoryId || null);
+  const [expandedBatch, setExpandedBatch] = useState(null);
   const [dispatchPlan, setDispatchPlan] = useState('');
   const [timeline, setTimeline] = useState(warehouseTimelineSeed);
   const [actionNotice, setActionNotice] = useState('');
@@ -19743,71 +19348,9 @@ function getWarehouseState(status) {
   return 'online';
 }
 
-const supplierDirectorySeed = [
-  {
-    id: 'supplier-malabar-spice',
-    name: 'Malabar Spice Supplier',
-    location: 'Kochi, Kerala',
-    products: ['Product pending', 'Cardamom'],
-    contact: 'Anil Varma',
-    phone: '+91-90000-11001',
-    whatsapp: '+91-90000-11001',
-    email: 'procurement-local@malabar.local',
-    score: 91,
-    lastResponse: 'Today 09:20',
-    status: 'Active',
-    risk: 'Low'
-  },
-  {
-    id: 'supplier-nizam-agro',
-    name: 'Nizam Agro',
-    location: 'Nizamabad, Telangana',
-    products: ['Product pending', 'Turmeric Powder'],
-    contact: 'Farooq Khan',
-    phone: '+91-90000-22002',
-    whatsapp: '+91-90000-22002',
-    email: 'sales-local@nizamagro.local',
-    score: 78,
-    lastResponse: 'Yesterday 17:10',
-    status: 'Pending Confirmation',
-    risk: 'Medium'
-  },
-  {
-    id: 'supplier-gujarat-seeds',
-    name: 'Gujarat Seeds Co',
-    location: 'Unjha, Gujarat',
-    products: ['Cumin Seeds', 'Fennel Seeds'],
-    contact: 'Mehul Patel',
-    phone: '+91-90000-33003',
-    whatsapp: '+91-90000-33003',
-    email: 'exports-local@gujaratseeds.local',
-    score: 64,
-    lastResponse: '2 days ago',
-    status: 'Quality Issue',
-    risk: 'High'
-  },
-  {
-    id: 'supplier-deccan-chilli',
-    name: 'Deccan Chilli Traders',
-    location: 'Guntur, Andhra Pradesh',
-    products: ['Red Chilli', 'Chilli Powder'],
-    contact: 'Sravani Rao',
-    phone: '+91-90000-44004',
-    whatsapp: '+91-90000-44004',
-    email: 'trade-local@deccanchilli.local',
-    score: 72,
-    lastResponse: 'Today 08:05',
-    status: 'Monitoring',
-    risk: 'Medium'
-  }
-];
+const supplierDirectorySeed = [];
 
-const supplierProductsSeed = [
-  ['Product pending', 'Malabar Spice Supplier', '1,800 KG', 'Grade A', 'May 29, 2026', 'INR 612 / KG', 'Available'],
-  ['Product pending', 'Nizam Agro', '1,200 KG', 'Premium', 'May 30, 2026', 'Price pending', 'Price Pending'],
-  ['Cumin Seeds', 'Gujarat Seeds Co', '600 KG', 'Sortex', 'Needs review', 'INR 248 / KG', 'Quality Review'],
-  ['Red Chilli', 'Deccan Chilli Traders', 'Not confirmed', 'Export Grade', 'June 1, 2026', 'INR 198 / KG', 'Needs Confirmation']
-].map(([product, supplier, quantity, grade, readyDate, price, status], index) => ({ id: `supplier-product-${index}`, product, supplier, quantity, grade, readyDate, price, status }));
+const supplierProductsSeed = [];
 
 const procurementRequestSeed = [
   ['Product pending', '900 KG', 'May 30, 2026', 'Country pending-SHP-001', 'Malabar Spice Supplier', 'Quote Requested', 'COO Command', 'High'],
@@ -19846,7 +19389,7 @@ const purchasePlanningSeed = [
 function SupplierProcurementDashboard({ navigate, onBack, view = 'suppliers', supplierId }) {
   const [suppliers, setSuppliers] = useState(supplierDirectorySeed);
   const [filter, setFilter] = useState('All');
-  const [selectedId, setSelectedId] = useState(supplierId || supplierDirectorySeed[0].id);
+  const [selectedId, setSelectedId] = useState(supplierId || null);
   const [requests, setRequests] = useState(procurementRequestSeed);
   const [followups, setFollowups] = useState(supplierFollowupSeed);
   const [notice, setNotice] = useState('');
@@ -20034,95 +19577,9 @@ function getSupplierState(status) {
   return 'online';
 }
 
-const buyerDirectorySeed = [
-  {
-    id: 'buyer-al-noor',
-    buyerName: 'Buyer contact pending',
-    company: 'Buyer pending',
-    country: 'Country pending',
-    email: 'buyer-local@alnoor.local',
-    phone: '+971-50-000-1101',
-    whatsapp: '+971-50-000-1101',
-    interests: ['Product pending', 'Product pending'],
-    lastContact: 'Today 09:35',
-    openEnquiries: 2,
-    quoteValue: 'No live amount',
-    status: 'Quote Pending',
-    risk: 'Medium',
-    relationshipValue: 'High Value'
-  },
-  {
-    id: 'buyer-oman-gulf',
-    buyerName: 'Fatima Al Harthy',
-    company: 'Oman Gulf Wholesale',
-    country: 'Oman',
-    email: 'procurement-local@omangulf.local',
-    phone: '+968-9000-2202',
-    whatsapp: '+968-9000-2202',
-    interests: ['Product pending', 'Cumin Seeds'],
-    lastContact: 'Yesterday 16:10',
-    openEnquiries: 1,
-    quoteValue: 'No live amount',
-    status: 'Follow-up Due',
-    risk: 'Low',
-    relationshipValue: 'Active'
-  },
-  {
-    id: 'buyer-vietnam-spice',
-    buyerName: 'Linh Tran',
-    company: 'Country pending Spice Distribution',
-    country: 'Country pending',
-    email: 'imports-local@vnspice.local',
-    phone: '+84-900-3303',
-    whatsapp: '+84-900-3303',
-    interests: ['Product pending', 'Red Chilli'],
-    lastContact: '3 days ago',
-    openEnquiries: 0,
-    quoteValue: 'No live amount',
-    status: 'Monitoring',
-    risk: 'Medium',
-    relationshipValue: 'Active'
-  },
-  {
-    id: 'buyer-aus-organics',
-    buyerName: 'Oliver Grant',
-    company: 'Southern Organics Pty',
-    country: 'Australia',
-    email: 'sourcing-local@southernorganics.local',
-    phone: '+61-400-000-404',
-    whatsapp: '+61-400-000-404',
-    interests: ['Cardamom', 'Organic Claims'],
-    lastContact: 'Last week',
-    openEnquiries: 1,
-    quoteValue: 'USD 22,100',
-    status: 'Risk Review',
-    risk: 'High',
-    relationshipValue: 'High Value'
-  },
-  {
-    id: 'buyer-sukesh-onion',
-    buyerName: 'Sukesh',
-    company: 'Sukesh',
-    country: 'Australia',
-    email: 'sukesh@buyer.local',
-    phone: '',
-    whatsapp: '',
-    interests: ['Onion'],
-    lastContact: 'Today',
-    openEnquiries: 1,
-    quoteValue: 'Pending',
-    status: 'New Lead',
-    risk: 'Low',
-    relationshipValue: 'New'
-  }
-];
+const buyerDirectorySeed = [];
 
-const buyerEnquirySeed = [
-  ['May 29, 2026', 'Onion', '20 MT', 'Australia', 'Director Command', 'New Lead', 'PR-SUKESH-001', 'Pending quote'],
-  ['May 26, 2026', 'Product pending', '2 tons', 'Country pending', 'WhatsApp', 'Pricing Review', 'PR-PENDING', 'GOPU-QTN-PENDING'],
-  ['May 25, 2026', 'Product pending', '5 tons', 'Oman', 'Website Form', 'Draft', 'PR-DEMO-002', 'Pending quote'],
-  ['May 22, 2026', 'Product pending', '1.5 tons', 'Country pending', 'Trade Directory', 'Monitoring', 'PR-PENDING', 'GOPU-QTN-PENDING']
-].map(([date, product, quantity, destination, source, status, pricingRequest, quote], index) => ({ id: `buyer-enquiry-${index}`, date, product, quantity, destination, source, status, pricingRequest, quote }));
+const buyerEnquirySeed = [];
 
 const buyerQuoteSeed = [
   ['GOPU-QTN-PENDING', 'Product pending', '2 tons', 'No live amount', '12%', 'CFO Review', 'Founder Approval', 'May 31, 2026'],
@@ -20866,20 +20323,11 @@ function MarketTable({ title, subtitle, icon: Icon, columns, rows, compact = fal
   return <section className="market-panel"><div className="approval-section-header"><div><span>{title}</span><h2>{subtitle}</h2></div><Icon size={18} /></div><div className={`market-table ${compact ? 'compact' : ''}`} style={{ '--market-cols': columns.length }}><div className="market-table-head">{columns.map((column) => <span key={column}>{column}</span>)}</div>{rows.map((row) => <div key={row.join('-')}>{row.map((cell, index) => index === 0 ? <strong key={`${row[0]}-${index}`}>{cell}</strong> : <span key={`${row[0]}-${index}`}>{cell}</span>)}</div>)}</div></section>;
 }
 
-const buyerPreferenceSeed = [
-  ['Preferred product', 'Product pending / Product pending'],
-  ['Preferred packing', '25 KG export bags'],
-  ['Preferred incoterm', 'CIF'],
-  ['Preferred payment terms', 'Advance preferred / clarify per quote'],
-  ['Communication channel', 'WhatsApp + email draft'],
-  ['Preferred currency', 'USD'],
-  ['Delivery expectations', 'Sea shipment with clear ETA'],
-  ['Document requirements', 'Invoice, Packing List, COO draft, LUT details snapshot']
-];
+const buyerPreferenceSeed = [];
 
 function BuyerCRMPage({ navigate, onBack, view = 'buyers', buyerId }) {
   const [buyers, setBuyers] = useState(buyerDirectorySeed);
-  const [selectedId, setSelectedId] = useState(buyerId || buyerDirectorySeed[0].id);
+  const [selectedId, setSelectedId] = useState(buyerId || null);
   const [filter, setFilter] = useState('All');
   const [search, setSearch] = useState('');
   const [followups, setFollowups] = useState(buyerFollowupSeed);
@@ -21099,16 +20547,7 @@ function getBuyerState(status) {
   return 'online';
 }
 
-const intelligenceSummarySeed = [
-  ['Active Workflows', '34', 'Monitoring', 'COO, pricing, invoices, shipments, and task workflows active'],
-  ['Pending Approvals', '9', 'Attention', 'Founder review queue contains commercial and document releases'],
-  ['Revenue Pipeline', 'No live data', 'Monitoring', 'Pipeline only; no finalized revenue claimed'],
-  ['Margin Health', '12.4% avg local', 'Healthy', 'CFO margin bands mostly within review range'],
-  ['Delayed Shipments', '2', 'Attention', 'Packing and document dependencies need COO action'],
-  ['Inventory Risks', '4', 'High Risk', 'Low stock and quality hold pressure dispatch readiness'],
-  ['Technical Alerts', '3', 'Attention', 'API credits, webhook retries, and automation queues monitored'],
-  ['Campaign Performance', 'Draft', 'Review Required', 'CMO content approvals and buyer outreach still local-only']
-].map(([label, value, status, note]) => ({ id: label.toLowerCase().replaceAll(' ', '-'), label, value, status, note }));
+const intelligenceSummarySeed = [];
 
 const analyticsPanelSeed = {
   operational: [
@@ -21177,14 +20616,7 @@ const analyticsPanelSeed = {
   ]
 };
 
-const founderRiskSeed = [
-  ['Blocked LUT invoice', 'Compliance', 'Critical', 'Invoice release blocked until LUT details and founder approval are complete.'],
-  ['Low-margin Country pending quote', 'Commercial', 'High', 'CFO review required before founder approval.'],
-  ['Packing bags shortage', 'Warehouse', 'High', 'Procurement follow-up needed before dispatch readiness.'],
-  ['Supplier quality hold', 'Supplier', 'Medium', 'Cumin batch remains under quality review.'],
-  ['API credit usage', 'Technical', 'Medium', 'OpenAI usage crossed attention threshold.'],
-  ['Buyer origin claim', 'Marketing', 'High', 'Organic/origin claim must route to Director Command Center.']
-].map(([title, category, severity, impact], index) => ({ id: `founder-risk-${index}`, title, category, severity, impact }));
+const founderRiskSeed = [];
 
 const intelligenceMemorySeed = ['Recurring LUT blockers', 'Approval delay patterns', 'Freight volatility on CIF quotes', 'Supplier quality hold recurrence', 'High-value buyer follow-up gaps', 'Packing material shortage cycles', 'Automation retry patterns', 'CMO claim approval patterns'];
 
@@ -21314,7 +20746,7 @@ function FounderIntelligenceDashboard({ navigate, onBack, view = 'analytics' }) 
   const [filter, setFilter] = useState('All');
   const [trendView, setTrendView] = useState('30 Days');
   const [expandedPanel, setExpandedPanel] = useState('commercial');
-  const [selectedRisk, setSelectedRisk] = useState(founderRiskSeed[0].id);
+  const [selectedRisk, setSelectedRisk] = useState(null);
   const [strategyReview, setStrategyReview] = useState('');
   const currentDateTime = new Date().toLocaleString('en-AU', { dateStyle: 'medium', timeStyle: 'short' });
   const allPanels = [
