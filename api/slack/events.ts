@@ -56,7 +56,8 @@ function normalizeText(value: unknown, fallback = "") {
 
 function labelValue(text = "", labels: string[] = []) {
   const escaped = labels.map((label) => label.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")).join("|");
-  const re = new RegExp(`(?:^|[\\n,;|])\\s*(?:${escaped})\\s*[:=-]\\s*([^\\n,;|]+)`, "i");
+  // Match "label: value" OR "label value" (space-separated, start of line)
+  const re = new RegExp(`(?:^|[\\n,;|])\\s*(?:${escaped})\\s*[:=-]?\\s*([^\\n,;|]+)`, "i");
   const match = String(text).match(re);
   return normalizeText(match?.[1] || "");
 }
@@ -68,10 +69,12 @@ function extractEmail(text = "") {
 function extractLeadQuantity(text = "") {
   const explicit = labelValue(text, ["quantity", "qty"]);
   const source = explicit || text;
-  const match = String(source).match(/(\d+(?:\.\d+)?)\s*(metric tons?|tons?|tonnes?|mt|kg|kgs|bags|cartons|boxes|containers?)?/i);
+  const match = String(source).match(/(\d+(?:\.\d+)?)\s*(feet container|foot container|20ft|40ft|metric tons?|tons?|tonnes?|mt|kg|kgs|bags|cartons|boxes|containers?)?/i);
+  const rawUnit = normalizeText(match?.[2] || labelValue(text, ["unit", "uom"]) || "mt").toLowerCase();
+  const unit = /feet container|foot container|20ft|40ft/.test(rawUnit) ? "container" : rawUnit || "mt";
   return {
     value: match ? Number(match[1]) : null,
-    unit: normalizeText(match?.[2] || labelValue(text, ["unit", "uom"]) || "mt").toLowerCase(),
+    unit,
   };
 }
 
@@ -84,10 +87,16 @@ function inferProductAndDestination(text = "") {
   };
 }
 
+function extractLeadName(text = "") {
+  // Match "Lead <name>" at start of message (no colon needed)
+  const match = String(text).match(/(?:^|\n)\s*lead\s+([A-Za-z][^\n]+)/i);
+  return normalizeText(match?.[1] || "");
+}
+
 function parseSlackLead(text = "", event: Record<string, any> = {}) {
   const inferred = inferProductAndDestination(text);
   const qty = extractLeadQuantity(text);
-  const buyerName = labelValue(text, ["buyer", "buyer name", "contact", "name"]) || normalizeText(event.user ? `Slack user ${event.user}` : "Slack lead");
+  const buyerName = labelValue(text, ["buyer", "buyer name", "contact", "name"]) || extractLeadName(text) || normalizeText(event.user ? `Slack user ${event.user}` : "Slack lead");
   const companyName = labelValue(text, ["company", "company name", "importer"]) || buyerName;
   const product = labelValue(text, ["product", "item", "commodity"]) || inferred.product || "Requested product";
   const destinationCountry = labelValue(text, ["destination", "country", "to", "market"]) || inferred.destination || "Not provided";
@@ -118,7 +127,7 @@ function parseSlackLead(text = "", event: Record<string, any> = {}) {
 }
 
 function isLeadMessage(text = "") {
-  return /\b(new lead|lead:|buyer:|product:|quote|enquiry|inquiry|pricing)\b/i.test(text);
+  return /(?:^|\n)\s*(?:new\s+lead|lead\b|buyer\b|product\b|quote|enquiry|inquiry|pricing)/i.test(text);
 }
 
 function formatMoney(value: unknown, currency = "USD") {
