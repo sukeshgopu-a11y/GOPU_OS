@@ -130,7 +130,7 @@ export async function getCMOPublishingWorkflow() {
 }
 
 export async function getCTODashboard(tenantId = demoTenantId) {
-  const [health, integrations, apiHealth, automationQueue, incidents, subscriptionWatch, deploymentStatus, architectureMap, auditLog, cmoMediaStack, cmoSocialIntegrations, cmoPublishingWorkflow, supabaseConnection] = await Promise.all([
+  const [health, integrations, apiHealth, automationQueue, incidents, subscriptionWatch, deploymentStatus, architectureMap, auditLog, cmoMediaStack, cmoSocialIntegrations, cmoPublishingWorkflow, supabaseConnection, liveIntegrations] = await Promise.all([
     getPlatformHealth(tenantId),
     getIntegrations(tenantId),
     getApiHealth(),
@@ -143,7 +143,8 @@ export async function getCTODashboard(tenantId = demoTenantId) {
     getCMOMediaStack(),
     getCMOSocialIntegrations(),
     getCMOPublishingWorkflow(),
-    checkSupabaseConnection()
+    checkSupabaseConnection(),
+    getLiveIntegrationStatus(tenantId)
   ]);
   return {
     ok: true,
@@ -162,13 +163,132 @@ export async function getCTODashboard(tenantId = demoTenantId) {
       cmoSocialIntegrations: cmoSocialIntegrations.data,
       cmoPublishingWorkflow: cmoPublishingWorkflow.data,
       supabaseConnection,
+      liveIntegrations,
       summary: {
         activeIncidents: incidents.data.filter((item) => ['High', 'Critical'].includes(item.severity)).length,
         failedWorkflows: automationQueue.data.filter((item) => ['Failed', 'Retry Pending', 'Attention'].includes(item.queue_status || item.status)).length,
         creditRisks: subscriptionWatch.data.filter((item) => item.usage >= 70).length,
-        cmoIntegrationReadiness: cmoMediaStack.data.filter((item) => ['Setup Required', 'Not Connected'].includes(item.status)).length
+        cmoIntegrationReadiness: cmoMediaStack.data.filter((item) => ['Setup Required', 'Not Connected'].includes(item.status)).length,
+        liveIntegrationScore: liveIntegrations.length ? Math.round((liveIntegrations.filter((s) => s.status === 'live').length / liveIntegrations.length) * 100) : 0
       }
     }
+  };
+}
+
+// ─── Live Integration Status ──────────────────────────────────────────────
+
+function envPresent(...names) {
+  for (const name of names) {
+    const val =
+      (typeof process !== 'undefined' && process.env?.[name]) ||
+      (typeof import.meta !== 'undefined' && import.meta.env?.[name]);
+    if (!val) return false;
+  }
+  return true;
+}
+
+async function checkSupabaseHealth() {
+  try {
+    const result = await checkSupabaseConnection();
+    return {
+      service: 'Supabase',
+      status: result.live ? 'live' : 'error',
+      message: result.message || (result.live ? 'Connected' : 'Not connected'),
+      last_checked: new Date().toISOString(),
+    };
+  } catch (e) {
+    return { service: 'Supabase', status: 'error', message: e?.message || 'Check failed', last_checked: new Date().toISOString() };
+  }
+}
+
+function checkOpenAIHealth() {
+  const present = envPresent('OPENAI_API_KEY') || envPresent('VITE_OPENAI_API_KEY');
+  return Promise.resolve({
+    service: 'OpenAI',
+    status: present ? 'live' : 'unconfigured',
+    message: present ? 'API key configured' : 'OPENAI_API_KEY not set',
+    last_checked: new Date().toISOString(),
+  });
+}
+
+function checkSlackHealth() {
+  const present = envPresent('SLACK_BOT_TOKEN') && envPresent('SLACK_CHANNEL_ID') && envPresent('SLACK_SIGNING_SECRET');
+  return Promise.resolve({
+    service: 'Slack',
+    status: present ? 'live' : 'unconfigured',
+    message: present ? 'Bot token, channel and signing secret configured' : 'Missing SLACK_BOT_TOKEN, SLACK_CHANNEL_ID, or SLACK_SIGNING_SECRET',
+    last_checked: new Date().toISOString(),
+  });
+}
+
+function checkResendHealth() {
+  const present = envPresent('RESEND_API_KEY');
+  return Promise.resolve({
+    service: 'Resend',
+    status: present ? 'live' : 'unconfigured',
+    message: present ? 'API key configured' : 'RESEND_API_KEY not set',
+    last_checked: new Date().toISOString(),
+  });
+}
+
+function checkVercelHealth() {
+  const present = envPresent('VERCEL') || envPresent('VERCEL_URL');
+  return Promise.resolve({
+    service: 'Vercel',
+    status: present ? 'live' : 'unconfigured',
+    message: present ? 'Running on Vercel' : 'VERCEL or VERCEL_URL env not set',
+    last_checked: new Date().toISOString(),
+  });
+}
+
+function checkTwilioHealth() {
+  const present = envPresent('TWILIO_ACCOUNT_SID') && envPresent('TWILIO_AUTH_TOKEN');
+  return Promise.resolve({
+    service: 'Twilio',
+    status: present ? 'live' : 'unconfigured',
+    message: present ? 'Account SID and auth token configured' : 'Missing TWILIO_ACCOUNT_SID or TWILIO_AUTH_TOKEN',
+    last_checked: new Date().toISOString(),
+  });
+}
+
+export async function getLiveIntegrationStatus(tenantId = demoTenantId) {
+  const results = await Promise.allSettled([
+    checkSupabaseHealth(),
+    checkOpenAIHealth(),
+    checkSlackHealth(),
+    checkResendHealth(),
+    checkVercelHealth(),
+    checkTwilioHealth(),
+  ]);
+
+  return results.map((r) => {
+    if (r.status === 'fulfilled') return r.value;
+    return { service: 'Unknown', status: 'error', message: r.reason?.message || 'Check threw', last_checked: new Date().toISOString() };
+  });
+}
+
+export async function getSystemHealthSummary(tenantId = demoTenantId) {
+  const services = await getLiveIntegrationStatus(tenantId);
+  const total = services.length;
+  const live = services.filter((s) => s.status === 'live').length;
+  const score = total ? Math.round((live / total) * 100) : 0;
+  const alerts = services.filter((s) => s.status === 'error');
+
+  let overall;
+  if (score >= 90) overall = 'healthy';
+  else if (score >= 50) overall = 'degraded';
+  else overall = 'critical';
+
+  return {
+    ok: true,
+    data: {
+      overall,
+      score,
+      services,
+      alerts,
+      lastChecked: new Date().toISOString(),
+    },
+    backend: backendStatus,
   };
 }
 
