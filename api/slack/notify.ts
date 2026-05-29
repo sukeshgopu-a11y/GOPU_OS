@@ -1,4 +1,4 @@
-import { sendSlackNotification } from "../../lib/slack";
+import { sendSlackNotification } from "../../lib/slack.js";
 
 type SlackAlertPayload = {
   type?: string;
