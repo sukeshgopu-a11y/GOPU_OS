@@ -22636,7 +22636,7 @@ function CMOCommandPage({ view = 'command', navigate, onBack }) {
     navigate('/export-os/director');
   }
 
-  const tabs = ['Overview', 'Content Queue', 'Published Posts', 'Platforms', 'LinkedIn Composer'];
+  const tabs = ['Overview', 'Content Queue', 'Published Posts', 'Platforms', 'LinkedIn Composer', 'Digital Marketing'];
   const scheduledCount = data.summary?.scheduledContent ?? 'Awaiting analytics';
   const approvalCount = data.summary?.pendingApprovals ?? 'Verification pending';
   const realRunStatus = getCmoRealRunStatus(data);
@@ -22754,11 +22754,349 @@ function getCmoTitle(item = {}) {
   return item.title || item.topic || item.campaign_name || item.content_type || 'Untitled content draft';
 }
 
+function CMODigitalMarketingTab() {
+  const [stage, setStage] = useState('Growing');
+  const [activeSection, setActiveSection] = useState('Budget');
+
+  const budgetData = {
+    Startup: {
+      label: 'Startup Exporter (0-2 yrs, <50L/mo)',
+      totalINR: '80,000 - 2,50,000',
+      totalUSD: '$950 - $3,000',
+      percent: '8-12%',
+      channels: [
+        { name: 'Google Search Ads', pct: 35, note: 'Best ROI for new exporters -- captures active buyer intent' },
+        { name: 'LinkedIn Ads + Sales Navigator', pct: 15, note: 'Start with organic; add Sales Navigator at month 3' },
+        { name: 'Meta (Facebook + Instagram)', pct: 20, note: 'Brand awareness + retargeting to website visitors' },
+        { name: 'Email Outreach (Apollo + Saleshandy)', pct: 15, note: 'Cold outreach to food importers in UAE/Germany/UK' },
+        { name: 'Trade Directories (IndiaMART, Alibaba)', pct: 10, note: 'IndiaMART for domestic leads; Alibaba at month 6+' },
+        { name: 'Content (website, video)', pct: 5, note: 'Product spec pages with COA downloads' },
+      ]
+    },
+    Growing: {
+      label: 'Growing Exporter (2-5 yrs, 50L-2Cr/mo)',
+      totalINR: '2,50,000 - 8,00,000',
+      totalUSD: '$3,000 - $9,500',
+      percent: '5-8%',
+      channels: [
+        { name: 'LinkedIn Ads + Sales Navigator', pct: 30, note: 'Lead Gen Forms + InMail -- highest quality B2B leads' },
+        { name: 'Google Search Ads', pct: 25, note: 'Bottom-funnel keywords: "Indian turmeric powder bulk supplier"' },
+        { name: 'Meta (Facebook + Instagram)', pct: 15, note: 'Retargeting + Lookalike audiences from buyer email list' },
+        { name: 'Email Outreach', pct: 10, note: '5-touch 12-day cold sequence to 200-300 prospects/month' },
+        { name: 'Trade Directories', pct: 10, note: 'Alibaba Gold Supplier + Spice Xchange India' },
+        { name: 'WhatsApp Business API', pct: 5, note: 'Broadcast to warm leads -- 0.86 paise/message' },
+        { name: 'Trade Show Digital', pct: 5, note: 'Pre/post Gulfood, Anuga, SIAL LinkedIn campaigns' },
+      ]
+    },
+    Established: {
+      label: 'Established Exporter (5+ yrs, >2Cr/mo)',
+      totalINR: '8,00,000 - 25,00,000',
+      totalUSD: '$9,500 - $30,000',
+      percent: '3-5%',
+      channels: [
+        { name: 'LinkedIn Ads + Sales Navigator', pct: 35, note: 'Full funnel -- awareness to Lead Gen Forms' },
+        { name: 'Google Search + SEO', pct: 20, note: 'Country-specific landing pages + organic ranking' },
+        { name: 'Meta (Facebook + Instagram)', pct: 10, note: 'Retargeting + brand awareness in target markets' },
+        { name: 'Content Marketing', pct: 10, note: '2 SEO blog posts/month + YouTube product tours' },
+        { name: 'WhatsApp Business API', pct: 5, note: 'Automated sequences for warm leads and existing buyers' },
+        { name: 'Trade Directories', pct: 7, note: 'Alibaba + GlobalSources + Spice Xchange India' },
+        { name: 'Trade Show Digital', pct: 5, note: 'Full pre/during/post show digital campaigns' },
+        { name: 'Email Newsletter', pct: 8, note: 'Monthly crop updates and pricing intelligence to buyer list' },
+      ]
+    }
+  };
+
+  const cplBenchmarks = [
+    { platform: 'LinkedIn Lead Gen Forms', cplUSD: '$75-$130', cplINR: '850-2,500', ctr: '0.4-0.8%', quality: 'Highest' },
+    { platform: 'LinkedIn InMail (Message Ads)', cplUSD: '$50-$100', cplINR: '700-1,800', ctr: '10-25% reply', quality: 'High' },
+    { platform: 'Google Search Ads', cplUSD: '$70-$90', cplINR: '600-1,500', ctr: '2-5%', quality: 'High' },
+    { platform: 'Facebook Lead Ads', cplUSD: '$27-$40', cplINR: '300-800', ctr: '0.9-1.5%', quality: 'Medium' },
+    { platform: 'Instagram Lead Ads', cplUSD: '$30-$50', cplINR: '350-900', ctr: '0.8-1.2%', quality: 'Medium' },
+  ];
+
+  const outreachTemplates = [
+    {
+      type: 'LinkedIn Connection Request',
+      limit: '<300 chars',
+      text: `Hi [First Name], I noticed your work at [Company] in food procurement for [UAE/Germany/UK]. We're a Spice Board-certified Indian exporter -- our turmeric/chilli is already with buyers in [their region]. Happy to share our product catalogue. Worth a connect?`
+    },
+    {
+      type: 'LinkedIn Follow-up DM #1 (Day 2)',
+      limit: 'After connection accepted',
+      text: `Thanks for connecting, [Name]. We export [Turmeric/Chilli/Cumin] in bulk to food manufacturers and importers across [Germany/UAE/UK]. Key advantages: Spice Board certification, consistent ASTA values, SGS-tested quality, FCL lead times under 21 days. Would it be helpful if I shared our product spec sheet and recent COA? Happy to send a sample if sourcing is relevant for your team.`
+    },
+    {
+      type: 'Cold Email Subject Lines (highest open rates)',
+      limit: 'Test 2-3 per campaign',
+      text: `"[City]-based turmeric supplier -- 2025 crop specs attached"\n"Your current spice supplier vs ours -- 3 spec differences"\n"[Name], Gulfood 2025 follow-up from [Your Name]"\n"Indian chilli: ASTA 80 vs 120 -- does it matter for your buyers?"\n"FSSAI certified Indian cumin at [price range] -- relevant for [Company]?"`
+    },
+    {
+      type: 'Cold Email Body (Day 1 of 5-touch sequence)',
+      limit: '35-45% open rate target',
+      text: `Hi [Name],\n\nI'm [Your Name] from GOPU Exports, a Spice Board of India-certified exporter based in India. We supply Turmeric / Chilli / Cumin to importers across Germany / UAE / UK.\n\nThree things relevant to your sourcing:\n- Curcumin content: 3-5% (HPLC tested), consistent across batches\n- Lead time: FCL in 18-21 days, LCL in 8-12 days\n- Certifications: FSSAI, Spice Board, HACCP, Organic (USDA/EU)\n\nHappy to share our current product catalogue and recent COA. Is this category relevant for you?\n\n[Signature]`
+    },
+    {
+      type: 'WhatsApp Broadcast (WABA approved template)',
+      limit: '~0.86 paise per message',
+      text: `Hi [Name], this is [Your Name] from GOPU Exports, India's Spice Board-certified exporter. Our 2025 [Turmeric/Chilli/Cumin] crop is now in stock with fresh COA. Available FCL/LCL. To receive our product catalogue + spec sheet, reply YES. Opt out anytime.`
+    }
+  ];
+
+  const toolStack = [
+    { tool: 'LinkedIn Sales Navigator Core', cost: '~8,000/mo', use: 'Find food importers in UAE/Germany/UK/USA by job title + industry', priority: 'High' },
+    { tool: 'Apollo.io Basic', cost: '~4,000/mo', use: 'B2B contact emails for procurement managers at food companies', priority: 'High' },
+    { tool: 'Saleshandy Basic', cost: '~2,000/mo', use: 'Cold email sequences -- 5-touch 12-day cadence to 300 prospects/month', priority: 'High' },
+    { tool: 'Zoho CRM Standard', cost: '~1,200/user/mo', use: 'Pipeline: Enquiry > Catalogue Sent > Sample > Trial Order > Repeat', priority: 'High' },
+    { tool: 'Google Ads', cost: 'Budget-dependent', use: 'Bottom-funnel: "Indian turmeric bulk supplier", "chilli powder exporter India"', priority: 'High' },
+    { tool: 'Interakt / AiSensy', cost: '1,000-3,000/mo', use: 'WhatsApp Business API for buyer broadcasts and follow-ups', priority: 'Medium' },
+    { tool: 'Hunter.io Starter', cost: '~4,000/mo', use: 'Email verification before sending cold outreach', priority: 'Medium' },
+    { tool: 'Zoho Social / Buffer', cost: '1,000-2,000/mo', use: 'Schedule LinkedIn + Instagram + Facebook posts in advance', priority: 'Medium' },
+    { tool: 'GA4 + UTM tracking', cost: 'Free', use: 'Track which channel generates enquiries and COA downloads', priority: 'High' },
+  ];
+
+  const kpis = [
+    { kpi: 'LinkedIn connection acceptance rate', target: '>30%', frequency: 'Weekly', tool: 'LinkedIn Analytics' },
+    { kpi: 'LinkedIn DM reply rate', target: '>10%', frequency: 'Weekly', tool: 'Manual tracking' },
+    { kpi: 'Cold email open rate', target: '>35%', frequency: 'Weekly', tool: 'Saleshandy' },
+    { kpi: 'Cold email reply rate', target: '>5%', frequency: 'Weekly', tool: 'Saleshandy' },
+    { kpi: 'WhatsApp broadcast response rate', target: '>15%', frequency: 'Weekly', tool: 'Interakt/Wati' },
+    { kpi: 'New MQLs (Marketing Qualified Leads)', target: '20-50/month', frequency: 'Monthly', tool: 'Zoho CRM' },
+    { kpi: 'Cost Per Lead (CPL) by channel', target: 'See benchmarks', frequency: 'Monthly', tool: 'Ads Manager + CRM' },
+    { kpi: 'Enquiry-to-Sample conversion', target: '>20%', frequency: 'Monthly', tool: 'Zoho CRM' },
+    { kpi: 'Sample-to-Order conversion', target: '>25%', frequency: 'Monthly', tool: 'Zoho CRM' },
+    { kpi: 'Overall Enquiry-to-Order ratio', target: '5-15%', frequency: 'Monthly', tool: 'Zoho CRM' },
+    { kpi: 'LinkedIn follower growth', target: '+50-100/month', frequency: 'Monthly', tool: 'LinkedIn Analytics' },
+    { kpi: 'Website organic enquiries', target: '5-20/month', frequency: 'Monthly', tool: 'GA4' },
+  ];
+
+  const weeklyPlan = [
+    { day: 'Monday', activity: 'Save 20-30 new Sales Navigator leads (food importers UAE/Germany/UK/USA). Plan week\'s 3-4 LinkedIn posts.', time: '1.5 hrs', tool: 'Sales Navigator, Zoho Social' },
+    { day: 'Tuesday', activity: 'Send 15 personalized LinkedIn connection requests. Post on LinkedIn (shipment milestone or educational carousel).', time: '1.0 hr', tool: 'LinkedIn' },
+    { day: 'Wednesday', activity: 'Launch cold email batch (50-100 leads). Respond to all LinkedIn DMs and connection accepts.', time: '1.5 hrs', tool: 'Saleshandy / Apollo' },
+    { day: 'Thursday', activity: 'LinkedIn post (founder story or market intelligence). WhatsApp follow-up to warm leads with new crop update.', time: '1.0 hr', tool: 'LinkedIn, WhatsApp Business' },
+    { day: 'Friday', activity: 'Review CRM pipeline -- update lead stages. Check ad performance (pause underperformers, increase winners).', time: '1.5 hrs', tool: 'Zoho CRM, Google/Meta Ads Manager' },
+  ];
+
+  const budget = budgetData[stage];
+
+  return (
+    <div className="cmo-digital-marketing-tab">
+      <div className="dm-header">
+        <h2>Digital Marketing Advisor</h2>
+        <p>Research-verified B2B export marketing strategy for Indian spice exporters selling to UAE, Germany, UK, USA, Saudi Arabia.</p>
+        <div className="dm-stage-selector">
+          {Object.keys(budgetData).map((s) => (
+            <button key={s} className={stage === s ? 'active' : ''} onClick={() => setStage(s)}>{s}</button>
+          ))}
+        </div>
+        <div className="dm-section-nav">
+          {['Budget', 'Channels', 'Outreach', 'Tools', 'KPIs', 'Weekly Plan'].map((s) => (
+            <button key={s} className={activeSection === s ? 'active' : ''} onClick={() => setActiveSection(s)}>{s}</button>
+          ))}
+        </div>
+      </div>
+
+      {activeSection === 'Budget' && (
+        <div className="dm-section">
+          <div className="dm-budget-overview">
+            <div className="dm-budget-card">
+              <span className="dm-label">Stage</span>
+              <strong>{budget.label}</strong>
+            </div>
+            <div className="dm-budget-card">
+              <span className="dm-label">Monthly Spend (INR)</span>
+              <strong>&#8377;{budget.totalINR}</strong>
+            </div>
+            <div className="dm-budget-card">
+              <span className="dm-label">Monthly Spend (USD)</span>
+              <strong>{budget.totalUSD}</strong>
+            </div>
+            <div className="dm-budget-card">
+              <span className="dm-label">% of Revenue</span>
+              <strong>{budget.percent}</strong>
+            </div>
+          </div>
+          <h3>Channel Allocation</h3>
+          <div className="dm-channel-list">
+            {budget.channels.map((c) => (
+              <div key={c.name} className="dm-channel-row">
+                <div className="dm-channel-name">{c.name}</div>
+                <div className="dm-channel-bar-wrap">
+                  <div className="dm-channel-bar" style={{ width: `${c.pct}%` }} />
+                  <span className="dm-channel-pct">{c.pct}%</span>
+                </div>
+                <div className="dm-channel-note">{c.note}</div>
+              </div>
+            ))}
+          </div>
+          <div className="dm-insight-box">
+            <strong>Key insight:</strong> At startup stage, prioritise Google Search Ads over LinkedIn -- Google captures importers actively searching for Indian spice suppliers right now. LinkedIn requires minimum &#8377;75,000/month budget to learn. One converted importer can represent 50-200x ROAS on the entire campaign.
+          </div>
+        </div>
+      )}
+
+      {activeSection === 'Channels' && (
+        <div className="dm-section">
+          <h3>CPL Benchmarks by Platform</h3>
+          <div className="dm-table-wrap">
+            <table className="dm-table">
+              <thead><tr><th>Platform</th><th>CPL (USD)</th><th>CPL (INR)</th><th>CTR / Reply Rate</th><th>Lead Quality</th></tr></thead>
+              <tbody>
+                {cplBenchmarks.map((row) => (
+                  <tr key={row.platform}>
+                    <td>{row.platform}</td>
+                    <td>{row.cplUSD}</td>
+                    <td>&#8377;{row.cplINR}</td>
+                    <td>{row.ctr}</td>
+                    <td><span className={`dm-quality dm-quality-${row.quality.toLowerCase()}`}>{row.quality}</span></td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          <h3>LinkedIn Sales Navigator -- Importer Search Filters</h3>
+          <div className="dm-code-block">
+            <div><strong>Industry:</strong> Food &amp; Beverages, Wholesale, Import &amp; Export, Retail</div>
+            <div><strong>Job Titles:</strong> "Procurement Manager" OR "Import Manager" OR "Buying Director" OR "Head of Sourcing" OR "Category Manager" OR "Supply Chain Manager"</div>
+            <div><strong>Geography:</strong> United Arab Emirates / Germany / United Kingdom / United States / Saudi Arabia</div>
+            <div><strong>Company Size:</strong> 11-1,000 employees</div>
+            <div><strong>Intent Signals:</strong> Changed jobs last 90 days + Posted on LinkedIn last 30 days</div>
+            <div><strong>Keywords:</strong> "spices" OR "ingredients" OR "food import" OR "ethnic food" OR "Asian groceries"</div>
+          </div>
+          <h3>Google Ads -- High-Intent B2B Keywords</h3>
+          <div className="dm-code-block">
+            <div>[Exact Match] "Indian turmeric powder bulk supplier" -- $0.80-$1.50 CPC</div>
+            <div>[Exact Match] "Indian chilli powder exporter" -- $0.70-$1.30 CPC</div>
+            <div>[Phrase Match] "cumin seeds wholesale India" -- $0.50-$1.00 CPC</div>
+            <div>[Exact Match] "FSSAI certified spice exporter" -- $0.50-$1.00 CPC</div>
+            <div>[Exact Match] "organic turmeric supplier India USDA" -- $1.00-$2.00 CPC</div>
+            <div className="dm-code-negative"><strong>Negative keywords:</strong> recipe, cooking, home, personal, retail, Amazon, 100g, 500g, diet, weight loss</div>
+          </div>
+          <h3>Meta Ads -- Targeting for UAE/Germany/UK Buyers</h3>
+          <div className="dm-code-block">
+            <div><strong>UAE / Saudi:</strong> Job title: Procurement Officer, Import Manager, Food Buyer + Industry: Food &amp; Beverages, Wholesale + Behavior: Business Decision Makers</div>
+            <div><strong>Germany / UK:</strong> Same + layer interests: Food safety, HACCP, Organic food, Sustainable sourcing (EU buyers respond to these)</div>
+            <div><strong>USA:</strong> Industry: Ethnic grocery chains, food manufacturers, spice distributors + Lookalike 1% from buyer email list upload</div>
+            <div><strong>Retargeting:</strong> Website visitors (30/60/90 days) + Video viewers (50%+) -- use social proof ad: "Currently supplying 40+ importers in EU"</div>
+          </div>
+          <div className="dm-insight-box">
+            <strong>APEDA &amp; Spice Board subsidy:</strong> Registered APEDA/Spice Board exporters can claim up to 50% subsidy on digital marketing tools and trade fair participation. Register CRES (Spice Board) and RCMC (APEDA) first -- these also give access to pre-qualified buyer databases.
+          </div>
+        </div>
+      )}
+
+      {activeSection === 'Outreach' && (
+        <div className="dm-section">
+          <h3>Outreach Templates</h3>
+          {outreachTemplates.map((t) => (
+            <div key={t.type} className="dm-template-card">
+              <div className="dm-template-header">
+                <strong>{t.type}</strong>
+                <span className="dm-template-limit">{t.limit}</span>
+              </div>
+              <pre className="dm-template-body">{t.text}</pre>
+            </div>
+          ))}
+          <div className="dm-insight-box">
+            <strong>Best practices:</strong> Personalise with specific company/country reference. Lead with certifications (reduces compliance anxiety). Offer COA or spec sheet -- tangible, not vague "partnership". Thursday 9-11am sends perform best. Target 35-45% open rate, 5-10% reply rate.
+          </div>
+        </div>
+      )}
+
+      {activeSection === 'Tools' && (
+        <div className="dm-section">
+          <h3>Recommended Tool Stack</h3>
+          <div className="dm-table-wrap">
+            <table className="dm-table">
+              <thead><tr><th>Tool</th><th>Monthly Cost (INR)</th><th>Use Case</th><th>Priority</th></tr></thead>
+              <tbody>
+                {toolStack.map((t) => (
+                  <tr key={t.tool}>
+                    <td><strong>{t.tool}</strong></td>
+                    <td>&#8377;{t.cost}</td>
+                    <td>{t.use}</td>
+                    <td><span className={`dm-quality dm-quality-${t.priority.toLowerCase()}`}>{t.priority}</span></td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          <div className="dm-insight-box">
+            <strong>Minimum viable stack (startup):</strong> Apollo.io + Saleshandy + Zoho CRM + GA4 = ~&#8377;7,000-10,000/month in tools before ad spend. Add LinkedIn Sales Navigator at month 3 once you have a working outreach script.
+          </div>
+        </div>
+      )}
+
+      {activeSection === 'KPIs' && (
+        <div className="dm-section">
+          <h3>KPI Dashboard</h3>
+          <div className="dm-table-wrap">
+            <table className="dm-table">
+              <thead><tr><th>KPI</th><th>Target</th><th>Track</th><th>Tool</th></tr></thead>
+              <tbody>
+                {kpis.map((k) => (
+                  <tr key={k.kpi}>
+                    <td>{k.kpi}</td>
+                    <td><strong>{k.target}</strong></td>
+                    <td>{k.frequency}</td>
+                    <td>{k.tool}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          <div className="dm-insight-box">
+            <strong>Most important metric for export:</strong> Enquiry-to-Order ratio (5-15% is normal for B2B spice export). Track this by channel in Zoho CRM -- it tells you which channel brings serious buyers vs tyre-kickers. One converted importer at 100 MT/year outweighs 1,000 unqualified leads.
+          </div>
+        </div>
+      )}
+
+      {activeSection === 'Weekly Plan' && (
+        <div className="dm-section">
+          <h3>Weekly Execution Rhythm</h3>
+          <div className="dm-weekly-list">
+            {weeklyPlan.map((d) => (
+              <div key={d.day} className="dm-weekly-row">
+                <div className="dm-weekly-day">{d.day}</div>
+                <div className="dm-weekly-content">
+                  <p>{d.activity}</p>
+                  <div className="dm-weekly-meta">
+                    <span>{d.time}</span>
+                    <span>{d.tool}</span>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+          <h3>Monthly Priorities</h3>
+          <div className="dm-month-grid">
+            {[
+              { week: 'Week 1', tasks: 'Campaign setup review. Schedule 4 LinkedIn posts. Launch new cold email batch (200-300 leads).' },
+              { week: 'Week 2', tasks: 'LinkedIn ads performance check -- pause underperformers, increase winners. Publish 1 SEO blog post. Update COA if new batch.' },
+              { week: 'Week 3', tasks: 'WhatsApp broadcast to warm leads (new crop/pricing update). Comment on buyer company LinkedIn posts to stay visible.' },
+              { week: 'Week 4', tasks: 'Monthly KPI review: CPL, enquiry count, pipeline value. Retargeting campaign refresh. Plan next month.' },
+            ].map((w) => (
+              <div key={w.week} className="dm-month-card">
+                <strong>{w.week}</strong>
+                <p>{w.tasks}</p>
+              </div>
+            ))}
+          </div>
+          <div className="dm-insight-box">
+            <strong>Quarterly must-dos:</strong> Register for Spice Board buyer-seller meets (pre-qualified importers, subsidised by govt). Pre-Anuga (Oct) LinkedIn campaign. Post-Gulfood (Feb) follow-up sequences. Post-harvest crop quality update campaign with fresh COA and specs.
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 function CMOFocusedCommandTabs({ activeTab, data, output, navigate, realRunStatus, onNewContent, onSchedulePost, onViewPublished, onSendSlack, onContentDecision, onCreateApprovalRequest }) {
   if (activeTab === 'Content Queue') return <CMOContentQueueTab items={getCmoPendingContentItems(data)} onContentDecision={onContentDecision} />;
   if (activeTab === 'Published Posts') return <CMOPublishedPostsTab items={getCmoPublishedContentItems(data)} />;
   if (activeTab === 'Platforms') return <CMOPlatformsTab connectedCount={getCmoConnectedPlatformCount(data)} navigate={navigate} />;
   if (activeTab === 'LinkedIn Composer') return <CMOLinkedInComposerTab onCreateApprovalRequest={onCreateApprovalRequest} />;
+  if (activeTab === 'Digital Marketing') return <CMODigitalMarketingTab />;
   return (
     <CMOFocusedOverviewTab
                 data={data}
