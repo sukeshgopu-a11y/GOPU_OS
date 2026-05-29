@@ -50,7 +50,7 @@ function verifySlackSignature(req: any, rawBody: string) {
   return { ok: true, status: "verified" };
 }
 
-function normalizeText(value: unknown, fallback = "") {
+export function normalizeText(value: unknown, fallback = "") {
   return String(value || fallback).replace(/\s+/g, " ").trim();
 }
 
@@ -126,7 +126,7 @@ function parseSlackLead(text = "", event: Record<string, any> = {}) {
   };
 }
 
-function isLeadMessage(text = "") {
+export function isLeadMessage(text = "") {
   return /(?:^|\n)\s*(?:new\s+lead|lead\b|buyer\b|product\b|quote|enquiry|inquiry|pricing)/i.test(text);
 }
 
@@ -135,7 +135,7 @@ function isMarketingCommand(text = "") {
     && !isLeadMessage(text);
 }
 
-function isGopuSystemReply(text = "") {
+export function isGopuSystemReply(text = "") {
   return /GOPU OS Slack lead received|GOPU OS Marketing Command Received|GOPU OS could not process|No quote, posting, or final invoice|Codex verified Slack outbound|Slack Connection Test/i.test(text);
 }
 
@@ -258,7 +258,7 @@ async function safeInsert(client: any, table: string, payload: Record<string, an
   return { ok: true, table, data };
 }
 
-async function sendSlackBotMessage(message: Record<string, any>) {
+export async function sendSlackBotMessage(message: Record<string, any>) {
   const botToken = env("SLACK_BOT_TOKEN");
   const channel = message.channel || env("SLACK_CHANNEL_ID");
   if (!botToken || !channel) return { ok: false, status: "not_configured", message: "Slack bot token or channel id is not configured." };
@@ -272,7 +272,7 @@ async function sendSlackBotMessage(message: Record<string, any>) {
   return { ok: true, status: "sent", channel: body.channel, ts: body.ts };
 }
 
-async function upsertSlackStatus(status: "live" | "error", details: Record<string, string> = {}) {
+export async function upsertSlackStatus(status: "live" | "error", details: Record<string, string> = {}) {
   const client = getSupabaseClient();
   if (!client) return;
   await client.from("integration_services").upsert({
@@ -296,7 +296,7 @@ async function upsertSlackStatus(status: "live" | "error", details: Record<strin
   }, { onConflict: "tenant_id,platform_key" });
 }
 
-async function processLead(event: Record<string, any>, text: string) {
+export async function processLead(event: Record<string, any>, text: string) {
   const client = getSupabaseClient();
   const lead = parseSlackLead(text, event);
   const pricing = runPricingEngine(lead);
@@ -419,7 +419,7 @@ async function processLead(event: Record<string, any>, text: string) {
   return { lead, pricing, amount, issues, cooTask, cfoTask, approval };
 }
 
-function buildReply(result: any) {
+export function buildReply(result: any) {
   const { lead, pricing, amount, issues, cooTask, cfoTask, approval } = result;
   const rows = [
     "*GOPU OS Slack lead received*",
