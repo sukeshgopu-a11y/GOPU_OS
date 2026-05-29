@@ -31,6 +31,16 @@ function readRawBody(req: any): Promise<string> {
   });
 }
 
+const AI_AGENT_PIPELINE = [
+  "AI Lead Intake Agent",
+  "AI COO Agent",
+  "AI CFO Agent",
+  "AI Logistics Agent",
+  "AI Compliance Agent",
+  "AI Sales Agent",
+  "AI Director Agent",
+];
+
 function safeEqual(left: string, right: string) {
   const leftBuffer = Buffer.from(left);
   const rightBuffer = Buffer.from(right);
@@ -258,6 +268,183 @@ async function safeInsert(client: any, table: string, payload: Record<string, an
   return { ok: true, table, data };
 }
 
+async function safeUpdate(client: any, table: string, id: string, payload: Record<string, any>, select = "id,status") {
+  if (!client || !id) return { ok: false, table, message: "Supabase service role env is missing." };
+  const { data, error } = await client.from(table).update({ ...payload, updated_at: new Date().toISOString() }).eq("id", id).select(select).maybeSingle();
+  if (error) return { ok: false, table, message: error.message };
+  return { ok: true, table, data };
+}
+
+async function findExistingLead(client: any, text: string) {
+  if (!client) return null;
+  const notes = normalizeText(text);
+  const { data } = await client
+    .from("lead_intake")
+    .select("*")
+    .eq("tenant_id", demoTenantId)
+    .eq("source", "Slack")
+    .eq("notes", notes)
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  return data || null;
+}
+
+async function findExistingPricing(client: any, leadId: string) {
+  if (!client || !leadId) return null;
+  const { data } = await client
+    .from("pricing_requests")
+    .select("*")
+    .eq("tenant_id", demoTenantId)
+    .eq("lead_id", leadId)
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  return data || null;
+}
+
+async function findExistingApproval(client: any, leadId: string) {
+  if (!client || !leadId) return null;
+  const { data } = await client
+    .from("founder_approvals")
+    .select("*")
+    .eq("tenant_id", demoTenantId)
+    .eq("related_record_id", leadId)
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  return data || null;
+}
+
+async function findExistingTask(client: any, leadId: string, agentName: string) {
+  if (!client || !leadId) return null;
+  const { data } = await client
+    .from("tasks")
+    .select("*")
+    .eq("tenant_id", demoTenantId)
+    .eq("linked_record_id", leadId)
+    .eq("workflow_source", "AI Agent Pipeline")
+    .eq("owner_command", agentName)
+    .limit(1)
+    .maybeSingle();
+  return data || null;
+}
+
+async function ensureAgentTask(client: any, lead: any, agentName: string, payload: Record<string, any> = {}) {
+  const existing = await findExistingTask(client, lead.id, agentName);
+  if (existing) {
+    await safeUpdate(client, "tasks", existing.id, {
+      status: payload.status || "Pending",
+      description: payload.description || existing.description,
+      next_action: payload.next_action || existing.next_action,
+      blocking_reason: payload.blocking_reason || existing.blocking_reason,
+      metadata: { ...(existing.metadata || {}), ...(payload.metadata || {}) },
+    });
+    return { ok: true, data: { ...existing, ...payload }, table: "tasks" };
+  }
+  return safeInsert(client, "tasks", {
+    tenant_id: lead.tenant_id,
+    title: `${agentName}: ${lead.company_name}`,
+    description: payload.description || `${agentName} is processing ${lead.quantity} ${lead.unit} ${lead.product} for ${lead.destination_country}.`,
+    workflow_source: "AI Agent Pipeline",
+    linked_record_id: lead.id,
+    linked_label: agentName,
+    linked_route: "/export-os/tasks",
+    department: payload.department || "AI Operations",
+    owner_command: agentName,
+    assigned_to: agentName,
+    assigned_role: agentName,
+    priority: payload.priority || "High",
+    status: payload.status || "Pending",
+    due_date: "Today",
+    escalation_level: "Director/Founder approval only",
+    blocking_reason: payload.blocking_reason || "Automated AI agent workflow. Manual work is not required unless status is Needs Review.",
+    next_action: payload.next_action || "AI agent will process automatically.",
+    buyer: lead.company_name,
+    product: lead.product,
+    metadata: payload.metadata || {},
+  }, "id,status,owner_command");
+}
+
+async function logAgentRun(client: any, agentName: string, status: string, context: Record<string, any>) {
+  if (!client) return { ok: false, message: "Supabase service role env is missing." };
+  const payload = {
+    tenant_id: demoTenantId,
+    lead_id: context.lead_id || null,
+    pricing_request_id: context.pricing_request_id || null,
+    approval_id: context.approval_id || null,
+    task_id: context.task_id || null,
+    agent_name: agentName,
+    agent_role: agentName.replace(/^AI\s+/, ""),
+    status,
+    input: context.input || {},
+    output: context.output || {},
+    error_message: context.error_message || null,
+    started_at: context.started_at || new Date().toISOString(),
+    completed_at: ["Completed", "Needs Review", "Failed"].includes(status) ? new Date().toISOString() : null,
+  };
+  const { data, error } = await client.from("ai_agent_runs").insert(payload).select("id,status,agent_name").maybeSingle();
+  if (error) return { ok: false, message: error.message };
+  return { ok: true, data };
+}
+
+async function runAgent(client: any, agentName: string, lead: any, pricing: any, details: Record<string, any>) {
+  const pendingTask = await ensureAgentTask(client, lead, agentName, { ...details, status: "Pending" });
+  const taskId = pendingTask.data?.id;
+  const processingRun = await logAgentRun(client, agentName, "Processing", { lead_id: lead.id, task_id: taskId, input: { lead, pricing } });
+  await safeUpdate(client, "tasks", taskId, { status: "Processing" });
+  const finalStatus = details.status || "Completed";
+  await safeUpdate(client, "tasks", taskId, {
+    status: finalStatus,
+    description: details.description,
+    next_action: details.next_action,
+    blocking_reason: details.blocking_reason,
+    metadata: details.metadata || {},
+  });
+  const run = await logAgentRun(client, agentName, finalStatus, {
+    lead_id: lead.id,
+    task_id: taskId,
+    pricing_request_id: details.pricing_request_id,
+    approval_id: details.approval_id,
+    input: { lead },
+    output: details.metadata || {},
+    error_message: finalStatus === "Failed" ? details.blocking_reason : null,
+  });
+  const issue = [
+    pendingTask.ok ? "" : `${agentName} task: ${pendingTask.message}`,
+    processingRun.ok ? "" : `${agentName} processing log: ${processingRun.message}`,
+    run.ok ? "" : `${agentName} final log: ${run.message}`,
+  ].filter(Boolean).join("; ");
+  return { task: pendingTask.data, run: run.data, status: finalStatus, issue };
+}
+
+function buildLogisticsPlan(lead: any, pricing: any) {
+  const freight = pricing.lines?.find((line: any) => line.key === "freight_cost")?.lineTotal || 0;
+  const inland = pricing.lines?.find((line: any) => line.key === "inland_logistics_cost")?.lineTotal || 0;
+  const clearance = pricing.lines?.find((line: any) => line.key === "export_clearance_cost")?.lineTotal || 0;
+  const packing = pricing.packingSuggestion || "Buyer-specific export packing";
+  return { freight, inland, clearance, packing, lead_time: pricing.seaLeadTime, mode: lead.shipping_mode };
+}
+
+function buildCompliancePlan(lead: any) {
+  const product = String(lead.product || "").toLowerCase();
+  const documents = ["Commercial invoice", "Packing list", "Certificate of origin", "Shipping bill", "Bill of lading"];
+  if (/chilli|chili|spice|pepper|turmeric|cumin|coriander|cardamom/.test(product)) {
+    documents.push("FSSAI/APEDA or Spice Board registration evidence", "Phytosanitary certificate if buyer/country requires", "Product COA / lab test report");
+  }
+  return { documents, certification_check: "Prepared for compliance review. Final release requires Director approval." };
+}
+
+function buildBuyerReplyDraft(lead: any, pricing: any, amount: string) {
+  return [
+    `Dear ${lead.company_name},`,
+    `Thank you for your enquiry for ${lead.quantity} ${lead.unit} ${lead.product} to ${lead.destination_country}.`,
+    `Indicative internal quote prepared: ${amount} (${pricing.incoterm}), subject to Director approval, final freight confirmation, documents, and buyer verification.`,
+    `Estimated lead time: ${pricing.seaLeadTime}.`,
+    "We will share the final approved quotation after internal approval is complete.",
+  ].join("\n");
+}
+
 export async function sendSlackBotMessage(message: Record<string, any>) {
   const botToken = env("SLACK_BOT_TOKEN");
   const channel = message.channel || env("SLACK_CHANNEL_ID");
@@ -296,14 +483,29 @@ export async function upsertSlackStatus(status: "live" | "error", details: Recor
   }, { onConflict: "tenant_id,platform_key" });
 }
 
-export async function processLead(event: Record<string, any>, text: string) {
+export async function processLead(event: Record<string, any>, text: string, options: Record<string, any> = {}) {
   const client = getSupabaseClient();
   const lead = parseSlackLead(text, event);
   const pricing = runPricingEngine(lead);
   const amount = formatMoney(pricing.recommendedTotalPrice, pricing.currency);
   const issues: string[] = [];
 
-  const leadResult = await safeInsert(client, "lead_intake", {
+  const existingLead = await findExistingLead(client, text);
+  if (existingLead && !options.force) {
+    return {
+      lead: { ...lead, ...existingLead, destination_country: existingLead.country || lead.destination_country, unit_of_measure: existingLead.unit || lead.unit },
+      pricing,
+      amount,
+      issues,
+      duplicate: true,
+      cooTask: { ok: true, data: null },
+      cfoTask: { ok: true, data: null },
+      approval: { ok: true, data: null },
+      agentRuns: [],
+    };
+  }
+
+  const leadResult = existingLead ? { ok: true, table: "lead_intake", data: existingLead } : await safeInsert(client, "lead_intake", {
     id: lead.id,
     tenant_id: lead.tenant_id,
     source: lead.source,
@@ -319,14 +521,25 @@ export async function processLead(event: Record<string, any>, text: string) {
     shipping_mode: lead.shipping_mode,
     incoterm: lead.incoterm,
     notes: lead.notes,
-    status: lead.status,
+    status: "Completed",
     assigned_to: lead.assigned_to,
   }, "id,status");
   if (!leadResult.ok) issues.push(`lead_intake: ${leadResult.message}`);
+  const leadId = leadResult.data?.id || lead.id;
+  const leadRecord = { ...lead, ...(existingLead || {}), id: leadId, status: "Completed" };
 
-  const pricingResult = await safeInsert(client, "pricing_requests", {
+  const leadAgent = await runAgent(client, "AI Lead Intake Agent", leadRecord, pricing, {
+    status: lead.product === "Requested product" ? "Needs Review" : "Completed",
+    department: "Lead Intake",
+    description: `Parsed Slack lead for ${lead.company_name}.`,
+    next_action: "Lead saved and routed to AI COO Agent.",
+    metadata: { parsed_fields: lead },
+  });
+
+  const existingPricing = await findExistingPricing(client, leadId);
+  const pricingPayload = {
     tenant_id: lead.tenant_id,
-    lead_id: leadResult.ok ? lead.id : null,
+    lead_id: leadId || null,
     buyer_name: lead.buyer_name,
     product: lead.product,
     quantity: lead.quantity,
@@ -336,55 +549,69 @@ export async function processLead(event: Record<string, any>, text: string) {
     freight_cost: pricing.lines?.find((line: any) => line.key === "freight_cost")?.lineTotal || 0,
     margin_target: pricing.targetMargin,
     currency: pricing.currency,
-    status: "CFO Pricing Ready",
-  }, "id,status");
+    status: "Completed",
+    payload: {
+      pricing,
+      ai_agent: "AI CFO Agent",
+      approval_required: true,
+      blocked_until_director_approval: true,
+    },
+  };
+  const pricingResult = existingPricing
+    ? await safeUpdate(client, "pricing_requests", existingPricing.id, pricingPayload, "id,status")
+    : await safeInsert(client, "pricing_requests", pricingPayload, "id,status");
   if (!pricingResult.ok) issues.push(`pricing_requests: ${pricingResult.message}`);
 
-  const cooTask = await safeInsert(client, "tasks", {
-    tenant_id: lead.tenant_id,
-    title: `Verify Slack lead: ${lead.company_name}`,
-    description: `Slack lead for ${lead.quantity} ${lead.unit} ${lead.product} to ${lead.destination_country}.`,
-    workflow_source: "Slack Lead Intake",
-    linked_record_id: leadResult.ok ? lead.id : null,
-    linked_route: "/export-os/executives/coo",
+  const logistics = buildLogisticsPlan(lead, pricing);
+  const compliance = buildCompliancePlan(lead);
+  const buyerReplyDraft = buildBuyerReplyDraft(lead, pricing, amount);
+
+  const cooTask = await runAgent(client, "AI COO Agent", leadRecord, pricing, {
+    status: lead.destination_country === "Not provided" || lead.product === "Requested product" ? "Needs Review" : "Completed",
     department: "Operations",
-    owner_command: "COO Command",
-    assigned_to: "COO Command",
-    priority: "High",
-    status: "Pending COO Verification",
-    due_date: "Today",
-    escalation_level: "Director if buyer or supplier verification is incomplete",
-    blocking_reason: "COO must verify buyer, product, quantity, destination, and supplier readiness before quote or invoice release.",
-    next_action: "Verify the lead before CFO pricing can be released.",
-    buyer: lead.company_name,
-    product: lead.product,
-  }, "id,status");
-  if (!cooTask.ok) issues.push(`COO task: ${cooTask.message}`);
+    description: `Verified export feasibility for ${lead.quantity} ${lead.unit} ${lead.product} to ${lead.destination_country}.`,
+    next_action: "COO feasibility prepared automatically. No manual COO work required.",
+    metadata: { feasible: lead.destination_country !== "Not provided", checks: ["buyer captured", "product captured", "destination captured", "quantity captured"] },
+  });
+  if (!cooTask.task?.id) issues.push("AI COO Agent task: not created");
 
-  const cfoTask = await safeInsert(client, "tasks", {
-    tenant_id: lead.tenant_id,
-    title: `Price Slack lead: ${lead.company_name}`,
-    description: `Pricing engine calculated ${amount} total and ${formatMoney(pricing.recommendedPricePerUnit, pricing.currency)} per ${lead.unit}.`,
-    workflow_source: "Pricing Engine",
-    linked_record_id: leadResult.ok ? lead.id : null,
-    linked_route: "/export-os/pricing",
+  const cfoTask = await runAgent(client, "AI CFO Agent", leadRecord, pricing, {
+    status: pricing.achievedMarginPercent < pricing.minMargin ? "Needs Review" : "Completed",
     department: "Finance",
-    owner_command: "CFO Command",
-    assigned_to: "CFO Command",
-    priority: "High",
-    status: "Waiting Review",
-    due_date: "Today",
-    escalation_level: "Director approval before buyer-facing release",
-    blocking_reason: "CFO must review pricing assumptions, margin, freight, and currency before Director approval.",
-    next_action: `Review ${pricing.achievedMarginPercent}% margin and ${pricing.incoterm} assumptions.`,
-    buyer: lead.company_name,
-    product: lead.product,
-  }, "id,status");
-  if (!cfoTask.ok) issues.push(`CFO task: ${cfoTask.message}`);
+    description: `Calculated ${amount} total, ${formatMoney(pricing.recommendedPricePerUnit, pricing.currency)} per ${lead.unit}, ${pricing.achievedMarginPercent}% margin.`,
+    next_action: "CFO pricing complete automatically. Director approval required before buyer release.",
+    pricing_request_id: pricingResult.data?.id,
+    metadata: { pricing, amount, profit: pricing.profitAmount, margin: pricing.achievedMarginPercent },
+  });
+  if (!cfoTask.task?.id) issues.push("AI CFO Agent task: not created");
 
-  const approvalId = crypto.randomUUID();
-  const approval = await safeInsert(client, "founder_approvals", {
-    id: approvalId,
+  const logisticsTask = await runAgent(client, "AI Logistics Agent", leadRecord, pricing, {
+    status: "Completed",
+    department: "Logistics",
+    description: `Estimated freight, inland logistics, clearance, packing, and lead time.`,
+    next_action: "Logistics estimate prepared automatically for Director review.",
+    metadata: logistics,
+  });
+
+  const complianceTask = await runAgent(client, "AI Compliance Agent", leadRecord, pricing, {
+    status: "Completed",
+    department: "Compliance",
+    description: `Checked required export documents and likely certificates for ${lead.product}.`,
+    next_action: "Compliance checklist prepared automatically. Final document release requires approval.",
+    metadata: compliance,
+  });
+
+  const salesTask = await runAgent(client, "AI Sales Agent", leadRecord, pricing, {
+    status: "Completed",
+    department: "Sales",
+    description: "Prepared buyer reply draft. It will not be sent until Director/Founder approval.",
+    next_action: "Hold buyer reply until Director approval.",
+    metadata: { buyer_reply_draft: buyerReplyDraft, blocked_until_director_approval: true },
+  });
+
+  const existingApproval = await findExistingApproval(client, leadId);
+  const approvalId = existingApproval?.id || crypto.randomUUID();
+  const approvalPayload = {
     tenant_id: lead.tenant_id,
     approval_request_id: approvalId,
     request_type: "Slack Lead Quote Approval",
@@ -392,8 +619,8 @@ export async function processLead(event: Record<string, any>, text: string) {
     summary: `Approve ${amount} quote for ${lead.quantity} ${lead.unit} ${lead.product} to ${lead.destination_country}. COO verification and CFO pricing review are required before final invoice.`,
     source_module: "Slack Lead Intake",
     related_table: "lead_intake",
-    related_record_id: leadResult.ok ? lead.id : null,
-    related_record: leadResult.ok ? lead.id : `slack:${event.channel}:${event.ts}`,
+    related_record_id: leadId || null,
+    related_record: leadId || `slack:${event.channel}:${event.ts}`,
     buyer_name: lead.company_name,
     amount,
     requested_by: "Slack Lead Intake",
@@ -406,17 +633,58 @@ export async function processLead(event: Record<string, any>, text: string) {
     metadata: {
       lead,
       pricing,
-      coo_task_id: cooTask.data?.id || null,
-      cfo_task_id: cfoTask.data?.id || null,
+      logistics,
+      compliance,
+      buyer_reply_draft: buyerReplyDraft,
+      coo_task_id: cooTask.task?.id || null,
+      cfo_task_id: cfoTask.task?.id || null,
+      logistics_task_id: logisticsTask.task?.id || null,
+      compliance_task_id: complianceTask.task?.id || null,
+      sales_task_id: salesTask.task?.id || null,
       approval_gating_required: true,
       quote_blocked_until_director_approval: true,
       invoice_blocked_until_director_approval: true,
+      buyer_reply_blocked_until_director_approval: true,
     },
     audit_trail: [{ event: "Slack lead routed to Director approval", status: "Pending Approval", at: new Date().toISOString() }],
-  }, "id,status,approval_status");
+  };
+  const approval = existingApproval
+    ? await safeUpdate(client, "founder_approvals", existingApproval.id, approvalPayload, "id,status,approval_status")
+    : await safeInsert(client, "founder_approvals", { id: approvalId, ...approvalPayload }, "id,status,approval_status");
   if (!approval.ok) issues.push(`founder_approvals: ${approval.message}`);
 
-  return { lead, pricing, amount, issues, cooTask, cfoTask, approval };
+  const directorTask = await runAgent(client, "AI Director Agent", leadRecord, pricing, {
+    status: "Needs Review",
+    department: "Director Office",
+    description: "Prepared final recommendation for manual Founder/Director decision.",
+    next_action: "Founder/Director must manually approve or reject. AI cannot approve.",
+    approval_id: approval.data?.id,
+    metadata: {
+      recommendation: pricing.achievedMarginPercent >= pricing.minMargin ? "Approve after COO/CFO evidence review." : "Review margin before approval.",
+      manual_approval_required: true,
+      approval_id: approval.data?.id || null,
+      buyer_reply_draft: buyerReplyDraft,
+    },
+  });
+  [leadAgent, cooTask, cfoTask, logisticsTask, complianceTask, salesTask, directorTask]
+    .forEach((agentResult: any) => {
+      if (agentResult.issue) issues.push(agentResult.issue);
+    });
+
+  return {
+    lead: leadRecord,
+    pricing,
+    amount,
+    issues,
+    cooTask: { ok: true, data: cooTask.task },
+    cfoTask: { ok: true, data: cfoTask.task },
+    logisticsTask,
+    complianceTask,
+    salesTask,
+    directorTask,
+    approval,
+    agentRuns: [leadAgent, cooTask, cfoTask, logisticsTask, complianceTask, salesTask, directorTask],
+  };
 }
 
 export function buildReply(result: any) {
@@ -430,9 +698,9 @@ export function buildReply(result: any) {
     `CFO pricing estimate: ${amount} total, ${formatMoney(pricing.recommendedPricePerUnit, pricing.currency)} per ${lead.unit}`,
     `Margin: ${pricing.achievedMarginPercent}% | Lead time: ${pricing.seaLeadTime}`,
     "",
-    "*Routing*",
-    `COO verification: ${cooTask.data?.id ? `created (${cooTask.data.id})` : "not created"}`,
-    `CFO pricing review: ${cfoTask.data?.id ? `created (${cfoTask.data.id})` : "not created"}`,
+    "*AI Agent Routing*",
+    `AI COO Agent: ${cooTask.data?.id ? `completed (${cooTask.data.id})` : "not created"}`,
+    `AI CFO Agent: ${cfoTask.data?.id ? `completed (${cfoTask.data.id})` : "not created"}`,
     `Director approval: ${approval.data?.id ? `pending (${approval.data.id})` : "not created"}`,
     "",
     "No quote, posting, or final invoice will proceed until Director approval is completed.",

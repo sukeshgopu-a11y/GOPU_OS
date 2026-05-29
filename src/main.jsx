@@ -14916,6 +14916,27 @@ function TaskFollowupEngine({ navigate, onBack }) {
     navigate('/export-os/director');
   }
 
+  async function runAIAgentAgain(task) {
+    if (!task?.id) return;
+    setTaskNotice(`Running ${task.owner_command || 'AI Agent'} again...`);
+    try {
+      const response = await fetch('/api/ai-agents/run', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ task_id: task.id })
+      });
+      const result = await response.json().catch(() => ({}));
+      setTaskNotice(result.ok ? `${task.owner_command || 'AI Agent'} rerun completed.` : result.message || 'AI agent rerun needs review.');
+      const refreshed = await getTasks(demoTenantId);
+      if (refreshed.data?.length) {
+        setTasks(refreshed.data);
+        setSelectedId(task.id);
+      }
+    } catch (error) {
+      setTaskNotice(error?.message || 'AI agent rerun failed.');
+    }
+  }
+
   async function createNewTask() {
     if (!newTaskDraft.title.trim()) {
       setTaskNotice('Task title is required.');
@@ -15036,7 +15057,7 @@ function TaskFollowupEngine({ navigate, onBack }) {
           <DailyFollowupPanel tasks={tasks} output={dailyPlan} onGenerate={generateDailyPlan} />
         </main>
         <aside className="task-right-stack">
-          <TaskDetailPanel task={selectedTask} note={note} setNote={setNote} updateTaskStatus={updateTaskStatus} navigate={navigate} onFounderApproval={routeTaskApproval} onEscalate={escalateSelectedTask} onAddNote={addNoteToTask} auditEvents={auditEvents} />
+          <TaskDetailPanel task={selectedTask} note={note} setNote={setNote} updateTaskStatus={updateTaskStatus} navigate={navigate} onFounderApproval={routeTaskApproval} onEscalate={escalateSelectedTask} onAddNote={addNoteToTask} onRunAiAgain={runAIAgentAgain} auditEvents={auditEvents} />
           <COOControlSummary tasks={tasks} output={founderSummary} onPrepare={prepareFounderSummary} />
         </aside>
       </section>
@@ -15142,9 +15163,10 @@ function TaskCard({ task, selected, onSelect }) {
   return <button className={`task-card-item ${selected ? 'selected' : ''} priority-${task.priority.toLowerCase()}`} onClick={onSelect}><strong>{task.title}</strong><p>{task.workflow_source} - {task.linked_label}</p><div><StatusBadge label={task.status} state={task.status === 'Blocked' || task.status === 'Escalated' ? 'attention' : 'progress'} /><PriorityBadge priority={task.priority} /></div><dl><div><dt>Owner</dt><dd>{task.owner_command}</dd></div><div><dt>Due</dt><dd>{task.due_date}</dd></div><div><dt>Dept</dt><dd>{task.department}</dd></div><div><dt>Link</dt><dd>{task.linked_record_id}</dd></div></dl></button>;
 }
 
-function TaskDetailPanel({ task, note, setNote, updateTaskStatus, onFounderApproval, onEscalate, onAddNote, navigate, auditEvents }) {
+function TaskDetailPanel({ task, note, setNote, updateTaskStatus, onFounderApproval, onEscalate, onAddNote, onRunAiAgain, navigate, auditEvents }) {
   if (!task) return null;
-  return <section className="task-panel task-detail-panel"><div className="approval-section-header"><div><span>Task Detail</span><h2>{task.title}</h2></div><PriorityBadge priority={task.priority} /></div><p>{task.description}</p><div className="task-detail-grid">{[['Owner', task.owner_command], ['Assigned Role', task.assigned_role || task.assigned_to], ['Department', task.department], ['Source Module', task.workflow_source], ['Linked Record', task.linked_record_id], ['Due Date', task.due_date], ['Status', task.status], ['Blocking Reason', task.blocking_reason || 'None'], ['Next Action', task.next_action], ['Escalation Rule', task.escalation_level]].map(([label, value]) => <div key={label}><span>{label}</span><strong>{value}</strong></div>)}</div><textarea value={note} onChange={(event) => setNote(event.target.value)} placeholder="Add note, revision request, or follow-up context." /><div className="task-action-grid"><button onClick={() => updateTaskStatus('In Progress', note)}>Mark In Progress</button><button onClick={() => updateTaskStatus('Waiting Review', note)}>Request Review</button><button onClick={() => updateTaskStatus('Blocked', note)}>Mark Blocked</button><button onClick={() => onEscalate(task, note)}>Escalate</button><button onClick={() => onAddNote(note)}>Add Note</button><button onClick={() => updateTaskStatus('Done', note)}>Done</button><button onClick={() => navigate(task.linked_route || '/export-os/tasks')}>Open Linked Module</button><button onClick={() => onFounderApproval(task, note)}>Send to Founder Approval</button></div><TaskAuditTrail task={task} note={note} auditEvents={auditEvents} /></section>;
+  const isAiAgentTask = String(task.owner_command || '').startsWith('AI ');
+  return <section className="task-panel task-detail-panel"><div className="approval-section-header"><div><span>Task Detail</span><h2>{task.title}</h2></div><PriorityBadge priority={task.priority} /></div><p>{task.description}</p><div className="task-detail-grid">{[['Owner', task.owner_command], ['Assigned Role', task.assigned_role || task.assigned_to], ['Department', task.department], ['Source Module', task.workflow_source], ['Linked Record', task.linked_record_id], ['Due Date', task.due_date], ['Status', task.status], ['Blocking Reason', task.blocking_reason || 'None'], ['Next Action', task.next_action], ['Escalation Rule', task.escalation_level]].map(([label, value]) => <div key={label}><span>{label}</span><strong>{value}</strong></div>)}</div><textarea value={note} onChange={(event) => setNote(event.target.value)} placeholder="Add note, revision request, or follow-up context." /><div className="task-action-grid">{isAiAgentTask && <button onClick={() => onRunAiAgain(task)}>Run AI Again</button>}<button onClick={() => updateTaskStatus('In Progress', note)}>Mark In Progress</button><button onClick={() => updateTaskStatus('Waiting Review', note)}>Request Review</button><button onClick={() => updateTaskStatus('Blocked', note)}>Mark Blocked</button><button onClick={() => onEscalate(task, note)}>Escalate</button><button onClick={() => onAddNote(note)}>Add Note</button><button onClick={() => updateTaskStatus('Done', note)}>Done</button><button onClick={() => navigate(task.linked_route || '/export-os/tasks')}>Open Linked Module</button><button onClick={() => onFounderApproval(task, note)}>Send to Founder Approval</button></div><TaskAuditTrail task={task} note={note} auditEvents={auditEvents} /></section>;
 }
 
 function DailyFollowupPanel({ tasks, output, onGenerate }) {
