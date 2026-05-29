@@ -32872,3 +32872,33 @@ a,
     font-size: clamp(1.4rem, 9vw, 1.8rem);
   }
 }
+
+/* ── CMO mobile fixes ────────────────────────────────────── */
+@media (max-width: 760px) {
+  /* Stats row: 2 columns on mobile */
+  .cmo-stat-chip-row {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  /* Quick action buttons: 2 columns, wrap text */
+  .cmo-quick-action-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .cmo-quick-action-grid button {
+    font-size: 0.72rem;
+    padding: 10px 8px;
+    white-space: normal;
+    text-align: center;
+    min-height: 44px;
+  }
+
+  /* Backend status banner: move above bottom nav, limit width */
+  .backend-status-banner {
+    bottom: 70px;
+    right: 10px;
+    left: 10px;
+    max-width: 100%;
+    font-size: 0.68rem;
+  }
+}
