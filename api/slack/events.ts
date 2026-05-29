@@ -490,7 +490,7 @@ export async function processLead(event: Record<string, any>, text: string, opti
   const amount = formatMoney(pricing.recommendedTotalPrice, pricing.currency);
   const issues: string[] = [];
 
-  const existingLead = await findExistingLead(client, text);
+  const existingLead = options.existingLead || await findExistingLead(client, text);
   if (existingLead && !options.force) {
     return {
       lead: { ...lead, ...existingLead, destination_country: existingLead.country || lead.destination_country, unit_of_measure: existingLead.unit || lead.unit },

@@ -61,7 +61,7 @@ export default async function handler(req: any, res: any) {
     }
     if (!lead) return res.status(404).json({ ok: false, status: "lead_not_found", message: "Lead id or AI agent task id is required." });
 
-    const result = await processLead({ channel: env("SLACK_CHANNEL_ID"), ts: lead.source_thread_ts || "" }, leadToSlackText(lead), { force: true });
+    const result = await processLead({ channel: env("SLACK_CHANNEL_ID"), ts: lead.source_thread_ts || "" }, leadToSlackText(lead), { force: true, existingLead: lead });
     const shouldReply = body.reply === true || url.searchParams.get("reply") === "true";
     let slackReply = null;
     if (shouldReply) {
