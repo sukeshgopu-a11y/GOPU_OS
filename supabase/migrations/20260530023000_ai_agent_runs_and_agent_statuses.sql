@@ -63,3 +63,6 @@ create index if not exists ai_agent_runs_task_idx
 alter table public.ai_agent_runs enable row level security;
 
 grant select, insert, update on public.ai_agent_runs to authenticated;
+grant select, insert, update, delete on public.ai_agent_runs to service_role;
+
+notify pgrst, 'reload schema';
