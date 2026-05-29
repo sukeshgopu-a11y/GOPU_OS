@@ -2965,7 +2965,9 @@ input[type="range"] {
   justify-content: end;
   align-items: center;
   gap: 9px;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  flex-shrink: 0;
 }
 
 .top-command-control {
@@ -5296,6 +5298,8 @@ input[type="range"] {
   color: var(--muted);
   font-size: 0.76rem;
   font-weight: 800;
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .coo-verified svg,
