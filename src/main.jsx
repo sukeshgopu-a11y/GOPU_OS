@@ -1,4 +1,4 @@
-﻿import React, { Fragment, useCallback, useEffect, useMemo, useState } from 'react';
+import React, { Fragment, useCallback, useEffect, useMemo, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import { AnimatePresence, motion } from 'framer-motion';
 import {
@@ -66,7 +66,7 @@ import {
   Zap
 } from 'lucide-react';
 
-// —â‚¬—â‚¬ GOPU Brand Identity —â‚¬—â‚¬—â‚¬—â‚¬—â‚¬—â‚¬—â‚¬—â‚¬—â‚¬—â‚¬—â‚¬—â‚¬—â‚¬—â‚¬—â‚¬—â‚¬—â‚¬—â‚¬—â‚¬—â‚¬—â‚¬—â‚¬—â‚¬—â‚¬—â‚¬—â‚¬—â‚¬—â‚¬—â‚¬—â‚¬—â‚¬—â‚¬—â‚¬—â‚¬—â‚¬—â‚¬—â‚¬—â‚¬—â‚¬—â‚¬—â‚¬—â‚¬—â‚¬—â‚¬—â‚¬—â‚¬—â‚¬—â‚¬—â‚¬—â‚¬—â‚¬
+// GOPU Brand Identity
 
 function GopuLogoMark({ size = 40, className = '' }) {
   return (
@@ -494,9 +494,9 @@ const KEYBOARD_SHORTCUTS = [
   {
     section: 'Navigation',
     shortcuts: [
-      { keys: ['⌘', 'K'], action: 'Command palette', desc: 'Open the global command palette' },
-      { keys: ['⌘', '/'], action: 'Focus search', desc: 'Jump to the search input' },
-      { keys: ['⌘', 'B'], action: 'Toggle sidebar', desc: 'Collapse or expand the sidebar' },
+      { keys: ['Ctrl', 'K'], action: 'Command palette', desc: 'Open the global command palette' },
+      { keys: ['Ctrl', '/'], action: 'Focus search', desc: 'Jump to the search input' },
+      { keys: ['Ctrl', 'B'], action: 'Toggle sidebar', desc: 'Collapse or expand the sidebar' },
       { keys: ['G', 'H'], action: 'Go to Home', desc: 'Navigate to Executive Command Deck' },
       { keys: ['G', 'A'], action: 'Go to Analytics', desc: 'Open analytics dashboard' },
       { keys: ['G', 'S'], action: 'Go to Shipments', desc: 'Open shipment tracking' },
@@ -505,18 +505,18 @@ const KEYBOARD_SHORTCUTS = [
   {
     section: 'Actions',
     shortcuts: [
-      { keys: ['⌘', 'N'], action: 'New command', desc: 'Create a new executive command' },
-      { keys: ['⌘', 'E'], action: 'Export CSV', desc: 'Export current view as CSV' },
-      { keys: ['⌘', 'Enter'], action: 'Submit / Approve', desc: 'Submit form or approve selected item' },
-      { keys: ['⌘', 'Z'], action: 'Undo', desc: 'Undo last action' },
+      { keys: ['Ctrl', 'N'], action: 'New command', desc: 'Create a new executive command' },
+      { keys: ['Ctrl', 'E'], action: 'Export CSV', desc: 'Export current view as CSV' },
+      { keys: ['Ctrl', 'Enter'], action: 'Submit / Approve', desc: 'Submit form or approve selected item' },
+      { keys: ['Ctrl', 'Z'], action: 'Undo', desc: 'Undo last action' },
     ],
   },
   {
     section: 'Selection & Lists',
     shortcuts: [
-      { keys: ['↑', '↓'], action: 'Navigate list', desc: 'Move focus up or down in any list' },
+      { keys: ['Up', 'Down'], action: 'Navigate list', desc: 'Move focus up or down in any list' },
       { keys: ['Space'], action: 'Select row', desc: 'Toggle selection of focused row' },
-      { keys: ['⌘', 'A'], action: 'Select all', desc: 'Select all rows in current view' },
+      { keys: ['Ctrl', 'A'], action: 'Select all', desc: 'Select all rows in current view' },
       { keys: ['Esc'], action: 'Clear selection', desc: 'Deselect all / close panel' },
     ],
   },
@@ -524,15 +524,15 @@ const KEYBOARD_SHORTCUTS = [
     section: 'Filters',
     shortcuts: [
       { keys: ['F'], action: 'Focus filter bar', desc: 'Jump to the filter search input' },
-      { keys: ['⌘', 'Shift', 'X'], action: 'Clear filters', desc: 'Reset all active filters' },
+      { keys: ['Ctrl', 'Shift', 'X'], action: 'Clear filters', desc: 'Reset all active filters' },
     ],
   },
   {
     section: 'System',
     shortcuts: [
       { keys: ['?'], action: 'Shortcuts', desc: 'Show this keyboard shortcuts reference' },
-      { keys: ['⌘', 'D'], action: 'Toggle dark mode', desc: 'Switch between dark and light theme' },
-      { keys: ['⌘', 'Shift', 'L'], action: 'End Session', desc: 'Securely end current session' },
+      { keys: ['Ctrl', 'D'], action: 'Toggle dark mode', desc: 'Switch between dark and light theme' },
+      { keys: ['Ctrl', 'Shift', 'L'], action: 'End Session', desc: 'Securely end current session' },
     ],
   },
 ];
@@ -1856,7 +1856,7 @@ function KeyboardShortcutsModal({ onClose }) {
         </div>
 
         <div className="kbd-modal-footer">
-          <span>Mac: use <kbd className="kbd">⌘</kbd> &nbsp;·&nbsp; Windows/Linux: use <kbd className="kbd">Ctrl</kbd></span>
+          <span>Mac: use <kbd className="kbd">Ctrl</kbd> &nbsp; - &nbsp; Windows/Linux: use <kbd className="kbd">Ctrl</kbd></span>
         </div>
       </div>
     </div>
@@ -2420,7 +2420,7 @@ const ANALYTICS_DATA = {
     revenue: [42, 38, 55, 61, 49, 67, 72],
     shipments: [3, 2, 4, 5, 3, 6, 5],
     labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
-    totalRevenue: '₹48.2L',
+    totalRevenue: 'Rs 48.2L',
     revenueChange: 12,
     totalShipments: 28,
     shipmentChange: 8,
@@ -2433,7 +2433,7 @@ const ANALYTICS_DATA = {
     revenue: [120, 135, 118, 142, 155, 148, 163, 171, 158, 168, 175, 182, 170, 188, 195, 182, 199, 210, 198, 215, 208, 222, 218, 235, 228, 242, 238, 251, 245, 258],
     shipments: [8, 10, 7, 12, 11, 9, 14, 13, 10, 15, 12, 16, 11, 14, 18, 13, 17, 20, 15, 19, 16, 21, 18, 23, 20, 24, 22, 26, 21, 25],
     labels: Array.from({ length: 30 }, (_, i) => `${i + 1}`),
-    totalRevenue: '₹2.14Cr',
+    totalRevenue: 'Rs 2.14Cr',
     revenueChange: 18,
     totalShipments: 124,
     shipmentChange: 15,
@@ -2446,7 +2446,7 @@ const ANALYTICS_DATA = {
     revenue: [380, 420, 395, 445, 468, 432, 478, 512, 488, 524, 506, 548, 532, 568, 552, 589, 575, 610, 592, 628, 614, 645, 630, 658, 645, 672, 660, 685, 670, 694, 682, 708, 695, 720, 708, 732, 718, 745, 730, 755, 742, 768, 755, 778, 765, 790, 778, 802, 790, 815],
     shipments: [22, 26, 24, 28, 30, 27, 32, 35, 31, 36, 34, 38, 36, 40, 38, 42, 40, 45, 43, 47, 45, 49, 47, 52, 50, 54, 52, 56, 54, 58],
     labels: ['Jan W1', 'Jan W2', 'Jan W3', 'Jan W4', 'Feb W1', 'Feb W2', 'Feb W3', 'Feb W4', 'Mar W1', 'Mar W2', 'Mar W3', 'Mar W4'],
-    totalRevenue: '₹6.8Cr',
+    totalRevenue: 'Rs 6.8Cr',
     revenueChange: 24,
     totalShipments: 412,
     shipmentChange: 22,
@@ -2459,7 +2459,7 @@ const ANALYTICS_DATA = {
     revenue: [820, 940, 880, 1020, 980, 1150, 1080, 1240, 1180, 1320, 1260, 1420],
     shipments: [48, 56, 52, 62, 58, 70, 66, 76, 72, 82, 78, 90],
     labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
-    totalRevenue: '₹28.4Cr',
+    totalRevenue: 'Rs 28.4Cr',
     revenueChange: 31,
     totalShipments: 1810,
     shipmentChange: 28,
@@ -2471,11 +2471,11 @@ const ANALYTICS_DATA = {
 };
 
 const TOP_MARKETS = [
-  { country: 'UAE', flag: '🇦🇪', revenue: '₹8.2L', share: 72, shipments: 34, trend: 'up' },
-  { country: 'Saudi Arabia', flag: '🇸🇦', revenue: '₹5.6L', share: 49, shipments: 22, trend: 'up' },
-  { country: 'USA', flag: '🇺🇸', revenue: '₹4.1L', share: 36, shipments: 16, trend: 'stable' },
-  { country: 'UK', flag: '🇬🇧', revenue: '₹2.8L', share: 25, shipments: 11, trend: 'up' },
-  { country: 'Germany', flag: '🇩🇪', revenue: '₹1.9L', share: 17, shipments: 8, trend: 'down' },
+  { country: 'UAE', flag: '', revenue: 'Rs 8.2L', share: 72, shipments: 34, trend: 'up' },
+  { country: 'Saudi Arabia', flag: '', revenue: 'Rs 5.6L', share: 49, shipments: 22, trend: 'up' },
+  { country: 'USA', flag: '', revenue: 'Rs 4.1L', share: 36, shipments: 16, trend: 'stable' },
+  { country: 'UK', flag: '', revenue: 'Rs 2.8L', share: 25, shipments: 11, trend: 'up' },
+  { country: 'Germany', flag: '', revenue: 'Rs 1.9L', share: 17, shipments: 8, trend: 'down' },
 ];
 
 const PRODUCT_MIX = [
@@ -2661,7 +2661,7 @@ function AnalyticsDashboard({ onBack }) {
                 color: (k.trend === 'up-good' ? k.change >= 0 : k.change < 0) ? '#22c55e' : '#ff4d6d'
               }}
             >
-              {k.change >= 0 ? '▲' : '▼'} {Math.abs(k.change)}%
+              {k.change >= 0 ? 'Up' : 'Down'} {Math.abs(k.change)}%
             </span>
           </div>
         ))}
@@ -2712,7 +2712,7 @@ function AnalyticsDashboard({ onBack }) {
                   </td>
                   <td>{m.shipments}</td>
                   <td style={{ color: m.trend === 'up' ? '#22c55e' : m.trend === 'down' ? '#ff4d6d' : 'var(--dim)' }}>
-                    {m.trend === 'up' ? '▲' : m.trend === 'down' ? '▼' : '--'}
+                    {m.trend === 'up' ? 'Up' : m.trend === 'down' ? 'Down' : '--'}
                   </td>
                 </tr>
               ))}
@@ -3425,7 +3425,7 @@ function OSSelectionCard({ id, title, subtitle, description, icon: Icon, selecte
         <p>{description}</p>
       </div>
       <div className="os-card-footer">
-        <span>{selected ? 'Starting…' : 'Launch'}</span>
+        <span>{selected ? 'Starting...' : 'Launch'}</span>
         <ChevronRight size={17} />
       </div>
     </motion.button>
@@ -3537,7 +3537,7 @@ function PageHero({ current }) {
       <button className="tactical-button">
         <Zap size={16} />
         Execute Command
-        <kbd className="kbd-hint">⌘K</kbd>
+        <kbd className="kbd-hint">Ctrl K</kbd>
       </button>
     </div>
   );
@@ -3818,7 +3818,7 @@ function LearningCentrePage({ navigate, onBack, reportMode = false }) {
                   <span>{finding.source_url ? <a href={finding.source_url} target="_blank" rel="noreferrer">Open source</a> : 'Source unavailable.'}</span>
                   <span title="Model self-assessment only. This is not a verified truth score.">{Number(finding.confidence_score || 0).toFixed(2)}</span>
                   <span>{finding.status}</span>
-                  <span>{finding.memory_saved ? '✓' : '✗}</span>
+                  <span>{finding.memory_saved ? 'Done' : 'No'}</span>
                   <span>{finding.tokens_processed || 0}</span>
                 </div>
               );
@@ -4782,7 +4782,7 @@ const TrendIndicator = React.memo(function TrendIndicator({ value, suffix = '%',
   const positive = invert ? numericValue < 0 : numericValue > 0;
   const neutral = numericValue === 0;
   const color = neutral ? 'var(--muted)' : positive ? '#3ddc84' : '#ff5a5a';
-  const arrow = neutral ? '→' : positive ? '↑' : '↓';
+  const arrow = neutral ? 'to' : positive ? 'Up' : 'Down';
   const displaySuffix = typeof value === 'string' && /[%a-zA-Z]/.test(value) ? '' : suffix;
   return (
     <span style={{ color, fontSize: '0.75rem', fontWeight: 700, display: 'inline-flex', alignItems: 'center', gap: 3 }}>
@@ -5327,7 +5327,7 @@ function ScrollToTop() {
       }}
       aria-label="Scroll to top"
     >
-      ↑
+      Up
     </button>
   );
 }
@@ -5861,7 +5861,7 @@ function CommandPalette({ open, onClose, onNavigate, onAction }) {
             value={query}
             onChange={(e) => { setQuery(e.target.value); setCursor(0); }}
             onKeyDown={handleKey}
-            placeholder="Search pages, actions, settings…"
+            placeholder="Search pages, actions, settings..."
             aria-label="Command search"
             aria-autocomplete="list"
             aria-controls="cmd-list"
@@ -5896,7 +5896,7 @@ function CommandPalette({ open, onClose, onNavigate, onAction }) {
                     <span className="cmd-item-label">
                       {highlightMatch(item.label, query)}
                     </span>
-                    <kbd className="cmd-item-hint">↵</kbd>
+                    <kbd className="cmd-item-hint">Enter</kbd>
                   </button>
                 );
               })}
@@ -5905,10 +5905,10 @@ function CommandPalette({ open, onClose, onNavigate, onAction }) {
         </div>
 
         <footer className="cmd-footer">
-          <span><kbd>↑↓</kbd> navigate</span>
-          <span><kbd>↵</kbd> select</span>
+          <span><kbd>UpDown</kbd> navigate</span>
+          <span><kbd>Enter</kbd> select</span>
           <span><kbd>ESC</kbd> close</span>
-          <span><kbd>⌘K</kbd> toggle</span>
+          <span><kbd>Ctrl K</kbd> toggle</span>
         </footer>
       </div>
     </div>
@@ -6308,7 +6308,7 @@ function SortableTableHeader({ columns, sortKey, sortDir, onSort, allSelected, s
           <span>{col.label}</span>
           {col.sortable !== false && (
             <span className="sort-icon" aria-hidden="true">
-              {sortKey === col.key ? (sortDir === 'asc' ? '↑' : '↓') : '•'}
+              {sortKey === col.key ? (sortDir === 'asc' ? 'Up' : 'Down') : '-'}
             </span>
           )}
         </div>
@@ -6345,7 +6345,7 @@ function BulkActionBar({ count, actions, onClear, onExport }) {
         )}
       </div>
       <button className="bulk-clear" onClick={onClear} aria-label="Clear selection">
-        • Clear
+        - Clear
       </button>
     </div>
   );
@@ -6779,7 +6779,7 @@ function RichKpiCard({ label, value, unit = '', change, trend, sparkData, color,
         <span className="rich-kpi-label">{label}</span>
         {change !== undefined && (
           <span className="rich-kpi-change" style={{ color: trendColor }}>
-            {isPositive ? '▲' : '▼'} {Math.abs(change)}%
+            {isPositive ? 'Up' : 'Down'} {Math.abs(change)}%
           </span>
         )}
       </div>
@@ -6827,7 +6827,7 @@ function TodaysPriorities({ navigate, items }) {
   return (
     <div className="priorities-panel">
       <div className="priorities-header">
-        <span className="priorities-eyebrow">Today's Priorities</span>
+        <span className="priorities-eyebrow">Todays Priorities</span>
         <span className="priorities-count">{priorities.length} actions</span>
       </div>
       <ol className="priorities-list">
@@ -6898,10 +6898,10 @@ function QuickLaunch({ navigate }) {
 function DashboardActivityFeed() {
   const events = [
     { id: 1, time: '2m ago', actor: 'CFO', action: 'reviewed', subject: 'Q3 margin report', icon: '📁', tone: 'blue' },
-    { id: 2, time: '11m ago', actor: 'COO', action: 'escalated', subject: 'GCC shipment delay', icon: '✗', tone: 'amber' },
-    { id: 3, time: '28m ago', actor: 'System', action: 'generated', subject: 'Morning briefing draft', icon: '✓', tone: 'cyan' },
-    { id: 4, time: '1h ago', actor: 'CTO', action: 'resolved', subject: 'Automation retry queue', icon: '…', tone: 'green' },
-    { id: 5, time: '2h ago', actor: 'Director', action: 'approved', subject: 'New buyer quotation release', icon: '✓', tone: 'green' },
+    { id: 2, time: '11m ago', actor: 'COO', action: 'escalated', subject: 'GCC shipment delay', icon: 'No', tone: 'amber' },
+    { id: 3, time: '28m ago', actor: 'System', action: 'generated', subject: 'Morning briefing draft', icon: 'Done', tone: 'cyan' },
+    { id: 4, time: '1h ago', actor: 'CTO', action: 'resolved', subject: 'Automation retry queue', icon: '...', tone: 'green' },
+    { id: 5, time: '2h ago', actor: 'Director', action: 'approved', subject: 'New buyer quotation release', icon: 'Done', tone: 'green' },
     { id: 6, time: '3h ago', actor: 'CMO', action: 'drafted', subject: 'GCC importer outreach email', icon: '✉', tone: 'blue' },
   ];
 
@@ -6929,7 +6929,7 @@ function DashboardActivityFeed() {
 }
 
 function HomeKpiStrip({ navigate }) {
-  const [kpis, setKpis] = useState({ leads: 0, pending: 0, tasks: 0, revenue: 'â€"', health: 'Checking...' });
+  const [kpis, setKpis] = useState({ leads: 0, pending: 0, tasks: 0, revenue: '-', health: 'Checking...' });
 
   useEffect(() => {
     async function load() {
@@ -6943,7 +6943,7 @@ function HomeKpiStrip({ navigate }) {
           leads: (leadsResult.data || []).length,
           pending: (approvalsResult.data || []).filter(a => a.status === 'Pending Approval').length,
           tasks: (tasksResult.data || []).filter(t => !['Done', 'Completed'].includes(t.status)).length,
-          revenue: 'â€"',
+          revenue: '-',
           health: 'Live',
         });
       } catch {
@@ -6983,7 +6983,7 @@ function HomeDirectorPreview({ navigate }) {
     <section className="home-panel">
       <div className="home-panel-header">
         <h2>Director Queue</h2>
-        <button className="ghost-button" onClick={() => navigate('/export-os/director')}>View all →</button>
+        <button className="ghost-button" onClick={() => navigate('/export-os/director')}>View all</button>
       </div>
       {items.length === 0
         ? <p className="home-panel-empty">No pending decisions. Agents are running.</p>
@@ -7115,7 +7115,7 @@ function HeroCommandPanel({ navigate }) {
       <div className="hero-command-actions">
         <button className="tactical-button" onClick={() => navigate('/export-os/director')}>
           Open Director Console
-          <kbd className="kbd-hint">⌘K</kbd>
+          <kbd className="kbd-hint">Ctrl K</kbd>
         </button>
         <button className="ghost-button" onClick={() => navigate('/export-os/workflows')}>View Workflows</button>
       </div>
@@ -7130,7 +7130,7 @@ const topBarSearchRecords = [
   { id: 'srch-invoices-pending', title: 'Pending export invoices', type: 'Invoice', owner: 'CFO', status: 'Review Required', priority: 'Critical', route: '/export-os/invoices', keywords: 'open pending invoices blocked invoice lut hsn final pdf buyer email' },
   { id: 'srch-high-risk', title: 'High-risk workflows', type: 'Risk', owner: 'Director', status: 'Risk Detected', priority: 'Critical', route: '/export-os/director', keywords: 'any high risk workflows critical escalated director queue pending review' },
   { id: 'srch-openai-renewal', title: 'OpenAI renewal and credit watch', type: 'Payment', owner: 'CTO + CFO', status: 'Monitoring', priority: 'Medium', route: '/export-os/payment-vault', keywords: 'openai renewal credit payment pending subscription vault budget' },
-  { id: 'srch-today', title: "Today's operating priorities", type: 'Executive Summary', owner: 'COO + Director', status: 'Attention', priority: 'High', route: '/export-os/director-console', keywords: 'what pending today priorities tasks due today urgent attention' },
+  { id: 'srch-today', title: "Todays operating priorities", type: 'Executive Summary', owner: 'COO + Director', status: 'Attention', priority: 'High', route: '/export-os/director-console', keywords: 'what pending today priorities tasks due today urgent attention' },
   { id: 'srch-suppliers', title: 'Supplier confirmation follow-ups', type: 'Supplier', owner: 'COO', status: 'Escalated', priority: 'High', route: '/export-os/suppliers', keywords: 'supplier follow up confirmation delayed stock packing procurement' },
   { id: 'srch-payments', title: 'Payment approvals and renewals', type: 'Payment', owner: 'CFO', status: 'Review Required', priority: 'High', route: '/export-os/payments', keywords: 'payments pending approvals otp renewal vendor billing methods receipts' },
   { id: 'srch-tasks', title: 'Open operational tasks', type: 'Task', owner: 'COO', status: 'In Progress', priority: 'Medium', route: '/export-os/tasks', keywords: 'open tasks blocked due today overdue follow up' },
@@ -9195,12 +9195,12 @@ function buildDirectorCommandResponse(query, items = [], directorData = {}) {
 }
 
 function DirectorCommandConsole({ value, setValue, onRun, response, history, navigate, onEscalate, onCreateFollowup }) {
-  const suggestions = ['What is pending this month?', 'How much marketing budget pending?', 'Show delayed shipments.', 'Any high-risk buyers?', 'What is blocking invoices?', 'What payments are pending?', 'Any Country pending opportunities?', "Show today's priorities."];
+  const suggestions = ['What is pending this month?', 'How much marketing budget pending?', 'Show delayed shipments.', 'Any high-risk buyers?', 'What is blocking invoices?', 'What payments are pending?', 'Any Country pending opportunities?', "Show todays priorities."];
   return (
     <section className="director-panel director-command-console">
       <div className="approval-section-header"><div><span>Director Command Input</span><h2>Ask GOPU OS anything operational</h2></div><Bot size={18} /></div>
       <div className="director-input-row">
-        <textarea aria-label="Command prompt" value={value} onChange={(event) => setValue(event.target.value)} onKeyDown={(event) => { if ((event.ctrlKey || event.metaKey) && event.key === 'Enter') onRun(); }} placeholder="What is pending this month?  •  Show delayed shipments.  •  Any Country pending opportunities?  •  What is blocking invoices?" />
+        <textarea aria-label="Command prompt" value={value} onChange={(event) => setValue(event.target.value)} onKeyDown={(event) => { if ((event.ctrlKey || event.metaKey) && event.key === 'Enter') onRun(); }} placeholder="What is pending this month?  -  Show delayed shipments.  -  Any Country pending opportunities?  -  What is blocking invoices?" />
         <button className="tactical-button" onClick={() => onRun()}>Ask Director</button>
       </div>
       <div className="director-suggestion-row">
@@ -10457,7 +10457,7 @@ const defaultPricingInputs = {
   minimum_margin_percent: '12',
   market_reference_price: '320',
   previous_customer_price: '',
-  notes: '----- MARKET PRICE AUTO CHECK START -----\nMARKET PRICE CHECK\nStatus: REFERENCE ESTIMATE\nProduct: Red Chilli Powder\nGrade/source match: Red Chilli/Guntur Chilli\nLive/reference price: ₹180.00/kg | ₹180,000.00/ton\nManual source check required before buyer-facing quote.'
+  notes: '----- MARKET PRICE AUTO CHECK START -----\nMARKET PRICE CHECK\nStatus: REFERENCE ESTIMATE\nProduct: Red Chilli Powder\nGrade/source match: Red Chilli/Guntur Chilli\nLive/reference price: Rs 180.00/kg | Rs 180,000.00/ton\nManual source check required before buyer-facing quote.'
 };
 
 function buildPricingCostRows(incoterm = 'FOB', currency = 'INR') {
@@ -11010,8 +11010,8 @@ function parsePricingChannelMessage(message) {
   const currencyMatch = text.match(/\b(INR|USD|AUD|EUR|GBP|AED|SAR|SGD)\b/i);
   if (currencyMatch) updates.currency = currencyMatch[1].toUpperCase();
 
-  const priceMatch = text.match(/(?:price|rate|buyer price|target price|required price)\D{0,18}(?:inr|rs\.?|₹)?\s*(\d+(?:\.\d+)?)/i)
-    || text.match(/(?:₹|inr|rs\.?)\s*(\d+(?:\.\d+)?)(?:\s*\/?\s*(?:kg|per kg))?/i);
+  const priceMatch = text.match(/(?:price|rate|buyer price|target price|required price)\D{0,18}(?:inr|rs\.?|Rs )?\s*(\d+(?:\.\d+)?)/i)
+    || text.match(/(?:Rs |inr|rs\.?)\s*(\d+(?:\.\d+)?)(?:\s*\/?\s*(?:kg|per kg))?/i);
   if (priceMatch?.[1]) updates.market_reference_price = priceMatch[1];
   return updates;
 }
@@ -11571,12 +11571,12 @@ function formatDualMoney(line, currency) {
 }
 
 function formatPricingInr(value) {
-  return `₹${Number(value || 0).toLocaleString(undefined, { maximumFractionDigits: 2 })}`;
+  return `Rs ${Number(value || 0).toLocaleString(undefined, { maximumFractionDigits: 2 })}`;
 }
 
 function formatPricingInrLive(value) {
   if (!Number.isFinite(Number(value)) || Number(value) <= 0) return 'Awaiting calculation';
-  return `₹${Number(value || 0).toLocaleString(undefined, { maximumFractionDigits: 2 })}`;
+  return `Rs ${Number(value || 0).toLocaleString(undefined, { maximumFractionDigits: 2 })}`;
 }
 
 function getCfoApprovalReasons(inputs, calc, risk, costRows, productIntel) {
@@ -11929,7 +11929,7 @@ function PricingEnginePage({ onBack, onOpenApprovalWall, onOpenTasks }) {
     const response = await initiatePayment(payload, demoTenantId);
     const status = response.data?.status || 'Payment request processed';
     const label = status === 'Auto-Paid'
-      ? 'Auto-Paid âœ"'
+      ? 'Auto-Paid Done'
       : status.includes('Director')
         ? 'Escalated to Director'
         : 'Sent to Slack for approval';
@@ -12384,11 +12384,11 @@ function splitPricingRange(range) {
 }
 
 function formatInrZero(value) {
-  return `₹${Number(value || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+  return `Rs ${Number(value || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 }
 
 function formatInrFixed(value) {
-  return `₹${Number(value || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+  return `Rs ${Number(value || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 }
 
 function formatCurrencyZero(value, currency = 'USD') {
@@ -12397,10 +12397,10 @@ function formatCurrencyZero(value, currency = 'USD') {
 
 function currencySymbol(currency) {
   if (currency === 'USD') return '$';
-  if (currency === 'INR') return '₹';
+  if (currency === 'INR') return 'Rs ';
   if (currency === 'AED') return 'AED ';
-  if (currency === 'EUR') return '€';
-  if (currency === 'GBP') return 'Ã‚£';
+  if (currency === 'EUR') return 'EUR';
+  if (currency === 'GBP') return 'GBP';
   if (currency === 'AUD') return 'A$';
   return `${currency} `;
 }
@@ -12571,7 +12571,7 @@ function PricingResultPanel({ calc, inputs, approvalReasons }) {
       <div className="cfo-result-hero">
         <div><span>Margin</span><strong>{calc.margin.toFixed(2)}%</strong><small>Target: {inputs.target_margin_percent}%</small></div>
         <div><span>Unit Price</span><strong>{formatPricingValue(calc.recommendedUnitPrice, inputs.currency)}</strong><small>{formatPricingInrLive(convertCurrency(calc.recommendedUnitPrice, inputs.currency, 'INR', moneyNumber(inputs.exchange_rate)))}</small></div>
-        <div><span>FX Basis</span><strong>1 USD = ₹{inputs.exchange_rate}</strong><small>Manual override allowed, approval tracked.</small></div>
+        <div><span>FX Basis</span><strong>1 USD = Rs {inputs.exchange_rate}</strong><small>Manual override allowed, approval tracked.</small></div>
       </div>
       <div className="ai-quote-grid">
         <div><span>Safe Quote</span><strong>{formatPricingValue(calc.safeQuotePrice, inputs.currency)}</strong><small>Conservative margin for freight/FX uncertainty.</small></div>
@@ -12724,17 +12724,17 @@ const cfoFinanceData = {
     ['Pending quote approvals', '4', 'Director review gate active -- no buyer release'],
     ['Margin risk alerts', '3', 'Black pepper 14.2% -- below 18% floor'],
     ['Invoice approval pending', '2', 'LUT gate + HSN verification active'],
-    ['RoDTEP & Drawback receivable', '₹2.4L', 'Q1 claim filed, ICEGATE pending'],
+    ['RoDTEP & Drawback receivable', 'Rs 2.4L', 'Q1 claim filed, ICEGATE pending'],
     ['Receivables (LC/TT)', '5', 'USD 48,200 outstanding -- 30-90d aging'],
     ['Payables (supplier + freight)', '6', 'CFO controlled -- no auto-pay'],
-    ['Monthly working capital (PCFC)', '₹18.5L', 'Packing credit utilised this cycle'],
+    ['Monthly working capital (PCFC)', 'Rs 18.5L', 'Packing credit utilised this cycle'],
     ['High-risk finance items', '5', 'Founder attention -- FEMA overdue watch']
   ],
   cashRows: [
-    ['PCFC utilisation', '₹18.5L drawn', 'Packing credit against confirmed LC -- standard', 'Monitoring'],
+    ['PCFC utilisation', 'Rs 18.5L drawn', 'Packing credit against confirmed LC -- standard', 'Monitoring'],
     ['Forward cover open', 'USD 25,000 @ 83.40', 'Hedged against USD/INR volatility -- 90d', 'Covered'],
-    ['RoDTEP credit ledger', '₹2.4L pending', 'ICEGATE claim filed -- awaiting credit', 'Review Required'],
-    ['Duty drawback claim', '₹68,000', 'Filed with customs -- 45d expected realisation', 'Monitoring'],
+    ['RoDTEP credit ledger', 'Rs 2.4L pending', 'ICEGATE claim filed -- awaiting credit', 'Review Required'],
+    ['Duty drawback claim', 'Rs 68,000', 'Filed with customs -- 45d expected realisation', 'Monitoring'],
     ['Overdue EDPMS entries', '2 shipments', 'BRC/FIRC not filed -- FEMA risk if >9 months', 'Attention']
   ],
   receivablesRows: [
@@ -12744,11 +12744,11 @@ const cfoFinanceData = {
     ['Singapore Spice House', 'CI-SGP-009', 'USD 4,950', '2026-07-01', 'DA 30 days', 'CFO Command']
   ],
   payableRows: [
-    ['Rajkot Chilli Mandi', 'Raw material procurement', '₹4,20,000', 'COO confirmation required', 'Supplier Control'],
-    ['Freight forwarder -- JNPT', 'Sea freight + THC charges', '₹85,000', 'COO + CFO approval', 'Shipment System'],
-    ['CHA charges -- SB filing', 'Custom house agent fees', '₹12,500', 'COO controlled', 'Customs'],
-    ['Fumigation agency', 'Methyl bromide treatment', '₹8,200', 'COO + quality clearance', 'Quality'],
-    ['Insurance premium', 'Marine cargo insurance', '₹6,800', 'CFO auto-eligible', 'Payment Vault']
+    ['Rajkot Chilli Mandi', 'Raw material procurement', 'Rs 4,20,000', 'COO confirmation required', 'Supplier Control'],
+    ['Freight forwarder -- JNPT', 'Sea freight + THC charges', 'Rs 85,000', 'COO + CFO approval', 'Shipment System'],
+    ['CHA charges -- SB filing', 'Custom house agent fees', 'Rs 12,500', 'COO controlled', 'Customs'],
+    ['Fumigation agency', 'Methyl bromide treatment', 'Rs 8,200', 'COO + quality clearance', 'Quality'],
+    ['Insurance premium', 'Marine cargo insurance', 'Rs 6,800', 'CFO auto-eligible', 'Payment Vault']
   ],
   marginRows: [
     ['Chilli Powder 100MT', 'Khalid Trading UAE', 'UAE', '14.2%', 'Low Margin -- Director Block'],
@@ -12875,7 +12875,7 @@ function CfoOverviewTab({ onOpenPricing }) {
       </div>
       <div className="cfo-finance-grid two">
         <CfoFinancePanel title="Approval Control" subtitle="Founder-sensitive finance queue" icon={FileCheck2} rows={['Low margin quotations require founder approval.', 'Invoice release remains blocked until approval.', 'Document release must route through Director Queue.', 'Payment caps remain INR-governed.']} />
-        <CfoFinancePanel title="Payment Vault Summary" subtitle="Infrastructure spend and renewals" icon={CircleDollarSign} rows={['Auto-pay allowed only for trusted infrastructure vendors.', 'Above ₹1,500 requires founder approval.', 'OTP is never stored or logged.', 'Receipts remain audit-controlled.']} />
+        <CfoFinancePanel title="Payment Vault Summary" subtitle="Infrastructure spend and renewals" icon={CircleDollarSign} rows={['Auto-pay allowed only for trusted infrastructure vendors.', 'Above Rs 1,500 requires founder approval.', 'OTP is never stored or logged.', 'Receipts remain audit-controlled.']} />
       </div>
       <button className="tactical-button" onClick={onOpenPricing}>Open Quotations Pricing Engine</button>
     </section>
@@ -13263,16 +13263,16 @@ function CfoPaymentVaultInteractiveTab({ data }) {
       {activeVaultTab === 'Overview' && (
         <>
           <BillingVaultOverview billingMethods={billingMethods} providerConnected={billingMethods.length > 0} onConnect={() => setConnectModalOpen(true)} />
-          <CfoFinanceTable title="Recent Payment Vault Records" subtitle="CFO-controlled infrastructure payment evidence" columns={['Vendor', 'Amount INR', 'Payment status', 'Receipt status']} rows={vaultRecentPayments.length ? vaultRecentPayments : [['OpenAI', '₹950', 'OTP Required', 'Receipt Pending']]} />
+          <CfoFinanceTable title="Recent Payment Vault Records" subtitle="CFO-controlled infrastructure payment evidence" columns={['Vendor', 'Amount INR', 'Payment status', 'Receipt status']} rows={vaultRecentPayments.length ? vaultRecentPayments : [['OpenAI', 'Rs 950', 'OTP Required', 'Receipt Pending']]} />
         </>
       )}
-      {activeVaultTab === 'Payments' && <CfoFinanceTable title="Recent Payment Vault Records" subtitle="CFO-controlled infrastructure payment evidence" columns={['Vendor', 'Amount INR', 'Payment status', 'Receipt status']} rows={vaultRecentPayments.length ? vaultRecentPayments : [['OpenAI', '₹950', 'OTP Required', 'Receipt Pending']]} />}
+      {activeVaultTab === 'Payments' && <CfoFinanceTable title="Recent Payment Vault Records" subtitle="CFO-controlled infrastructure payment evidence" columns={['Vendor', 'Amount INR', 'Payment status', 'Receipt status']} rows={vaultRecentPayments.length ? vaultRecentPayments : [['OpenAI', 'Rs 950', 'OTP Required', 'Receipt Pending']]} />}
       {activeVaultTab === 'Renewals' && <RenewalForecastPanel forecasts={paymentForecastSeed} expanded={paymentForecastSeed[0]?.id} onToggle={() => setNotice('Renewal forecast opened. Payment execution still requires token, INR limit, and approval rule.')} />}
       {activeVaultTab === 'Vendors' && <VendorTrustRegistry vendors={vendorTrustSeed} />}
       {activeVaultTab === 'Receipts' && <ReceiptRepository receipts={paymentReceiptsSeed} onMarkReviewed={(id) => setNotice(`Receipt ${id} marked reviewed locally.`)} />}
       {activeVaultTab === 'Audit' && <BillingAuditPanel audit={billingAudit} />}
       <div className="cfo-finance-grid two">
-        <CfoFinancePanel title="Payment Governance Rules" subtitle="INR-capped and founder-controlled" icon={ShieldCheck} rows={['≤ ₹1,000: CFO-controlled auto-renew only for trusted infrastructure vendors.', '₹1,001-₹1,500: CFO + COO confirmation required.', '> ₹1,500: Director review required.', 'Never auto-pay suppliers, freight, customs, tax, salaries, refunds, or arbitrary invoices.']} />
+        <CfoFinancePanel title="Payment Governance Rules" subtitle="INR-capped and founder-controlled" icon={ShieldCheck} rows={['<= Rs 1,000: CFO-controlled auto-renew only for trusted infrastructure vendors.', 'Rs 1,001-Rs 1,500: CFO + COO confirmation required.', '> Rs 1,500: Director review required.', 'Never auto-pay suppliers, freight, customs, tax, salaries, refunds, or arbitrary invoices.']} />
         <CfoFinancePanel title="OTP Security Rule" subtitle="CFO payment confirmation" icon={LockKeyhole} rows={['Founder receives OTP externally.', 'Founder securely shares OTP with CFO.', 'CFO enters OTP once in secure confirmation screen.', 'OTP is never stored, logged, reused, or included in AI memory.']} />
       </div>
       {connectModalOpen && <ConnectBillingMethodModal onCancel={() => setConnectModalOpen(false)} onTokenize={connectCfoBillingMethod} />}
@@ -13297,9 +13297,9 @@ function CfoPaymentVaultTab({ data }) {
           return <article key={`${label}-${index}`}><span>{label}</span><strong>{value}</strong><small>{status}</small></article>;
         })}
       </div>
-      <CfoFinanceTable title="Recent Payment Vault Records" subtitle="CFO-controlled infrastructure payment evidence" columns={['Vendor', 'Amount INR', 'Payment status', 'Receipt status']} rows={vaultRecentPayments.length ? vaultRecentPayments : [['OpenAI', '₹950', 'OTP Required', 'Receipt Pending']]} />
+      <CfoFinanceTable title="Recent Payment Vault Records" subtitle="CFO-controlled infrastructure payment evidence" columns={['Vendor', 'Amount INR', 'Payment status', 'Receipt status']} rows={vaultRecentPayments.length ? vaultRecentPayments : [['OpenAI', 'Rs 950', 'OTP Required', 'Receipt Pending']]} />
       <div className="cfo-finance-grid two">
-        <CfoFinancePanel title="Payment Governance Rules" subtitle="INR-capped and founder-controlled" icon={ShieldCheck} rows={['≤ ₹1,000: CFO-controlled auto-renew only for trusted infrastructure vendors.', '₹1,001-₹1,500: CFO + COO confirmation required.', '> ₹1,500: Founder approval mandatory.', 'Never auto-pay suppliers, freight, customs, tax, salaries, refunds, or arbitrary invoices.']} />
+        <CfoFinancePanel title="Payment Governance Rules" subtitle="INR-capped and founder-controlled" icon={ShieldCheck} rows={['<= Rs 1,000: CFO-controlled auto-renew only for trusted infrastructure vendors.', 'Rs 1,001-Rs 1,500: CFO + COO confirmation required.', '> Rs 1,500: Founder approval mandatory.', 'Never auto-pay suppliers, freight, customs, tax, salaries, refunds, or arbitrary invoices.']} />
         <CfoFinancePanel title="OTP Security Rule" subtitle="CFO payment confirmation" icon={LockKeyhole} rows={['Founder receives OTP externally.', 'Founder securely shares OTP with CFO.', 'CFO enters OTP once in secure confirmation screen.', 'OTP is never stored, logged, reused, or included in AI memory.']} />
       </div>
       <CfoFinancePanel title="Payment Workflow" subtitle="CTO detects, CFO executes" icon={Route} rows={vaultWorkflowSteps.length ? vaultWorkflowSteps : ['CTO detects renewal.', 'COO confirms need.', 'CFO validates and executes.', 'Founder approval/OTP if required.', 'CFO stores receipt in Payment Vault.']} />
@@ -13360,7 +13360,7 @@ function CfoIntelligencePanel({ data, onOpenPricing, onOpenPaymentVault }) {
       {openedItem && <div className="cfo-inline-detail"><strong>Risk opened</strong><span>{openedItem}</span><small>Route to pricing, Payment Vault, or Director approval if this risk blocks release.</small></div>}
       <div className="cfo-intelligence-subpanel">
         <strong>Renewal Risks</strong>
-        {(renewals.length ? renewals : [['OpenAI credits', '2026-05-31', '₹950', 'Attention']]).map((row, index) => {
+        {(renewals.length ? renewals : [['OpenAI credits', '2026-05-31', 'Rs 950', 'Attention']]).map((row, index) => {
           const rowKey = safeCfoJoin(row, '-');
           const rowDetail = safeCfoJoin(row, ' / ');
           return <button type="button" key={`${rowKey}-${index}`} onClick={() => setOpenedItem(`Renewal: ${rowDetail}`)}>{row[0]} / {row[2]} / {row[4] || row[3]}</button>;
@@ -13368,7 +13368,7 @@ function CfoIntelligencePanel({ data, onOpenPricing, onOpenPaymentVault }) {
       </div>
       <div className="cfo-intelligence-subpanel">
         <strong>Approval Logic</strong>
-        {['Margin < 20% requires founder approval.', 'Payment > ₹1,500 requires founder approval.', 'Unknown vendor or high-risk buyer requires founder approval.', 'Aggressive pricing or freight uncertainty requires review.'].map((item) => <button type="button" key={item} onClick={() => setOpenedItem(item)}>{item}</button>)}
+        {['Margin < 20% requires founder approval.', 'Payment > Rs 1,500 requires founder approval.', 'Unknown vendor or high-risk buyer requires founder approval.', 'Aggressive pricing or freight uncertainty requires review.'].map((item) => <button type="button" key={item} onClick={() => setOpenedItem(item)}>{item}</button>)}
       </div>
       <div className="cfo-report-actions">
         <button className="tactical-button" onClick={onOpenPricing}>Review Quotations</button>
@@ -13785,7 +13785,7 @@ function CreativeWalletCard() {
     try {
       const res = await fetch('/api/cfo/wallet/topup', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ amount, note: 'Founder top-up' }) });
       const json = await res.json();
-      if (json.ok) { setMsg(`Topped up ₹${amount}. New balance: ₹${json.balance}`); await load(); }
+      if (json.ok) { setMsg(`Topped up Rs ${amount}. New balance: Rs ${json.balance}`); await load(); }
       else setMsg(json.message || 'Top-up failed.');
     } catch { setMsg('Request failed.'); }
     setLoading(false);
@@ -14487,8 +14487,8 @@ function InvoiceWorkspaceHeader({ invoice, blockers, canRelease, onSaveDraft, on
     <section className="invoice-workspace-header">
       <div>
         <span>Professional Invoice Workspace</span>
-        <h2>{invoice.invoice_number || 'Draft invoice'} · {invoice.invoice_type}</h2>
-        <p>{invoice.export_mode} · IGST 0% under LUT · {blockers.length ? `${blockers.length} critical blocker(s)` : 'Validation clear'}</p>
+        <h2>{invoice.invoice_number || 'Draft invoice'}  -  {invoice.invoice_type}</h2>
+        <p>{invoice.export_mode}  -  IGST 0% under LUT  -  {blockers.length ? `${blockers.length} critical blocker(s)` : 'Validation clear'}</p>
       </div>
       <div className="invoice-action-bar">
         <button className="ghost-button" onClick={onSaveDraft}>Save Draft</button>
@@ -14643,7 +14643,7 @@ function ValidationChecklist({ validation, navigate }) {
   const failed = validation.filter((check) => check.status === 'Failed');
   const groups = ['Company', 'LUT', 'Buyer', 'Product', 'Export', 'Approval', 'Commercial', 'Bank', 'Packing', 'Release', 'Document Type', 'Invoice', 'System'];
   const grouped = groups.map((group) => [group, validation.filter((check) => check.group === group)]).filter(([, rows]) => rows.length);
-  return <section className="invoice-side-panel validation-checklist-panel"><div className="approval-section-header"><div><span>Validation Checklist</span><h2>{failed.length ? `${failed.length} blockers` : 'Validation Passed'}</h2></div><TriangleAlert size={18} /></div><div className="validation-list grouped">{grouped.map(([group, rows]) => <div className="validation-group" key={group}><h3>{group}</h3>{rows.map((check) => <div className={check.status.toLowerCase()} key={check.key}><strong>{check.status === 'Passed' ? '✓' : 'Blocked'} {check.message}</strong><span>{check.owner}</span>{check.status === 'Failed' && <button onClick={() => navigate(check.group === 'LUT' || check.group === 'Company' ? '/export-os/company-master-data' : check.group === 'Commercial' ? '/export-os/pricing-engine' : '/export-os/director')}>Fix</button>}</div>)}</div>)}</div></section>;
+  return <section className="invoice-side-panel validation-checklist-panel"><div className="approval-section-header"><div><span>Validation Checklist</span><h2>{failed.length ? `${failed.length} blockers` : 'Validation Passed'}</h2></div><TriangleAlert size={18} /></div><div className="validation-list grouped">{grouped.map(([group, rows]) => <div className="validation-group" key={group}><h3>{group}</h3>{rows.map((check) => <div className={check.status.toLowerCase()} key={check.key}><strong>{check.status === 'Passed' ? 'Done' : 'Blocked'} {check.message}</strong><span>{check.owner}</span>{check.status === 'Failed' && <button onClick={() => navigate(check.group === 'LUT' || check.group === 'Company' ? '/export-os/company-master-data' : check.group === 'Commercial' ? '/export-os/pricing-engine' : '/export-os/director')}>Fix</button>}</div>)}</div>)}</div></section>;
 }
 
 function ApprovalRoutingPanel({ invoice, blockers, navigate, onValidate, onCreateApproval }) {
@@ -14980,7 +14980,7 @@ function TaskFollowupEngine({ navigate, onBack }) {
       actionRequired: planText,
       source: 'COO Command'
     });
-    setTaskNotice('Plan sent to Slack âœ"');
+    setTaskNotice('Plan sent to Slack Done');
   }
 
   function prepareFounderSummary() {
@@ -16246,16 +16246,16 @@ const paymentGovernanceRules = {
 const trustedInfrastructureVendors = ['OpenAI credits', 'Supabase', 'Vercel', 'Cloudflare', 'Domain / SSL renewals', 'Email provider', 'Automation tools'];
 const neverAutoPayCategories = ['Supplier payments', 'Freight', 'Customs', 'Tax', 'Salaries', 'Refunds', 'Unknown invoices', 'Bank transfers', 'Manual vendor invoices'];
 const paymentApprovalBands = [
-  ['Safe auto-pay', '₹0-₹1,000', 'Trusted infrastructure vendor only', 'CFO can approve after COO confirms operational need'],
-  ['Controlled auto-pay', '₹1,001-₹1,500', 'Trusted infrastructure vendor only', 'CFO + COO confirmation required before auto-pay'],
-  ['Founder approval required', 'Above ₹1,500', 'Any vendor', 'Founder approval required before payment'],
+  ['Safe auto-pay', 'Rs 0-Rs 1,000', 'Trusted infrastructure vendor only', 'CFO can approve after COO confirms operational need'],
+  ['Controlled auto-pay', 'Rs 1,001-Rs 1,500', 'Trusted infrastructure vendor only', 'CFO + COO confirmation required before auto-pay'],
+  ['Founder approval required', 'Above Rs 1,500', 'Any vendor', 'Founder approval required before payment'],
   ['Auto-pay blocked', 'Any amount', 'Unknown, high-risk, or non-infrastructure', 'Route to Director Command Center']
 ];
 const paymentVaultRecords = [
-  ['OpenAI credits', '₹950', 'AI workflow credit top-up', 'Trusted Infrastructure', 'CTO requirement -> COO necessity -> CFO validation/execution', 'Receipt pending', 'CFO Command', 'Requirement raised', 'Confirmed', 'Ready to initiate', 'Not required', 'Pending until gateway OTP completes', 'Draft audit event'],
-  ['Supabase', '₹1,250', 'Database platform renewal buffer', 'Trusted Infrastructure', 'CTO requirement -> COO + CFO confirmation', 'Invoice pending', 'CFO Command', 'Requirement raised', 'Pending', 'Review', 'Not required', 'Pending until CFO + COO confirmation', 'Controlled auto-pay review'],
-  ['Freight vendor invoice', '₹1,200', 'Manual shipment invoice', 'Freight', 'Blocked -> Founder Review', 'Not uploaded', 'Not paid', 'Blocked', 'Blocked', 'Blocked', 'Required', 'No payment timestamp', 'Non-infrastructure category blocked'],
-  ['Unknown SaaS vendor', '₹800', 'Unverified renewal request', 'Unknown Vendor', 'Blocked -> Founder Review', 'Missing', 'Not paid', 'Pending', 'Pending', 'Blocked', 'Required', 'No payment timestamp', 'New vendor approval required']
+  ['OpenAI credits', 'Rs 950', 'AI workflow credit top-up', 'Trusted Infrastructure', 'CTO requirement -> COO necessity -> CFO validation/execution', 'Receipt pending', 'CFO Command', 'Requirement raised', 'Confirmed', 'Ready to initiate', 'Not required', 'Pending until gateway OTP completes', 'Draft audit event'],
+  ['Supabase', 'Rs 1,250', 'Database platform renewal buffer', 'Trusted Infrastructure', 'CTO requirement -> COO + CFO confirmation', 'Invoice pending', 'CFO Command', 'Requirement raised', 'Pending', 'Review', 'Not required', 'Pending until CFO + COO confirmation', 'Controlled auto-pay review'],
+  ['Freight vendor invoice', 'Rs 1,200', 'Manual shipment invoice', 'Freight', 'Blocked -> Founder Review', 'Not uploaded', 'Not paid', 'Blocked', 'Blocked', 'Blocked', 'Required', 'No payment timestamp', 'Non-infrastructure category blocked'],
+  ['Unknown SaaS vendor', 'Rs 800', 'Unverified renewal request', 'Unknown Vendor', 'Blocked -> Founder Review', 'Missing', 'Not paid', 'Pending', 'Pending', 'Blocked', 'Required', 'No payment timestamp', 'New vendor approval required']
 ].map(([vendor_name, amount_inr, payment_reason, category, approval_path, receipt_invoice, paid_by, cto_confirmation, coo_confirmation, cfo_confirmation, founder_approval, payment_timestamp, audit_trail], index) => ({
   id: `payment-vault-${index}`,
   vendor_name,
@@ -16468,7 +16468,7 @@ function CTOCommandPage({ navigate, onBack }) {
       const result = await response.json().catch(() => ({}));
       setSaveState((current) => ({
         ...current,
-        [fieldId]: result.ok ? 'Saved âœ" Restart dev server to apply' : result.message || 'Save failed'
+        [fieldId]: result.ok ? 'Saved Done Restart dev server to apply' : result.message || 'Save failed'
       }));
       if (result.ok) setInputs((current) => ({ ...current, [fieldId]: '' }));
     } catch (error) {
@@ -17543,9 +17543,9 @@ function PaymentGovernancePanel({ compact = false }) {
     <section className={`cto-panel payment-governance-panel ${compact ? 'compact' : ''}`}>
       <div className="approval-section-header"><div><span>Payment Governance</span><h2>CFO execution / Founder OTP authority</h2></div><LockKeyhole size={18} /></div>
       <div className="payment-limit-grid">
-        <div><span>Safe auto-pay</span><strong>₹0-₹1,000</strong><small>Trusted infrastructure only</small></div>
-        <div><span>Controlled cap</span><strong>₹1,001-₹1,500</strong><small>CFO + COO confirmation</small></div>
-        <div><span>Founder required</span><strong>Above ₹1,500</strong><small>No auto-pay above cap</small></div>
+        <div><span>Safe auto-pay</span><strong>Rs 0-Rs 1,000</strong><small>Trusted infrastructure only</small></div>
+        <div><span>Controlled cap</span><strong>Rs 1,001-Rs 1,500</strong><small>CFO + COO confirmation</small></div>
+        <div><span>Founder required</span><strong>Above Rs 1,500</strong><small>No auto-pay above cap</small></div>
         <div><span>OTP owner</span><strong>Founder</strong><small>CFO enters once after founder shares</small></div>
       </div>
       <div className="payment-policy-callout">
@@ -17706,11 +17706,11 @@ const paymentRecordsSeed = [];
 const paymentReceiptsSeed = [];
 
 const vendorTrustSeed = [
-  ['OpenAI', 'Trusted Infrastructure', 'Trusted', '₹1,000', 'Allowed under cap', 'Low', 'Pending', 'Usage-based'],
-  ['Supabase', 'Trusted Infrastructure', 'Trusted', '₹1,500', 'Controlled', 'Medium', 'Pending', 'Monthly'],
-  ['Vercel', 'Trusted Infrastructure', 'Trusted', '₹1,000', 'Allowed under cap', 'Low', 'May 24, 2026', 'Monthly'],
-  ['Cloudflare', 'Domain / SSL renewal', 'Review Required', '₹1,500', 'Founder approval over cap', 'High', 'Pending', 'Annual'],
-  ['Unknown SaaS vendor', 'Unknown Vendor', 'Blocked', '₹0', 'Not allowed', 'Critical', 'Never paid', 'Unknown']
+  ['OpenAI', 'Trusted Infrastructure', 'Trusted', 'Rs 1,000', 'Allowed under cap', 'Low', 'Pending', 'Usage-based'],
+  ['Supabase', 'Trusted Infrastructure', 'Trusted', 'Rs 1,500', 'Controlled', 'Medium', 'Pending', 'Monthly'],
+  ['Vercel', 'Trusted Infrastructure', 'Trusted', 'Rs 1,000', 'Allowed under cap', 'Low', 'May 24, 2026', 'Monthly'],
+  ['Cloudflare', 'Domain / SSL renewal', 'Review Required', 'Rs 1,500', 'Founder approval over cap', 'High', 'Pending', 'Annual'],
+  ['Unknown SaaS vendor', 'Unknown Vendor', 'Blocked', 'Rs 0', 'Not allowed', 'Critical', 'Never paid', 'Unknown']
 ].map(([vendorName, category, trustLevel, monthlyLimit, autoPayEligibility, riskLevel, lastPayment, renewalFrequency], index) => ({ id: `vendor-${index}`, vendorName, category, trustLevel, monthlyLimit, autoPayEligibility, riskLevel, lastPayment, renewalFrequency }));
 
 const paymentForecastSeed = [];
@@ -17771,7 +17771,7 @@ function buildRenewalDashboardItems(payments = paymentRecordsSeed, forecasts = p
 
 const paymentRiskSeed = [
   ['Missing receipt', 'Medium', 'Resend receipt still pending review.', 'CFO Command'],
-  ['Founder approval missing', 'High', 'Cloudflare amount exceeds ₹1,500 cap.', 'Founder'],
+  ['Founder approval missing', 'High', 'Cloudflare amount exceeds Rs 1,500 cap.', 'Founder'],
   ['Duplicate renewal risk', 'Low', 'No duplicate charge detected; monitor next cycle.', 'CFO Command'],
   ['Failed payment retry', 'Medium', 'WhatsApp API payment processing should be checked after OTP step.', 'CFO Command']
 ].map(([title, severity, detail, owner], index) => ({ id: `payment-risk-${index}`, title, severity, detail, owner }));
@@ -18321,9 +18321,9 @@ function BillingSecurityRulesPanel({ rules = billingVendorRuleSeed }) {
     <section className="payment-vault-panel billing-rules-panel">
       <div className="approval-section-header"><div><span>Auto-Renew Security Rules</span><h2>Limits and OTP policy</h2></div><ShieldCheck size={18} /></div>
       <div className="billing-rule-list">
-        <span>≤ ₹1,000: safe auto-renew allowed only for trusted infrastructure vendors with approved token and no risk flag.</span>
-        <span>₹1,001-₹1,500: CFO + COO confirmation required.</span>
-        <span>&gt; ₹1,500: Director review required.</span>
+        <span>Up to Rs 1,000: safe auto-renew allowed only for trusted infrastructure vendors with approved token and no risk flag.</span>
+        <span>Rs 1,001-Rs 1,500: CFO + COO confirmation required.</span>
+        <span>&gt; Rs 1,500: Director review required.</span>
         <span>Unknown vendor or high-risk vendor: blocked.</span>
         <span>OTP is entered once, submitted to provider, then cleared immediately. Audit never records OTP value.</span>
       </div>
@@ -18440,7 +18440,7 @@ function ConnectBillingMethodModal({ request = renewalRequestFromPayment(), bill
       amountInr: safeAmount,
       cardName: cardName.trim(),
       bankName: bankName.trim(),
-      maskedReference: `${cardBrand} •••• ${last4}`,
+      maskedReference: `${cardBrand} ---- ${last4}`,
       expiryMonth: expiryMonth.padStart(2, '0').slice(0, 2),
       expiryYear
     });
@@ -18825,7 +18825,7 @@ function getPaymentState(status) {
 }
 
 function formatInr(value) {
-  return `₹${Number(value || 0).toLocaleString('en-IN')}`;
+  return `Rs ${Number(value || 0).toLocaleString('en-IN')}`;
 }
 
 function WorkflowGuidanceEngine({ navigate, onBack, initialView = 'Workflow Guidance' }) {
@@ -19985,7 +19985,7 @@ function MobilePaymentPanel({ data, navigate }) {
 }
 
 function MobileBriefingPanel({ data, navigate }) {
-  return <div className="mobile-screen-stack"><MobileExecutiveSummary summaries={data.executiveSummaries} navigate={navigate} /><section className="mobile-card"><div className="mobile-section-title"><span>Founder Action Plan</span><strong>Today's mobile briefing</strong></div><div className="mobile-brief-list">{data.briefingPlan.map((item) => <span key={item}>{item}</span>)}</div><div className="mobile-card-actions"><button onClick={() => navigate('/export-os/morning-briefing')}>Open Full Briefing</button><button onClick={() => navigate('/export-os/director')}>Open Director Queue</button></div></section></div>;
+  return <div className="mobile-screen-stack"><MobileExecutiveSummary summaries={data.executiveSummaries} navigate={navigate} /><section className="mobile-card"><div className="mobile-section-title"><span>Founder Action Plan</span><strong>Todays mobile briefing</strong></div><div className="mobile-brief-list">{data.briefingPlan.map((item) => <span key={item}>{item}</span>)}</div><div className="mobile-card-actions"><button onClick={() => navigate('/export-os/morning-briefing')}>Open Full Briefing</button><button onClick={() => navigate('/export-os/director')}>Open Director Queue</button></div></section></div>;
 }
 
 const warehouseInventorySeed = [];
@@ -20095,7 +20095,7 @@ function WarehouseDashboard({ navigate, onBack, view = 'warehouse', inventoryId 
         </div>
         <div className="deck-header-controls">
           <div className="coo-verified"><ShieldCheck size={16} /><span>Founder session verified</span></div>
-          <div className="coo-status"><PackageCheck size={16} /><strong>Stock Value: ₹18.4L Local</strong></div>
+          <div className="coo-status"><PackageCheck size={16} /><strong>Stock Value: Rs 18.4L Local</strong></div>
           <StatusBadge label={`${lowStockCount} low stock`} state="attention" />
           <StatusBadge label={`${shipmentAllocationSeed.length} dispatch pending`} state="progress" />
           <span className="deck-time-chip">{currentDateTime}</span>
@@ -25138,7 +25138,7 @@ function CMOAutomationFlow({ flow, contentMemoryArchive }) {
                   onOpen={(event) => openStepDetail(event, step)}
                   onKeyDown={(event) => handleStepKeyDown(event, step)}
                 />
-                {index < displaySteps.length - 1 ? <div className="cmo-flow-down" aria-hidden="true">↓</div> : null}
+                {index < displaySteps.length - 1 ? <div className="cmo-flow-down" aria-hidden="true">Down</div> : null}
               </Fragment>
             );
           }
@@ -25231,7 +25231,7 @@ function CMOAutomationFlow({ flow, contentMemoryArchive }) {
                 {(step.status === 'pending' || step.status === 'waiting') && step.healthMessage ? <p className="cmo-flow-pending">{step.healthMessage}</p> : null}
                 {step.id === 'ai-content-generation' ? <Step2ContentQualityPanel /> : null}
               </article>
-              {index < displaySteps.length - 1 ? <div className="cmo-flow-down" aria-hidden="true">↓</div> : null}
+              {index < displaySteps.length - 1 ? <div className="cmo-flow-down" aria-hidden="true">Down</div> : null}
             </Fragment>
           );
         })}
@@ -26060,7 +26060,7 @@ function CMOPostingTimeSettings({ preference }) {
 
 function CMOTopStatusStrip({ data }) {
   const items = [
-    ["Today's Focus", data.summary?.todayRunbook || '9:00 AM IST', CalendarClock],
+    ["Todays Focus", data.summary?.todayRunbook || '9:00 AM IST', CalendarClock],
     ['Growth Objective', '10% Optimization', Target],
     ['Budget Governance', 'CFO-Controlled', CircleDollarSign],
     ['Publishing Rule', 'Approval Queue First', ClipboardCheck],
@@ -26239,7 +26239,7 @@ function CMOApprovalQueueClean({ rows, navigate }) {
         {items.map((row) => (
           <div key={row[0]}>
             <strong>{row[0]}</strong>
-            <p>{row[2]} · {row[4]}</p>
+            <p>{row[2]}  -  {row[4]}</p>
             <small>{row[3]}</small>
           </div>
         ))}
@@ -26490,7 +26490,7 @@ function CMOOverviewWorkspaceV2({ data, output, onGenerateTodayPlan, onGenerateF
 function CMOOverviewWorkspace({ data, output, onGenerateTodayPlan, onGenerateFounderSummary, navigate }) {
   const summary = data.summary || {};
   const metrics = [
-    ["Today's content runbook", summary.todayRunbook || '8:39 AM IST', 'Monitoring'],
+    ["Todays content runbook", summary.todayRunbook || '8:39 AM IST', 'Monitoring'],
     ['Pending approvals', summary.pendingApprovals || 4, 'Founder review queue'],
     ['Campaign activity', summary.campaignActivity || 5, 'Active campaigns'],
     ['Buyer outreach activity', summary.buyerOutreachActivity || 7, 'Buyer CRM linked'],
@@ -26587,7 +26587,7 @@ const campaignObjectives = ['Brand Awareness', 'Lead Generation', 'Website Traff
 
 function formatInrValue(value) {
   const amount = Number(value) || 0;
-  return `₹${new Intl.NumberFormat('en-IN', { maximumFractionDigits: 0 }).format(amount)}`;
+  return `Rs ${new Intl.NumberFormat('en-IN', { maximumFractionDigits: 0 }).format(amount)}`;
 }
 
 function CampaignBudgetPanel({ control, navigate }) {
@@ -26670,7 +26670,7 @@ function CampaignBudgetPanel({ control, navigate }) {
                   <span>{campaign.cpc ? formatInrValue(campaign.cpc) : 'No data'}</span>
                   <span>{campaign.ctr ? `${campaign.ctr.toFixed(2)}%` : 'No data'}</span>
                   <span>{campaign.roi ? `${campaign.roi.toFixed(2)}x` : 'No data'}</span>
-                  <span>{campaign.startDate || 'Not set'} → {campaign.endDate || 'Not set'}</span>
+                  <span>{campaign.startDate || 'Not set'} to {campaign.endDate || 'Not set'}</span>
                 </div>
               );
             })}
@@ -27375,8 +27375,8 @@ function FounderSummaryHero({ onGenerate, generatedNote }) {
   return (
     <section className="briefing-hero">
       <div>
-        <span className="coo-kicker">Today's Founder Briefing</span>
-        <h2>Executive command intelligence for today's decisions</h2>
+        <span className="coo-kicker">Todays Founder Briefing</span>
+        <h2>Executive command intelligence for todays decisions</h2>
         <p>Consolidated from COO, CFO, CTO, and CMO command units. Connect Supabase to activate only: no issue is marked resolved and no release action is claimed.</p>
         <div className="briefing-status-chips">
           {['COO Monitoring', 'CFO Review Active', 'CTO Risk Scan', 'CMO Content Runbook'].map((chip) => <StatusBadge key={chip} label={chip} state="progress" />)}
@@ -27490,7 +27490,7 @@ function RiskAlertPanel({ alerts, expandedAlert, setExpandedAlert }) {
 function PriorityTimeline({ items }) {
   return (
     <section className="briefing-panel">
-      <div className="approval-section-header"><div><span>Today's Priority Timeline</span><h2>Founder operating rhythm</h2></div><TimerReset size={18} /></div>
+      <div className="approval-section-header"><div><span>Todays Priority Timeline</span><h2>Founder operating rhythm</h2></div><TimerReset size={18} /></div>
       <div className="priority-timeline-list">
         {items.map((item) => (
           <div key={`${item.time}-${item.event}`}>
@@ -27601,7 +27601,7 @@ const whatsappCommandMessages = [
     id: 'wa-006',
     sender: 'Founder',
     timestamp: '12:30',
-    raw_message: "Give today's briefing.",
+    raw_message: "Give todays briefing.",
     command_type: 'Morning Briefing Request',
     parse_status: 'Parsed',
     workflow_status: 'Draft Response Ready'
@@ -27696,7 +27696,7 @@ function buildWhatsAppResponse(commandType, missingFields, target) {
     return `Received. I need ${missingFields.join(', ')} before preparing the ${commandType.toLowerCase()} workflow.`;
   }
   if (commandType === 'Approval Request') return 'Received. Pending approvals are ready for review in the Director Command Center.';
-  if (commandType === 'Morning Briefing Request') return "Received. Today's founder briefing is ready for review in the Morning Briefing System.";
+  if (commandType === 'Morning Briefing Request') return "Received. Todays founder briefing is ready for review in the Morning Briefing System.";
   if (commandType === 'Price Quote Request') return 'Received. I have prepared the pricing workflow for CFO review and founder approval routing if required.';
   if (commandType === 'Invoice Request') return 'Received. I have prepared an invoice validation workflow. Final release remains blocked until approval checks pass.';
   return `Received. I have prepared the workflow and routed it toward ${target.department} for review.`;
@@ -29602,7 +29602,7 @@ function COOBlockedWorkflows({ blockers, onEscalate, onOpen, onInspect }) {
 }
 
 function COOTodayPriorities({ priorities, output, onGenerate, onCreateFollowup, onMarkProgress, onInspect }) {
-  return <section className="coo-panel"><div className="coo-panel-header"><div><span>Today's Operating Priorities</span><h2>Generated from task data</h2></div><Target size={20} /></div><div className="coo-priority-list">{priorities.slice(0, 6).map((task) => <article className="coo-clickable-card" tabIndex={0} role="button" onClick={() => onInspect(task, 'Daily Priority')} onKeyDown={(event) => event.key === 'Enter' && onInspect(task, 'Daily Priority')} key={task.id}><strong>{task.title}</strong><div><StateChip label={task.owner_command} /><StateChip label={task.due_date} /><StateChip label={task.priority} /></div><p>{task.next_action}</p><small>{task.escalation_level}</small><div className="coo-card-actions"><button onClick={(event) => { event.stopPropagation(); onMarkProgress(task); }}>Mark In Progress</button><button onClick={(event) => { event.stopPropagation(); onCreateFollowup(task); }}>Create Follow-up</button></div></article>)}</div><button className="tactical-button" onClick={onGenerate}>Generate COO Daily Plan</button>{output && <pre className="task-local-output">{output}</pre>}</section>;
+  return <section className="coo-panel"><div className="coo-panel-header"><div><span>Todays Operating Priorities</span><h2>Generated from task data</h2></div><Target size={20} /></div><div className="coo-priority-list">{priorities.slice(0, 6).map((task) => <article className="coo-clickable-card" tabIndex={0} role="button" onClick={() => onInspect(task, 'Daily Priority')} onKeyDown={(event) => event.key === 'Enter' && onInspect(task, 'Daily Priority')} key={task.id}><strong>{task.title}</strong><div><StateChip label={task.owner_command} /><StateChip label={task.due_date} /><StateChip label={task.priority} /></div><p>{task.next_action}</p><small>{task.escalation_level}</small><div className="coo-card-actions"><button onClick={(event) => { event.stopPropagation(); onMarkProgress(task); }}>Mark In Progress</button><button onClick={(event) => { event.stopPropagation(); onCreateFollowup(task); }}>Create Follow-up</button></div></article>)}</div><button className="tactical-button" onClick={onGenerate}>Generate COO Daily Plan</button>{output && <pre className="task-local-output">{output}</pre>}</section>;
 }
 
 function FounderApprovalDependencies({ approvals, onOpenApprovalWall, onInspect }) {
@@ -29908,7 +29908,7 @@ function COOHeader({ onBack, onOpenTasks }) {
         </button>
         <button className="ghost-button coo-back" onClick={onBack}>
           <ArrowLeft size={15} />
-          ? Command Deck
+          Command Deck
         </button>
       </div>
     </header>

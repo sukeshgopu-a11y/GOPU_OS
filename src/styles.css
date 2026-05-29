@@ -29476,7 +29476,7 @@ select {
   40%, 60% { opacity: 1; }
 }
 
-/* ── Fix Orbitron → Syne ── */
+/* ── Fix Orbitron to Syne ── */
 .greeting-copy h1,
 .selection-copy h1,
 .plant-header h1 {
@@ -32231,7 +32231,7 @@ a,
   border-color: var(--accent, #2ef2ff);
 }
 .notif-toggle.on::after {
-  content: '✓';
+  content: '';
   position: absolute;
   inset: 0;
   display: grid;
@@ -32298,7 +32298,7 @@ a,
 }
 
 
-/* ─── Director Command — Clean Layout ──────────────────────────────────────── */
+/* ─── Director Command - Clean Layout ──────────────────────────────────────── */
 
 .director-command-page {
   display: flex;
@@ -32569,7 +32569,7 @@ a,
   color: var(--dim);
 }
 
-/* ─── Home Page — Clean Layout ─────────────────────────────────────────────── */
+/* ─── Home Page - Clean Layout ─────────────────────────────────────────────── */
 
 .home-hero {
   display: flex;

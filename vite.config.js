@@ -8,6 +8,7 @@ export default defineConfig({
   server: {
     proxy: {
       '/api/integrations': 'http://127.0.0.1:8787',
+      '/api/cto': 'http://127.0.0.1:8787',
       '/api/learning-centre': 'http://127.0.0.1:8787',
       '/api/cmo': 'http://127.0.0.1:8787',
       '/api/cto': 'http://127.0.0.1:8787',

@@ -42,7 +42,7 @@ function normalizeApprovalPayload(payload = {}) {
 export function formatWhatsAppApprovalMessage(payload = {}) {
   const approval = normalizeApprovalPayload(payload);
   return [
-    '━━━━━━━━━━━━━━',
+    '--------------',
     'GOPU OS APPROVAL REQUEST',
     '',
     `Type: ${approval.type}`,
@@ -60,7 +60,7 @@ export function formatWhatsAppApprovalMessage(payload = {}) {
     'APPROVE',
     'or',
     'REJECT',
-    '━━━━━━━━━━━━━━'
+    '--------------'
   ].join('\n');
 }
 

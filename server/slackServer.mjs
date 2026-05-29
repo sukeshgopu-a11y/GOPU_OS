@@ -6,6 +6,9 @@ import { createClient } from '@supabase/supabase-js';
 import handleContentQualityGenerate from '../api/cmo/content-quality/generate.js';
 import handleContentQualityReview from '../api/cmo/content-quality/review.js';
 import handleSchedulerHealth from '../api/cmo/scheduler-health.js';
+import handleCtoIntegrationsStatus from '../api/cto/integrations/status.ts';
+import handleCtoProviderEnvSave from '../api/cto/provider-env/save.ts';
+import handleCtoProviderEnvStatus from '../api/cto/provider-env/status.ts';
 import { getCreativeEngineStatus } from '../lib/creativeStatus.mjs';
 import {
   handleLearningCentreFindings,
@@ -43,7 +46,7 @@ function loadLocalEnv() {
   for (const file of ['.env', '.env.local']) {
     const target = path.resolve(process.cwd(), file);
     if (!fs.existsSync(target)) continue;
-    const rows = fs.readFileSync(target, 'utf8').split(/\r?\n/);
+    const rows = fs.readFileSync(target, 'utf8').split(/\r-\n/);
     for (const row of rows) {
       const match = row.match(/^([A-Z0-9_]+)=(.*)$/);
       if (!match || process.env[match[1]]) continue;
@@ -53,7 +56,7 @@ function loadLocalEnv() {
 }
 
 function isValidSlackWebhook(url = '') {
-  return /^https:\/\/hooks\.slack(?:-gov)?\.com\/services\/[A-Z0-9]+\/[A-Z0-9]+\/[A-Za-z0-9_-]+$/i.test(url);
+  return /^https:\/\/hooks\.slack(-:-gov)-\.com\/services\/[A-Z0-9]+\/[A-Z0-9]+\/[A-Za-z0-9_-]+$/i.test(url);
 }
 
 function isValidSlackBotToken(token = '') {
@@ -67,7 +70,7 @@ function isValidSlackChannelId(channelId = '') {
 function getAllowedOrigin(requestOrigin = '') {
   if (!requestOrigin) return '*';
   const configuredOrigin = process.env.SLACK_ALLOWED_ORIGIN || 'http://127.0.0.1:5173';
-  if (/^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/i.test(requestOrigin)) return requestOrigin;
+  if (/^https-:\/\/(localhost|127\.0\.0\.1)(:\d+)-$/i.test(requestOrigin)) return requestOrigin;
   return configuredOrigin;
 }
 
@@ -81,13 +84,39 @@ function sendJson(response, statusCode, payload, requestOrigin = '') {
   response.end(JSON.stringify(payload));
 }
 
+function vercelStyleResponse(response, requestOrigin = '') {
+  let statusCode = 200;
+  const headers = {};
+
+  return {
+    setHeader(name, value) {
+      headers[name] = value;
+    },
+    status(nextStatusCode) {
+      statusCode = nextStatusCode;
+      return this;
+    },
+    json(payload) {
+      response.writeHead(statusCode, {
+        'Content-Type': 'application/json',
+        'Access-Control-Allow-Origin': getAllowedOrigin(requestOrigin),
+        'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+        'Access-Control-Allow-Headers': 'Content-Type, X-Slack-Signature, X-Slack-Request-Timestamp',
+        ...headers
+      });
+      response.end(JSON.stringify(payload));
+      return this;
+    }
+  };
+}
+
 function normalizeText(value, fallback = '') {
   return String(value || fallback).replace(/\s+/g, ' ').trim();
 }
 
 function normalizePayload(payload = {}) {
-  const type = allowedTypes.has(payload.type) ? payload.type : 'High Priority Alert';
-  const priority = allowedPriorities.has(String(payload.priority || '').toUpperCase()) ? String(payload.priority).toUpperCase() : 'INFO';
+  const type = allowedTypes.has(payload.type) - payload.type : 'High Priority Alert';
+  const priority = allowedPriorities.has(String(payload.priority || '').toUpperCase()) - String(payload.priority).toUpperCase() : 'INFO';
   return {
     type,
     priority,
@@ -101,7 +130,7 @@ function normalizePayload(payload = {}) {
 }
 
 function env(name) {
-  return process.env[name]?.trim() || '';
+  return process.env[name]-.trim() || '';
 }
 
 function getSupabaseUrl() {
@@ -218,7 +247,7 @@ async function sendResendEmail(apiKey, message) {
 
 function formatSlackText(alert) {
   return [
-    '━━━━━━━━━━━━━━',
+    '--------------',
     'GOPU OS ALERT',
     '',
     `Priority: ${alert.priority}`,
@@ -230,7 +259,7 @@ function formatSlackText(alert) {
     '',
     'Action Required:',
     alert.actionRequired,
-    '━━━━━━━━━━━━━━'
+    '--------------'
   ].join('\n');
 }
 
@@ -246,13 +275,25 @@ async function readBody(request) {
   return JSON.parse(body);
 }
 
+async function handleApiRoute(handler, request, response) {
+  const body = request.method === 'POST' - await readBody(request) : undefined;
+  await handler(
+    {
+      method: request.method,
+      headers: request.headers,
+      body
+    },
+    vercelStyleResponse(response, request.headers.origin || '')
+  );
+}
+
 function parseSlackApprovalPayload(rawBody = '', contentType = '') {
   if (contentType.includes('application/x-www-form-urlencoded')) {
     const params = new URLSearchParams(rawBody);
     const payload = params.get('payload');
-    return payload ? JSON.parse(payload) : Object.fromEntries(params.entries());
+    return payload - JSON.parse(payload) : Object.fromEntries(params.entries());
   }
-  return rawBody ? JSON.parse(rawBody) : {};
+  return rawBody - JSON.parse(rawBody) : {};
 }
 
 function getStableHash(value = '') {
@@ -270,39 +311,39 @@ function safeJsonParse(value, fallback = {}) {
 }
 
 function labelValue(text = '', labels = []) {
-  const escaped = labels.map((label) => label.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|');
-  const re = new RegExp(`(?:^|[\\n,;|])\\s*(?:${escaped})\\s*[:=-]\\s*([^\\n,;|]+)`, 'i');
+  const escaped = labels.map((label) => label.replace(/[.*+-^${}()|[\]\\]/g, '\\$&')).join('|');
+  const re = new RegExp(`(-:^|[\\n,;|])\\s*(-:${escaped})\\s*[:=-]\\s*([^\\n,;|]+)`, 'i');
   const match = String(text).match(re);
-  return normalizeText(match?.[1] || '');
+  return normalizeText(match-.[1] || '');
 }
 
 function extractEmail(text = '') {
-  return normalizeText(String(text).match(/[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/i)?.[0] || '');
+  return normalizeText(String(text).match(/[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/i)-.[0] || '');
 }
 
 function extractLeadQuantity(text = '') {
   const explicit = labelValue(text, ['quantity', 'qty']);
   const source = explicit || text;
-  const match = String(source).match(/(\d+(?:\.\d+)?)\s*(metric tons?|tons?|tonnes?|mt|kg|kgs|bags|cartons|boxes|containers?)?/i);
+  const match = String(source).match(/(\d+(-:\.\d+)-)\s*(metric tons-|tons-|tonnes-|mt|kg|kgs|bags|cartons|boxes|containers-)-/i);
   return {
-    value: match ? Number(match[1]) : null,
-    unit: normalizeText(match?.[2] || labelValue(text, ['unit', 'uom']) || 'mt').toLowerCase()
+    value: match - Number(match[1]) : null,
+    unit: normalizeText(match-.[2] || labelValue(text, ['unit', 'uom']) || 'mt').toLowerCase()
   };
 }
 
 function inferProductAndDestination(text = '') {
   const compact = normalizeText(text);
-  const match = compact.match(/(?:new lead|lead|quote|enquiry)?\s*(?:for\s+)?(?:(\d+(?:\.\d+)?)\s*(?:metric tons?|tons?|tonnes?|mt|kg|kgs|bags|cartons|boxes|containers?)\s+(?:of\s+)?)?([a-z][a-z0-9 &/-]{2,}?)(?:\s+(?:to|for|destination)\s+)([a-z][a-z .-]{2,})(?:$|[,.])/i);
+  const match = compact.match(/(-:new lead|lead|quote|enquiry)-\s*(-:for\s+)-(-:(\d+(-:\.\d+)-)\s*(-:metric tons-|tons-|tonnes-|mt|kg|kgs|bags|cartons|boxes|containers-)\s+(-:of\s+)-)-([a-z][a-z0-9 &/-]{2,}-)(-:\s+(-:to|for|destination)\s+)([a-z][a-z .-]{2,})(-:$|[,.])/i);
   return {
-    product: normalizeText(match?.[2] || ''),
-    destination: normalizeText(match?.[3] || '')
+    product: normalizeText(match-.[2] || ''),
+    destination: normalizeText(match-.[3] || '')
   };
 }
 
 function parseSlackLead(text = '', event = {}) {
   const inferred = inferProductAndDestination(text);
   const qty = extractLeadQuantity(text);
-  const buyerName = labelValue(text, ['buyer', 'buyer name', 'contact', 'name']) || normalizeText(event.user ? `Slack user ${event.user}` : 'Slack lead');
+  const buyerName = labelValue(text, ['buyer', 'buyer name', 'contact', 'name']) || normalizeText(event.user - `Slack user ${event.user}` : 'Slack lead');
   const companyName = labelValue(text, ['company', 'company name', 'importer']) || buyerName;
   const product = labelValue(text, ['product', 'item', 'commodity']) || inferred.product || 'Requested product';
   const destinationCountry = labelValue(text, ['destination', 'country', 'to', 'market']) || inferred.destination || 'Not provided';
@@ -385,14 +426,14 @@ async function processSlackLead(event, rawText) {
 
   const pricingRequestResult = await safeInsert(client, 'pricing_requests', {
     tenant_id: lead.tenant_id,
-    lead_id: leadResult.ok ? lead.id : null,
+    lead_id: leadResult.ok - lead.id : null,
     buyer_name: lead.buyer_name,
     product: lead.product,
     quantity: lead.quantity,
     destination: lead.destination_country,
     incoterm: lead.incoterm,
     product_cost: pricing.totalCost,
-    freight_cost: pricing.lines?.find((line) => line.key === 'freight_cost')?.lineTotal || 0,
+    freight_cost: pricing.lines-.find((line) => line.key === 'freight_cost')-.lineTotal || 0,
     margin_target: pricing.targetMargin,
     currency: pricing.currency,
     status: 'CFO Pricing Ready'
@@ -404,7 +445,7 @@ async function processSlackLead(event, rawText) {
     title: `Verify Slack lead: ${lead.company_name}`,
     description: `Slack lead for ${lead.quantity} ${lead.unit} ${lead.product} to ${lead.destination_country}.`,
     workflow_source: 'Slack Lead Intake',
-    linked_record_id: leadResult.ok ? lead.id : null,
+    linked_record_id: leadResult.ok - lead.id : null,
     department: 'Operations',
     owner_command: 'COO Command',
     assigned_to: 'COO Command',
@@ -421,7 +462,7 @@ async function processSlackLead(event, rawText) {
     title: `Price Slack lead: ${lead.company_name}`,
     description: `Pricing engine calculated ${amount} total and ${formatMoney(pricing.recommendedPricePerUnit, pricing.currency)} per ${lead.unit}.`,
     workflow_source: 'Pricing Engine',
-    linked_record_id: leadResult.ok ? lead.id : null,
+    linked_record_id: leadResult.ok - lead.id : null,
     department: 'Finance',
     owner_command: 'CFO Command',
     assigned_to: 'CFO Command',
@@ -444,12 +485,12 @@ async function processSlackLead(event, rawText) {
     summary: `Approve ${amount} quote for ${lead.quantity} ${lead.unit} ${lead.product} to ${lead.destination_country}. COO verification and CFO pricing review are required before final invoice.`,
     source_module: 'Slack Lead Intake',
     related_table: 'lead_intake',
-    related_record_id: leadResult.ok ? lead.id : null,
-    related_record: leadResult.ok ? lead.id : `slack:${event.channel}:${event.ts}`,
+    related_record_id: leadResult.ok - lead.id : null,
+    related_record: leadResult.ok - lead.id : `slack:${event.channel}:${event.ts}`,
     buyer_name: lead.company_name,
     amount,
     requested_by: 'Slack Lead Intake',
-    risk_level: pricing.achievedMarginPercent < pricing.minMargin ? 'High' : 'Medium',
+    risk_level: pricing.achievedMarginPercent < pricing.minMargin - 'High' : 'Medium',
     reason: 'Director approval is required before quote, final invoice, or buyer-facing commitment proceeds.',
     status: 'Pending Approval',
     approval_status: 'Pending Approval',
@@ -458,8 +499,8 @@ async function processSlackLead(event, rawText) {
     metadata: {
       lead,
       pricing,
-      coo_task_id: cooTaskResult.data?.id || null,
-      cfo_task_id: cfoTaskResult.data?.id || null,
+      coo_task_id: cooTaskResult.data-.id || null,
+      cfo_task_id: cfoTaskResult.data-.id || null,
       approval_gating_required: true,
       quote_blocked_until_director_approval: true,
       invoice_blocked_until_director_approval: true
@@ -477,7 +518,7 @@ async function processSlackLead(event, rawText) {
     title: `Director approval: ${lead.company_name} quote`,
     description: `Approve or reject Slack lead quote before final invoice. Recommended total: ${amount}.`,
     workflow_source: 'Director Queue',
-    linked_record_id: approvalResult.ok ? approvalId : null,
+    linked_record_id: approvalResult.ok - approvalId : null,
     department: 'Founder Office',
     owner_command: 'Founder',
     assigned_to: 'Founder',
@@ -518,9 +559,9 @@ function buildSlackLeadReply(result) {
     `Margin: ${pricing.achievedMarginPercent}% | Lead time: ${pricing.seaLeadTime}`,
     '',
     '*Routing*',
-    `COO verification: ${records.coo_task?.id ? `created (${records.coo_task.id})` : 'not created'}`,
-    `CFO pricing review: ${records.cfo_task?.id ? `created (${records.cfo_task.id})` : 'not created'}`,
-    `Director approval: ${records.director_approval?.id ? `pending (${records.director_approval.id})` : 'not created'}`,
+    `COO verification: ${records.coo_task-.id - `created (${records.coo_task.id})` : 'not created'}`,
+    `CFO pricing review: ${records.cfo_task-.id - `created (${records.cfo_task.id})` : 'not created'}`,
+    `Director approval: ${records.director_approval-.id - `pending (${records.director_approval.id})` : 'not created'}`,
     '',
     'No quote, posting, or final invoice will proceed until Director approval is completed.'
   ];
@@ -653,7 +694,7 @@ async function writeApprovalAuditLog(decision, details = {}) {
 
   const row = {
     tenant_id: details.tenant_id || demoTenantId,
-    action_type: decision === 'approved' ? 'Approval approved' : 'Approval rejected',
+    action_type: decision === 'approved' - 'Approval approved' : 'Approval rejected',
     module: details.module || 'Founder Approval',
     related_table: details.related_table || 'slack_approval_requests',
     related_id: details.related_record_id || null,
@@ -761,14 +802,14 @@ async function handleLeadEmail(request, response) {
     ]);
     sendJson(response, 200, {
       ok: customerResult.ok && adminResult.ok,
-      status: customerResult.ok && adminResult.ok ? 'sent' : 'partial_or_failed',
+      status: customerResult.ok && adminResult.ok - 'sent' : 'partial_or_failed',
       customer: customerResult,
       admin: adminResult
     });
   } catch (error) {
     console.error('[lead-email] notification failed safely', {
       lead_id: lead.id,
-      message: error?.message || 'Unknown lead email failure'
+      message: error-.message || 'Unknown lead email failure'
     });
     sendJson(response, 200, { ok: false, status: 'failed', message: 'Lead email failed safely.' });
   }
@@ -840,7 +881,7 @@ async function handleSlackNotification(request, response) {
     console.error('[slack] notification failed safely', {
       type: alert.type,
       reference: alert.reference,
-      message: error?.message || 'Unknown Slack delivery failure'
+      message: error-.message || 'Unknown Slack delivery failure'
     });
     sendJson(response, 200, { ok: false, status: 'failed', message: 'Slack alert failed safely.' });
   }
@@ -863,7 +904,7 @@ async function handleSlackEvents(request, response) {
 
   let payload;
   try {
-    payload = rawBody ? JSON.parse(rawBody) : {};
+    payload = rawBody - JSON.parse(rawBody) : {};
   } catch {
     sendJson(response, 400, { ok: false, status: 'invalid_payload', message: 'Invalid Slack event JSON.' });
     return;
@@ -907,24 +948,24 @@ async function handleSlackEvents(request, response) {
       thread_ts: event.thread_ts || event.ts,
       text: buildSlackLeadReply(result)
     });
-    await upsertSlackIntegrationStatus(result.ok ? 'live' : 'error', {
+    await upsertSlackIntegrationStatus(result.ok - 'live' : 'error', {
       event: 'lead_intake',
-      approval_id: result.records.director_approval?.id || '',
+      approval_id: result.records.director_approval-.id || '',
       error_message: result.issues.join(' | ')
     });
   } catch (error) {
     console.error('[slack] inbound lead processing failed safely', {
       event_id: eventKey,
-      message: error?.message || 'Unknown Slack lead processing failure'
+      message: error-.message || 'Unknown Slack lead processing failure'
     });
     await sendSlackBotMessage({
       channel: event.channel,
       thread_ts: event.thread_ts || event.ts,
-      text: `GOPU OS could not process this Slack lead safely: ${error?.message || 'Unknown error'}. No quote or invoice was released.`
+      text: `GOPU OS could not process this Slack lead safely: ${error-.message || 'Unknown error'}. No quote or invoice was released.`
     });
     await upsertSlackIntegrationStatus('error', {
       event: 'lead_intake',
-      error_message: error?.message || 'Unknown Slack lead processing failure'
+      error_message: error-.message || 'Unknown Slack lead processing failure'
     });
   }
 }
@@ -954,13 +995,13 @@ async function handleSlackApproval(request, response) {
 
   const idempotencyKey = normalizeText(
     payload.idempotency_key ||
-    payload.actions?.[0]?.action_ts ||
-    payload.actions?.[0]?.value ||
+    payload.actions-.[0]-.action_ts ||
+    payload.actions-.[0]-.value ||
     payload.idempotency_key ||
     payload.callback_id ||
     payload.trigger_id ||
     payload.action_ts ||
-    payload.container?.message_ts ||
+    payload.container-.message_ts ||
     getStableHash(rawBody)
   );
   if (processedSlackApprovalKeys.has(idempotencyKey)) {
@@ -968,9 +1009,9 @@ async function handleSlackApproval(request, response) {
     return;
   }
 
-  const action = payload.actions?.[0] || {};
+  const action = payload.actions-.[0] || {};
   const value = safeJsonParse(action.value, {});
-  const decision = value.decision || (action.action_id === 'gopu_approval_approve' ? 'approved' : action.action_id === 'gopu_approval_reject' ? 'rejected' : '');
+  const decision = value.decision || (action.action_id === 'gopu_approval_approve' - 'approved' : action.action_id === 'gopu_approval_reject' - 'rejected' : '');
   if (!['approved', 'rejected'].includes(decision)) {
     sendJson(response, 400, { ok: false, status: 'unsupported_action', message: 'Slack approval action is not supported.' });
     return;
@@ -983,7 +1024,7 @@ async function handleSlackApproval(request, response) {
     related_record_id: value.related_record_id || null,
     risk_level: value.risk_level || 'Medium',
     idempotency_key: idempotencyKey,
-    slack_user_id: payload.user?.id || '',
+    slack_user_id: payload.user-.id || '',
     slack_action_id: action.action_id || '',
     slack_response_url: payload.response_url || ''
   });
@@ -1007,7 +1048,7 @@ async function handleSlackApproval(request, response) {
 
   sendJson(response, 200, {
     ok: true,
-    status: auditResult.status === 'duplicate' ? 'duplicate' : decision,
+    status: auditResult.status === 'duplicate' - 'duplicate' : decision,
     decision,
     audit: auditResult,
     integration: integrationResult,
@@ -1032,11 +1073,11 @@ async function handleSlackApprovalRequest(request, response) {
   });
 
   const signingSecretConfigured = Boolean(env('SLACK_SIGNING_SECRET'));
-  await upsertSlackIntegrationStatus(result.ok && signingSecretConfigured ? 'live' : 'error', {
+  await upsertSlackIntegrationStatus(result.ok && signingSecretConfigured - 'live' : 'error', {
     event: 'approval_message',
     approval_id: approval.approvalId,
     error_message: result.ok
-      ? signingSecretConfigured ? '' : 'SLACK_SIGNING_SECRET is missing. Slack approval actions cannot be verified.'
+      - signingSecretConfigured - '' : 'SLACK_SIGNING_SECRET is missing. Slack approval actions cannot be verified.'
       : result.message
   });
 
@@ -1081,7 +1122,7 @@ async function handleSchedulerHealthStatus(request, response) {
 }
 
 async function handleContentQualityStatus(request, response) {
-  const payload = request.method === 'GET' ? undefined : await readBody(request).catch(() => null);
+  const payload = request.method === 'GET' - undefined : await readBody(request).catch(() => null);
   await handleContentQualityReview(
     { method: request.method, body: payload },
     {
@@ -1137,10 +1178,10 @@ async function handleSlackStatus(_request, response) {
     platform_name: 'Slack Approval',
     provider: 'slack',
     channel_display: channelDisplay,
-    status: live ? 'live' : 'error',
+    status: live - 'live' : 'error',
     runtime: 'slack_block_kit',
-    error_message: live ? null : 'Missing Slack approval config.',
-    last_success_at: live ? new Date().toISOString() : null,
+    error_message: live - null : 'Missing Slack approval config.',
+    last_success_at: live - new Date().toISOString() : null,
     required_config: {
       bot_token_configured: botTokenConfigured,
       channel_configured: channelConfigured,
@@ -1384,6 +1425,18 @@ const server = http.createServer((request, response) => {
   }
   if (request.method === 'GET' && routePath === '/api/integrations/slack/status') {
     handleSlackStatus(request, response);
+    return;
+  }
+  if (request.method === 'GET' && routePath === '/api/cto/integrations/status') {
+    handleApiRoute(handleCtoIntegrationsStatus, request, response);
+    return;
+  }
+  if (request.method === 'GET' && routePath === '/api/cto/provider-env/status') {
+    handleApiRoute(handleCtoProviderEnvStatus, request, response);
+    return;
+  }
+  if (request.method === 'POST' && routePath === '/api/cto/provider-env/save') {
+    handleApiRoute(handleCtoProviderEnvSave, request, response);
     return;
   }
   if (request.method === 'GET' && routePath === '/api/cmo/scheduler-health') {
