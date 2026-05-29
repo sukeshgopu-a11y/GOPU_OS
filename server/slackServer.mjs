@@ -19,6 +19,7 @@ import {
 import { getOpenAIStatus } from '../lib/openaiStatus.mjs';
 import { getSupabaseStorageStatus } from '../lib/supabaseStorageStatus.mjs';
 import { getVercelStatus } from '../lib/vercelStatus.mjs';
+import { runPricingEngine } from '../src/services/pricingEngineService.js';
 
 const port = Number(process.env.SLACK_NOTIFICATION_PORT || 8787);
 const allowedTypes = new Set([
@@ -29,11 +30,13 @@ const allowedTypes = new Set([
   'Renewal Expired',
   'Payment Received',
   'High Priority Alert',
-  'Founder Approval Required'
+  'Founder Approval Required',
+  'Lead Pricing Ready'
 ]);
 const allowedPriorities = new Set(['INFO', 'WARNING', 'URGENT']);
 const sentSlackNotificationKeys = new Set();
 const processedSlackApprovalKeys = new Set();
+const processedSlackLeadKeys = new Set();
 const demoTenantId = '11111111-1111-1111-1111-111111111111';
 
 function loadLocalEnv() {
@@ -264,6 +267,267 @@ function safeJsonParse(value, fallback = {}) {
   } catch {
     return fallback;
   }
+}
+
+function labelValue(text = '', labels = []) {
+  const escaped = labels.map((label) => label.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|');
+  const re = new RegExp(`(?:^|[\\n,;|])\\s*(?:${escaped})\\s*[:=-]\\s*([^\\n,;|]+)`, 'i');
+  const match = String(text).match(re);
+  return normalizeText(match?.[1] || '');
+}
+
+function extractEmail(text = '') {
+  return normalizeText(String(text).match(/[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/i)?.[0] || '');
+}
+
+function extractLeadQuantity(text = '') {
+  const explicit = labelValue(text, ['quantity', 'qty']);
+  const source = explicit || text;
+  const match = String(source).match(/(\d+(?:\.\d+)?)\s*(metric tons?|tons?|tonnes?|mt|kg|kgs|bags|cartons|boxes|containers?)?/i);
+  return {
+    value: match ? Number(match[1]) : null,
+    unit: normalizeText(match?.[2] || labelValue(text, ['unit', 'uom']) || 'mt').toLowerCase()
+  };
+}
+
+function inferProductAndDestination(text = '') {
+  const compact = normalizeText(text);
+  const match = compact.match(/(?:new lead|lead|quote|enquiry)?\s*(?:for\s+)?(?:(\d+(?:\.\d+)?)\s*(?:metric tons?|tons?|tonnes?|mt|kg|kgs|bags|cartons|boxes|containers?)\s+(?:of\s+)?)?([a-z][a-z0-9 &/-]{2,}?)(?:\s+(?:to|for|destination)\s+)([a-z][a-z .-]{2,})(?:$|[,.])/i);
+  return {
+    product: normalizeText(match?.[2] || ''),
+    destination: normalizeText(match?.[3] || '')
+  };
+}
+
+function parseSlackLead(text = '', event = {}) {
+  const inferred = inferProductAndDestination(text);
+  const qty = extractLeadQuantity(text);
+  const buyerName = labelValue(text, ['buyer', 'buyer name', 'contact', 'name']) || normalizeText(event.user ? `Slack user ${event.user}` : 'Slack lead');
+  const companyName = labelValue(text, ['company', 'company name', 'importer']) || buyerName;
+  const product = labelValue(text, ['product', 'item', 'commodity']) || inferred.product || 'Requested product';
+  const destinationCountry = labelValue(text, ['destination', 'country', 'to', 'market']) || inferred.destination || 'Not provided';
+  const incoterm = (labelValue(text, ['incoterm', 'terms']) || 'FOB').toUpperCase();
+  const currency = (labelValue(text, ['currency']) || 'USD').toUpperCase();
+  const email = labelValue(text, ['email']) || extractEmail(text);
+  const phone = labelValue(text, ['phone', 'mobile', 'whatsapp']);
+
+  return {
+    id: crypto.randomUUID(),
+    tenant_id: demoTenantId,
+    source: 'Slack',
+    source_channel: event.channel || '',
+    source_thread_ts: event.thread_ts || event.ts || '',
+    source_user: event.user || '',
+    buyer_name: buyerName,
+    company_name: companyName,
+    country: destinationCountry,
+    destination_country: destinationCountry,
+    email,
+    phone,
+    product,
+    quantity: qty.value || 1,
+    unit: qty.unit || 'mt',
+    unit_of_measure: qty.unit || 'mt',
+    destination_port: labelValue(text, ['port', 'destination port']),
+    shipping_mode: labelValue(text, ['shipping', 'mode', 'shipping mode']) || 'Sea freight',
+    incoterm,
+    currency,
+    status: 'Pending COO Verification',
+    assigned_to: 'COO Command',
+    notes: normalizeText(text)
+  };
+}
+
+function isSlackLeadMessage(text = '') {
+  return /\b(new lead|lead:|buyer:|product:|quote|enquiry|inquiry|pricing)\b/i.test(text);
+}
+
+function formatMoney(value, currency = 'USD') {
+  const amount = Number(value || 0);
+  if (!Number.isFinite(amount)) return `${currency} 0`;
+  return `${currency} ${amount.toLocaleString('en-US', { maximumFractionDigits: 2 })}`;
+}
+
+async function safeInsert(client, table, payload, select = 'id') {
+  if (!client) return { ok: false, table, status: 'not_configured', message: 'Supabase service role env is missing.' };
+  const { data, error } = await client.from(table).insert(payload).select(select).maybeSingle();
+  if (error) return { ok: false, table, status: 'insert_failed', message: error.message };
+  return { ok: true, table, data };
+}
+
+async function processSlackLead(event, rawText) {
+  const client = getSupabaseClient();
+  const lead = parseSlackLead(rawText, event);
+  const pricing = runPricingEngine(lead);
+  const amount = formatMoney(pricing.recommendedTotalPrice, pricing.currency);
+  const issues = [];
+
+  const leadResult = await safeInsert(client, 'lead_intake', {
+    id: lead.id,
+    tenant_id: lead.tenant_id,
+    source: lead.source,
+    buyer_name: lead.buyer_name,
+    company_name: lead.company_name,
+    country: lead.country,
+    email: lead.email,
+    phone: lead.phone,
+    product: lead.product,
+    quantity: lead.quantity,
+    unit: lead.unit,
+    destination_port: lead.destination_port,
+    shipping_mode: lead.shipping_mode,
+    incoterm: lead.incoterm,
+    notes: lead.notes,
+    status: lead.status,
+    assigned_to: lead.assigned_to
+  }, 'id,status');
+  if (!leadResult.ok) issues.push(`lead_intake: ${leadResult.message}`);
+
+  const pricingRequestResult = await safeInsert(client, 'pricing_requests', {
+    tenant_id: lead.tenant_id,
+    lead_id: leadResult.ok ? lead.id : null,
+    buyer_name: lead.buyer_name,
+    product: lead.product,
+    quantity: lead.quantity,
+    destination: lead.destination_country,
+    incoterm: lead.incoterm,
+    product_cost: pricing.totalCost,
+    freight_cost: pricing.lines?.find((line) => line.key === 'freight_cost')?.lineTotal || 0,
+    margin_target: pricing.targetMargin,
+    currency: pricing.currency,
+    status: 'CFO Pricing Ready'
+  }, 'id,status');
+  if (!pricingRequestResult.ok) issues.push(`pricing_requests: ${pricingRequestResult.message}`);
+
+  const cooTaskResult = await safeInsert(client, 'tasks', {
+    tenant_id: lead.tenant_id,
+    title: `Verify Slack lead: ${lead.company_name}`,
+    description: `Slack lead for ${lead.quantity} ${lead.unit} ${lead.product} to ${lead.destination_country}.`,
+    workflow_source: 'Slack Lead Intake',
+    linked_record_id: leadResult.ok ? lead.id : null,
+    department: 'Operations',
+    owner_command: 'COO Command',
+    assigned_to: 'COO Command',
+    priority: 'High',
+    status: 'Pending COO Verification',
+    due_date: 'Today',
+    escalation_level: 'Director if buyer or supplier verification is incomplete',
+    blocking_reason: 'COO must verify buyer, product, quantity, destination, and supplier readiness before quote or invoice release.'
+  }, 'id,status');
+  if (!cooTaskResult.ok) issues.push(`COO task: ${cooTaskResult.message}`);
+
+  const cfoTaskResult = await safeInsert(client, 'tasks', {
+    tenant_id: lead.tenant_id,
+    title: `Price Slack lead: ${lead.company_name}`,
+    description: `Pricing engine calculated ${amount} total and ${formatMoney(pricing.recommendedPricePerUnit, pricing.currency)} per ${lead.unit}.`,
+    workflow_source: 'Pricing Engine',
+    linked_record_id: leadResult.ok ? lead.id : null,
+    department: 'Finance',
+    owner_command: 'CFO Command',
+    assigned_to: 'CFO Command',
+    priority: 'High',
+    status: 'Waiting Review',
+    due_date: 'Today',
+    escalation_level: 'Director approval before buyer-facing release',
+    blocking_reason: 'CFO must review pricing assumptions, margin, freight, and currency before Director approval.',
+    next_action: `Review ${pricing.achievedMarginPercent}% margin and ${pricing.incoterm} assumptions.`
+  }, 'id,status');
+  if (!cfoTaskResult.ok) issues.push(`CFO task: ${cfoTaskResult.message}`);
+
+  const approvalId = crypto.randomUUID();
+  const approvalResult = await safeInsert(client, 'founder_approvals', {
+    id: approvalId,
+    tenant_id: lead.tenant_id,
+    approval_request_id: approvalId,
+    request_type: 'Slack Lead Quote Approval',
+    title: `Approve Slack lead quote: ${lead.company_name}`,
+    summary: `Approve ${amount} quote for ${lead.quantity} ${lead.unit} ${lead.product} to ${lead.destination_country}. COO verification and CFO pricing review are required before final invoice.`,
+    source_module: 'Slack Lead Intake',
+    related_table: 'lead_intake',
+    related_record_id: leadResult.ok ? lead.id : null,
+    related_record: leadResult.ok ? lead.id : `slack:${event.channel}:${event.ts}`,
+    buyer_name: lead.company_name,
+    amount,
+    requested_by: 'Slack Lead Intake',
+    risk_level: pricing.achievedMarginPercent < pricing.minMargin ? 'High' : 'Medium',
+    reason: 'Director approval is required before quote, final invoice, or buyer-facing commitment proceeds.',
+    status: 'Pending Approval',
+    approval_status: 'Pending Approval',
+    whatsapp_status: 'Pending',
+    whatsapp_provider: 'slack',
+    metadata: {
+      lead,
+      pricing,
+      coo_task_id: cooTaskResult.data?.id || null,
+      cfo_task_id: cfoTaskResult.data?.id || null,
+      approval_gating_required: true,
+      quote_blocked_until_director_approval: true,
+      invoice_blocked_until_director_approval: true
+    },
+    audit_trail: [{
+      event: 'Slack lead routed to Director approval',
+      status: 'Pending Approval',
+      at: new Date().toISOString()
+    }]
+  }, 'id,status,approval_status');
+  if (!approvalResult.ok) issues.push(`founder_approvals: ${approvalResult.message}`);
+
+  const approvalTaskResult = await safeInsert(client, 'tasks', {
+    tenant_id: lead.tenant_id,
+    title: `Director approval: ${lead.company_name} quote`,
+    description: `Approve or reject Slack lead quote before final invoice. Recommended total: ${amount}.`,
+    workflow_source: 'Director Queue',
+    linked_record_id: approvalResult.ok ? approvalId : null,
+    department: 'Founder Office',
+    owner_command: 'Founder',
+    assigned_to: 'Founder',
+    priority: 'High',
+    status: 'Waiting Founder Approval',
+    due_date: 'Today',
+    escalation_level: 'Founder',
+    blocking_reason: 'Approval is mandatory before buyer quote or final invoice release.'
+  }, 'id,status');
+  if (!approvalTaskResult.ok) issues.push(`Director task: ${approvalTaskResult.message}`);
+
+  return {
+    ok: issues.length === 0,
+    lead,
+    pricing,
+    amount,
+    records: {
+      lead: leadResult.data || null,
+      pricing_request: pricingRequestResult.data || null,
+      coo_task: cooTaskResult.data || null,
+      cfo_task: cfoTaskResult.data || null,
+      director_approval: approvalResult.data || null,
+      director_task: approvalTaskResult.data || null
+    },
+    issues
+  };
+}
+
+function buildSlackLeadReply(result) {
+  const { lead, pricing, amount, records, issues } = result;
+  const rows = [
+    '*GOPU OS Slack lead received*',
+    `Buyer/company: ${lead.company_name}`,
+    `Product: ${lead.quantity} ${lead.unit} ${lead.product}`,
+    `Destination: ${lead.destination_country}`,
+    `Incoterm: ${pricing.incoterm}`,
+    `CFO pricing estimate: ${amount} total, ${formatMoney(pricing.recommendedPricePerUnit, pricing.currency)} per ${lead.unit}`,
+    `Margin: ${pricing.achievedMarginPercent}% | Lead time: ${pricing.seaLeadTime}`,
+    '',
+    '*Routing*',
+    `COO verification: ${records.coo_task?.id ? `created (${records.coo_task.id})` : 'not created'}`,
+    `CFO pricing review: ${records.cfo_task?.id ? `created (${records.cfo_task.id})` : 'not created'}`,
+    `Director approval: ${records.director_approval?.id ? `pending (${records.director_approval.id})` : 'not created'}`,
+    '',
+    'No quote, posting, or final invoice will proceed until Director approval is completed.'
+  ];
+  if (issues.length) {
+    rows.push('', '*Blockers*', ...issues.map((issue) => `- ${issue}`));
+  }
+  return rows.join('\n');
 }
 
 function normalizeApprovalRequest(payload = {}) {
@@ -582,6 +846,89 @@ async function handleSlackNotification(request, response) {
   }
 }
 
+async function handleSlackEvents(request, response) {
+  let rawBody = '';
+  try {
+    rawBody = await readRawBody(request);
+  } catch {
+    sendJson(response, 400, { ok: false, status: 'invalid_payload', message: 'Invalid Slack event payload.' });
+    return;
+  }
+
+  const verification = verifySlackSignature(request, rawBody);
+  if (!verification.ok) {
+    sendJson(response, 401, verification);
+    return;
+  }
+
+  let payload;
+  try {
+    payload = rawBody ? JSON.parse(rawBody) : {};
+  } catch {
+    sendJson(response, 400, { ok: false, status: 'invalid_payload', message: 'Invalid Slack event JSON.' });
+    return;
+  }
+
+  if (payload.type === 'url_verification') {
+    sendJson(response, 200, { challenge: payload.challenge });
+    return;
+  }
+
+  const event = payload.event || {};
+  const eventKey = normalizeText(payload.event_id || `${event.channel}:${event.ts}:${event.user}`);
+  if (!eventKey) {
+    sendJson(response, 200, { ok: true, status: 'ignored', message: 'Slack event missing key.' });
+    return;
+  }
+  if (processedSlackLeadKeys.has(eventKey)) {
+    sendJson(response, 200, { ok: true, status: 'duplicate', message: 'Slack event already processed.' });
+    return;
+  }
+
+  if (event.bot_id || event.subtype === 'bot_message' || event.subtype === 'message_changed' || event.subtype === 'message_deleted') {
+    processedSlackLeadKeys.add(eventKey);
+    sendJson(response, 200, { ok: true, status: 'ignored_bot_or_subtype' });
+    return;
+  }
+
+  const text = normalizeText(event.text || '');
+  if (!['message', 'app_mention'].includes(event.type) || !isSlackLeadMessage(text)) {
+    sendJson(response, 200, { ok: true, status: 'ignored_not_lead' });
+    return;
+  }
+
+  processedSlackLeadKeys.add(eventKey);
+  sendJson(response, 200, { ok: true, status: 'accepted', message: 'Slack lead accepted for processing.' });
+
+  try {
+    const result = await processSlackLead(event, text);
+    await sendSlackBotMessage({
+      channel: event.channel,
+      thread_ts: event.thread_ts || event.ts,
+      text: buildSlackLeadReply(result)
+    });
+    await upsertSlackIntegrationStatus(result.ok ? 'live' : 'error', {
+      event: 'lead_intake',
+      approval_id: result.records.director_approval?.id || '',
+      error_message: result.issues.join(' | ')
+    });
+  } catch (error) {
+    console.error('[slack] inbound lead processing failed safely', {
+      event_id: eventKey,
+      message: error?.message || 'Unknown Slack lead processing failure'
+    });
+    await sendSlackBotMessage({
+      channel: event.channel,
+      thread_ts: event.thread_ts || event.ts,
+      text: `GOPU OS could not process this Slack lead safely: ${error?.message || 'Unknown error'}. No quote or invoice was released.`
+    });
+    await upsertSlackIntegrationStatus('error', {
+      event: 'lead_intake',
+      error_message: error?.message || 'Unknown Slack lead processing failure'
+    });
+  }
+}
+
 async function handleSlackApproval(request, response) {
   let rawBody = '';
   try {
@@ -814,6 +1161,10 @@ const server = http.createServer((request, response) => {
   }
   if (request.method === 'POST' && routePath === '/api/slack/notify') {
     handleSlackNotification(request, response);
+    return;
+  }
+  if (request.method === 'POST' && routePath === '/api/slack/events') {
+    handleSlackEvents(request, response);
     return;
   }
   if (request.method === 'GET' && routePath === '/api/integrations/openai/status') {

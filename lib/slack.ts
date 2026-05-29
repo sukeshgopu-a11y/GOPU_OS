@@ -56,7 +56,7 @@ export async function sendSlackNotification({
   message,
   priority = "INFO",
 }: SlackNotificationInput): Promise<SlackNotificationResult> {
-  if (typeof window !== "undefined") {
+  if ("window" in globalThis) {
     return {
       ok: false,
       status: "server_only",

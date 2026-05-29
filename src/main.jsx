@@ -11043,7 +11043,7 @@ function buildDirectorPricingReviewNote(inputs, calc, risk, approvalReasons, cha
   const lossLine = position.isLoss
     ? `BIG RED ALERT: Loss order detected on ${position.basis}. Do not allow buyer release. Director can approve final override only after reviewing the loss amount and reason.`
     : `Commercial result: ${formatProfitLossLine(position.activeProfit, position.currency)} on ${position.basis}.`;
-  return safeCfoJoin([
+  return [
     `Director pricing review: ${reviewNeeded ? 'Review needed' : 'No blocking review detected'}`,
     lossLine,
     `Source: ${channel}`,
@@ -11060,7 +11060,7 @@ function buildDirectorPricingReviewNote(inputs, calc, risk, approvalReasons, cha
     `Buyer-required price result: ${position.buyerProfit === null ? 'Buyer price missing' : formatProfitLossLine(position.buyerProfit, position.currency)}`,
     `Margin: ${calc.margin.toFixed(2)}%`,
     `Reason: ${approvalReasons[0] || risk.reason || 'Commercial validation required before buyer-facing release.'}`
-  ], '\n');
+  ].map((line) => safeCfoString(line)).join('\n');
 }
 
 function clampPercent(value) {
@@ -12376,7 +12376,7 @@ function buildMarketCheckNote(inputs) {
   const sourcePrice = getAutoMarketSourcePrice(inputs);
   const enteredPrice = Number(inputs.market_reference_price || 0);
   const referencePrice = sourcePrice || enteredPrice;
-  return safeCfoJoin([
+  return [
     '----- MARKET PRICE AUTO CHECK START -----',
     'MARKET PRICE CHECK',
     'Status: REFERENCE ESTIMATE',
@@ -12385,7 +12385,7 @@ function buildMarketCheckNote(inputs) {
     `Auto/source reference price: ${formatInrFixed(referencePrice)}/kg | ${formatInrFixed(referencePrice * 1000)}/ton`,
     `Entered buyer/commercial price: ${formatInrFixed(enteredPrice)}/kg`,
     'Manual source check required before buyer-facing quote.'
-  ], '\n');
+  ].map((line) => safeCfoString(line)).join('\n');
 }
 
 const pricingReferenceCheckedAt = formatDisplayDate(new Date());
@@ -21318,6 +21318,7 @@ function BuyerDirectory({ buyers, selectedId, filter, search, onFilter, onSearch
 }
 
 function BuyerDetailPage({ buyer, notes, onAddNote, onSummary, onLink, summary }) {
+  if (!buyer) return <div className="empty-state"><p>Select a buyer from the list to view details.</p></div>;
   return (
     <section className="buyer-panel">
       <div className="approval-section-header"><div><span>Buyer Detail Page</span><h2>{buyer.company}</h2></div><Building2 size={18} /></div>
@@ -21330,13 +21331,14 @@ function BuyerDetailPage({ buyer, notes, onAddNote, onSummary, onLink, summary }
 }
 
 function BuyerProfileCard({ buyer }) {
+  if (!buyer) return null;
   const fields = [
     ['Buyer', buyer.buyerName],
     ['Company', buyer.company],
     ['Country', buyer.country],
     ['Email', buyer.email],
     ['Phone / WhatsApp', `${buyer.phone} / ${buyer.whatsapp}`],
-    ['Product interests', buyer.interests.join(', ')],
+    ['Product interests', (buyer.interests || []).join(', ')],
     ['Payment behavior', 'Pending only / no payment confirmed'],
     ['Approvals linked', buyer.status === 'Risk Review' ? 'Marketing/origin claim review' : 'Pricing and document review']
   ];
@@ -21364,6 +21366,7 @@ function BuyerFollowupQueue({ followups, onCreate }) {
 }
 
 function BuyerRiskProfile({ buyer }) {
+  if (!buyer) return <div className="empty-state"><p>Select a buyer to view risk details.</p></div>;
   const risks = [
     ['Payment term risk', buyer.risk === 'High' ? 'High' : 'Medium'],
     ['Country risk', buyer.country === 'Australia' ? 'Medium' : 'Low'],

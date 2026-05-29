@@ -1,4 +1,4 @@
-import { getVercelStatus } from "../../../../lib/vercelStatus.mjs";
+import { getVercelStatus } from "../../../lib/vercelStatus.mjs";
 
 export default async function handler(req: any, res: any) {
   if (req.method !== "GET") {

@@ -1,4 +1,5 @@
 import { isSupabaseConfigured, requireSupabase } from '../lib/supabaseClient.js';
+import importerSeedData from '../data/importerSeedData.js';
 import { demoTenantId } from './demoData.js';
 
 const serviceDelay = 0;
@@ -79,6 +80,7 @@ export const spiceBoardProducts = [
 ];
 
 export const exportProductOptions = [
+  ...['Onion', 'Garlic', 'Rice', 'Pepper', 'Cardamom', 'Turmeric', 'Chilli', 'Spices'].map((product) => ({ label: product, group: 'Sample Products' })),
   ...apedaProductCategories.map((product) => ({ label: product, group: 'APEDA' })),
   ...spiceBoardProducts.map((product) => ({ label: product, group: 'Spice Board' }))
 ];
@@ -99,7 +101,7 @@ export const importerTypes = [
   'private label buyer'
 ];
 
-export const importerRecords = [];
+export const importerRecords = importerSeedData;
 
 const marketSignals = [];
 
@@ -164,11 +166,26 @@ function buildImporterEstimates(importer) {
 }
 
 function enrichImporter(importer, index = 0) {
-  const score = calculateImporterConfidence(importer);
-  const opportunityScore = strategicOpportunityScore(importer);
-  const estimates = buildImporterEstimates(importer);
-  return {
+  const normalizedProducts = Array.isArray(importer.products) && importer.products.length
+    ? importer.products
+    : Array.isArray(importer.product_interest)
+      ? importer.product_interest
+      : [];
+  const normalizedConfidence = Number(importer.confidence_score ?? importer.confidence ?? 0);
+  const normalizedStatus = importer.verification_status || importer.status || 'Manual Verification Required';
+  const normalizedImporter = {
     ...importer,
+    products: normalizedProducts,
+    preferred_products: Array.isArray(importer.preferred_products) && importer.preferred_products.length ? importer.preferred_products : normalizedProducts,
+    confidence_score: normalizedConfidence,
+    verification_status: normalizedStatus,
+    outreach_status: importer.outreach_status || importer.status || 'Active'
+  };
+  const score = normalizedConfidence || calculateImporterConfidence(normalizedImporter);
+  const opportunityScore = strategicOpportunityScore(normalizedImporter);
+  const estimates = buildImporterEstimates(normalizedImporter);
+  return {
+    ...normalizedImporter,
     confidence_score: score,
     confidence_level: confidenceLevel(score),
     strategic_opportunity_score: opportunityScore,
@@ -234,6 +251,7 @@ function filterImporters(records, filters = {}) {
       importer.importer_type,
       importer.industry_category,
       ...(importer.products || []),
+      ...(importer.product_interest || []),
       ...(importer.apeda_relevance || []),
       ...(importer.spice_board_relevance || []),
       ...(importer.tags || []),
@@ -248,13 +266,14 @@ function filterImporters(records, filters = {}) {
 
     const matchesSearch = !search || haystack.includes(search);
     const matchesCountry = !filters.country || filters.country === 'All' || importer.country === filters.country;
-    const matchesProduct = !filters.product || filters.product === 'All' || importer.products.some((item) => item.toLowerCase().includes(filters.product.toLowerCase()));
+    const productValues = importer.products || importer.product_interest || [];
+    const matchesProduct = !filters.product || filters.product === 'All' || productValues.some((item) => item.toLowerCase().includes(filters.product.toLowerCase()));
     const matchesType = !filters.importerType || filters.importerType === 'All' || importer.importer_type === filters.importerType;
     const matchesVerification = !filters.verificationStatus || filters.verificationStatus === 'All' || importer.verification_status === filters.verificationStatus;
     const matchesRisk = !filters.buyerRisk || filters.buyerRisk === 'All' || importer.buyer_risk === filters.buyerRisk;
     const matchesSource = !filters.source || filters.source === 'All' || importer.source === filters.source || importer.source_platform === filters.source;
-    const matchesStatus = !filters.status || filters.status === 'All' || importer.outreach_status === filters.status || importer.verification_status === filters.status;
-    const matchesConfidence = !filters.confidence || filters.confidence === 'All' || confidenceLevel(importer.confidence_score) === filters.confidence;
+    const matchesStatus = !filters.status || filters.status === 'All' || importer.status === filters.status || importer.outreach_status === filters.status || importer.verification_status === filters.status;
+    const matchesConfidence = !filters.confidence || filters.confidence === 'All' || confidenceLevel(importer.confidence_score ?? importer.confidence) === filters.confidence;
     return matchesSearch && matchesCountry && matchesProduct && matchesType && matchesVerification && matchesRisk && matchesSource && matchesStatus && matchesConfidence;
   });
 }
@@ -351,16 +370,16 @@ export async function getImporterById(importerId) {
 async function loadImporterRecords() {
   if (!isSupabaseConfigured) return buildGlobalImporterIndex();
   const { client, error } = requireSupabase();
-  if (error) return [];
+  if (error) return buildGlobalImporterIndex();
   const { data, error: queryError } = await client
     .from('importer_records')
     .select('*')
     .eq('tenant_id', demoTenantId)
     .order('created_at', { ascending: false });
-  if (queryError) return [];
-  return (data || []).map((record, index) => enrichImporter({
+  if (queryError) return buildGlobalImporterIndex();
+  const liveRecords = (data || []).map((record, index) => enrichImporter({
     ...record,
-    products: Array.isArray(record.products) ? record.products : [],
+    products: Array.isArray(record.products) && record.products.length ? record.products : record.product_interest || [],
     city: record.metadata?.city || record.city || '',
     importer_type: record.metadata?.importer_type || record.importer_type || 'importer',
     website: record.metadata?.website || '',
@@ -370,6 +389,9 @@ async function loadImporterRecords() {
     source_url: record.metadata?.source_url || '',
     confidence_score: record.opportunity_score || record.metadata?.confidence_score || 0
   }, index));
+  const merged = new Map(buildGlobalImporterIndex().map((record) => [record.id, record]));
+  liveRecords.forEach((record) => merged.set(record.id, record));
+  return Array.from(merged.values());
 }
 
 async function loadMarketSignals() {

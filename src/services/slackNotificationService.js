@@ -6,7 +6,11 @@ export const slackNotificationTypes = [
   'Renewal Expired',
   'Payment Received',
   'High Priority Alert',
-  'Founder Approval Required'
+  'Founder Approval Required',
+  'Task Blocked',
+  'Task Escalated',
+  'COO Daily Plan',
+  'Supplier Follow-up Required'
 ];
 
 export const slackPriorities = ['INFO', 'WARNING', 'URGENT'];

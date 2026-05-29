@@ -252,6 +252,18 @@ function checkTwilioHealth() {
 }
 
 export async function getLiveIntegrationStatus(tenantId = demoTenantId) {
+  if (typeof window !== 'undefined') {
+    try {
+      const response = await fetch('/api/cto/integrations/status', { headers: { Accept: 'application/json' } });
+      if (response.ok) {
+        const result = await response.json();
+        if (Array.isArray(result?.data)) return result.data;
+      }
+    } catch {
+      // Fall back to client-visible env checks in local UI-only mode.
+    }
+  }
+
   const results = await Promise.allSettled([
     checkSupabaseHealth(),
     checkOpenAIHealth(),
