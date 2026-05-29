@@ -66,7 +66,7 @@ import {
   Zap
 } from 'lucide-react';
 
-// Ã¢â€â‚¬Ã¢â€â‚¬ GOPU Brand Identity Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
+// —â‚¬—â‚¬ GOPU Brand Identity —â‚¬—â‚¬—â‚¬—â‚¬—â‚¬—â‚¬—â‚¬—â‚¬—â‚¬—â‚¬—â‚¬—â‚¬—â‚¬—â‚¬—â‚¬—â‚¬—â‚¬—â‚¬—â‚¬—â‚¬—â‚¬—â‚¬—â‚¬—â‚¬—â‚¬—â‚¬—â‚¬—â‚¬—â‚¬—â‚¬—â‚¬—â‚¬—â‚¬—â‚¬—â‚¬—â‚¬—â‚¬—â‚¬—â‚¬—â‚¬—â‚¬—â‚¬—â‚¬—â‚¬—â‚¬—â‚¬—â‚¬—â‚¬—â‚¬—â‚¬—â‚¬
 
 function GopuLogoMark({ size = 40, className = '' }) {
   return (
@@ -514,7 +514,7 @@ const KEYBOARD_SHORTCUTS = [
   {
     section: 'Selection & Lists',
     shortcuts: [
-      { keys: ['Ã¢â€ â€˜', 'Ã¢â€ â€œ'], action: 'Navigate list', desc: 'Move focus up or down in any list' },
+      { keys: ['↑', '↓'], action: 'Navigate list', desc: 'Move focus up or down in any list' },
       { keys: ['Space'], action: 'Select row', desc: 'Toggle selection of focused row' },
       { keys: ['⌘', 'A'], action: 'Select all', desc: 'Select all rows in current view' },
       { keys: ['Esc'], action: 'Clear selection', desc: 'Deselect all / close panel' },
@@ -2103,7 +2103,7 @@ function SettingsPage({ onBack }) {
           <p className="settings-page-sub">Manage your profile, preferences, and integrations</p>
         </div>
         {onBack && (
-          <button className="btn btn-ghost btn-sm" onClick={onBack}>Ã¢â€ Â Back</button>
+          <button className="btn btn-ghost btn-sm" onClick={onBack}> Back</button>
         )}
       </div>
 
@@ -2641,7 +2641,7 @@ function AnalyticsDashboard({ onBack }) {
           ))}
         </div>
         {onBack && (
-          <button className="btn btn-ghost btn-sm" onClick={onBack} type="button">Ã¢â€ Â Back</button>
+          <button className="btn btn-ghost btn-sm" onClick={onBack} type="button"> Back</button>
         )}
       </div>
 
@@ -2661,7 +2661,7 @@ function AnalyticsDashboard({ onBack }) {
                 color: (k.trend === 'up-good' ? k.change >= 0 : k.change < 0) ? '#22c55e' : '#ff4d6d'
               }}
             >
-              {k.change >= 0 ? 'Ã¢â€"Â²' : 'Ã¢â€"Â¼'} {Math.abs(k.change)}%
+              {k.change >= 0 ? '▲' : '▼'} {Math.abs(k.change)}%
             </span>
           </div>
         ))}
@@ -2712,7 +2712,7 @@ function AnalyticsDashboard({ onBack }) {
                   </td>
                   <td>{m.shipments}</td>
                   <td style={{ color: m.trend === 'up' ? '#22c55e' : m.trend === 'down' ? '#ff4d6d' : 'var(--dim)' }}>
-                    {m.trend === 'up' ? 'Ã¢â€"Â²' : m.trend === 'down' ? 'Ã¢â€"Â¼' : 'Ã¢â‚¬â€'}
+                    {m.trend === 'up' ? '▲' : m.trend === 'down' ? '▼' : '--'}
                   </td>
                 </tr>
               ))}
@@ -3818,7 +3818,7 @@ function LearningCentrePage({ navigate, onBack, reportMode = false }) {
                   <span>{finding.source_url ? <a href={finding.source_url} target="_blank" rel="noreferrer">Open source</a> : 'Source unavailable.'}</span>
                   <span title="Model self-assessment only. This is not a verified truth score.">{Number(finding.confidence_score || 0).toFixed(2)}</span>
                   <span>{finding.status}</span>
-                  <span>{finding.memory_saved ? 'Ã¢Å"â€œ' : 'Ã¢Å"â€"'}</span>
+                  <span>{finding.memory_saved ? '✓' : '✗}</span>
                   <span>{finding.tokens_processed || 0}</span>
                 </div>
               );
@@ -4311,7 +4311,7 @@ function ShipmentTrackerPage({ navigate, onBack, shipmentId }) {
           <div className="coo-verified"><ShieldCheck size={16} /><span>Founder session verified</span></div>
           <StatusBadge label={dataMode} state={dataMode === 'Live Supabase' ? 'online' : 'attention'} />
           <StatusBadge label={`${shipments.length} shipments`} state="progress" />
-          <button className="ghost-button deck-logout" onClick={onBack}><ArrowLeft size={15} />? Command Deck</button>
+          <button className="ghost-button deck-logout" onClick={onBack}><ArrowLeft size={15} /> Command Deck</button>
         </div>
       </header>
 
@@ -4782,7 +4782,7 @@ const TrendIndicator = React.memo(function TrendIndicator({ value, suffix = '%',
   const positive = invert ? numericValue < 0 : numericValue > 0;
   const neutral = numericValue === 0;
   const color = neutral ? 'var(--muted)' : positive ? '#3ddc84' : '#ff5a5a';
-  const arrow = neutral ? 'Ã¢â€ â€™' : positive ? 'Ã¢â€ â€˜' : 'Ã¢â€ â€œ';
+  const arrow = neutral ? '→' : positive ? '↑' : '↓';
   const displaySuffix = typeof value === 'string' && /[%a-zA-Z]/.test(value) ? '' : suffix;
   return (
     <span style={{ color, fontSize: '0.75rem', fontWeight: 700, display: 'inline-flex', alignItems: 'center', gap: 3 }}>
@@ -5130,7 +5130,7 @@ function ConnectionBanner() {
   return (
     <div className="connection-banner" role="alert" aria-live="assertive">
       <AlertTriangle size={14} aria-hidden="true" />
-      You are offline Ã¢â‚¬â€ changes may not save until connection is restored.
+      You are offline -- changes may not save until connection is restored.
     </div>
   );
 }
@@ -5245,7 +5245,7 @@ const Pagination = React.memo(function Pagination({ total, perPage = 20, page, o
         disabled={page === 1}
         aria-label="Previous page"
       >
-        Ã¢â‚¬Â¹
+        ‹
       </button>
       {pages.map((p) => (
         <button
@@ -5264,7 +5264,7 @@ const Pagination = React.memo(function Pagination({ total, perPage = 20, page, o
         disabled={page === totalPages}
         aria-label="Next page"
       >
-        Ã¢â‚¬Âº
+        ›
       </button>
     </nav>
   );
@@ -5327,7 +5327,7 @@ function ScrollToTop() {
       }}
       aria-label="Scroll to top"
     >
-      Ã¢â€ â€˜
+      ↑
     </button>
   );
 }
@@ -5896,7 +5896,7 @@ function CommandPalette({ open, onClose, onNavigate, onAction }) {
                     <span className="cmd-item-label">
                       {highlightMatch(item.label, query)}
                     </span>
-                    <kbd className="cmd-item-hint">Ã¢â€ Âµ</kbd>
+                    <kbd className="cmd-item-hint">↵</kbd>
                   </button>
                 );
               })}
@@ -5905,8 +5905,8 @@ function CommandPalette({ open, onClose, onNavigate, onAction }) {
         </div>
 
         <footer className="cmd-footer">
-          <span><kbd>Ã¢â€ â€˜Ã¢â€ â€œ</kbd> navigate</span>
-          <span><kbd>Ã¢â€ Âµ</kbd> select</span>
+          <span><kbd>↑↓</kbd> navigate</span>
+          <span><kbd>↵</kbd> select</span>
           <span><kbd>ESC</kbd> close</span>
           <span><kbd>⌘K</kbd> toggle</span>
         </footer>
@@ -6308,7 +6308,7 @@ function SortableTableHeader({ columns, sortKey, sortDir, onSort, allSelected, s
           <span>{col.label}</span>
           {col.sortable !== false && (
             <span className="sort-icon" aria-hidden="true">
-              {sortKey === col.key ? (sortDir === 'asc' ? 'Ã¢â€ â€˜' : 'Ã¢â€ â€œ') : 'Ã¢â€ â€¢'}
+              {sortKey === col.key ? (sortDir === 'asc' ? '↑' : '↓') : '•'}
             </span>
           )}
         </div>
@@ -6345,7 +6345,7 @@ function BulkActionBar({ count, actions, onClear, onExport }) {
         )}
       </div>
       <button className="bulk-clear" onClick={onClear} aria-label="Clear selection">
-        Ã¢Å"â€¢ Clear
+        • Clear
       </button>
     </div>
   );
@@ -6779,7 +6779,7 @@ function RichKpiCard({ label, value, unit = '', change, trend, sparkData, color,
         <span className="rich-kpi-label">{label}</span>
         {change !== undefined && (
           <span className="rich-kpi-change" style={{ color: trendColor }}>
-            {isPositive ? 'Ã¢â€"Â²' : 'Ã¢â€"Â¼'} {Math.abs(change)}%
+            {isPositive ? '▲' : '▼'} {Math.abs(change)}%
           </span>
         )}
       </div>
@@ -6897,12 +6897,12 @@ function QuickLaunch({ navigate }) {
 
 function DashboardActivityFeed() {
   const events = [
-    { id: 1, time: '2m ago', actor: 'CFO', action: 'reviewed', subject: 'Q3 margin report', icon: 'Ã°Å¸â€œâ€¹', tone: 'blue' },
-    { id: 2, time: '11m ago', actor: 'COO', action: 'escalated', subject: 'GCC shipment delay', icon: 'Ã¢Å¡Â Ã¯Â¸Â', tone: 'amber' },
-    { id: 3, time: '28m ago', actor: 'System', action: 'generated', subject: 'Morning briefing draft', icon: 'Ã¢Å¡Â¡', tone: 'cyan' },
-    { id: 4, time: '1h ago', actor: 'CTO', action: 'resolved', subject: 'Automation retry queue', icon: 'Ã¢Å"â€¦', tone: 'green' },
-    { id: 5, time: '2h ago', actor: 'Director', action: 'approved', subject: 'New buyer quotation release', icon: 'Ã¢Å"â€œ', tone: 'green' },
-    { id: 6, time: '3h ago', actor: 'CMO', action: 'drafted', subject: 'GCC importer outreach email', icon: 'Ã¢Å"â€°', tone: 'blue' },
+    { id: 1, time: '2m ago', actor: 'CFO', action: 'reviewed', subject: 'Q3 margin report', icon: '📁', tone: 'blue' },
+    { id: 2, time: '11m ago', actor: 'COO', action: 'escalated', subject: 'GCC shipment delay', icon: '✗', tone: 'amber' },
+    { id: 3, time: '28m ago', actor: 'System', action: 'generated', subject: 'Morning briefing draft', icon: '✓', tone: 'cyan' },
+    { id: 4, time: '1h ago', actor: 'CTO', action: 'resolved', subject: 'Automation retry queue', icon: '…', tone: 'green' },
+    { id: 5, time: '2h ago', actor: 'Director', action: 'approved', subject: 'New buyer quotation release', icon: '✓', tone: 'green' },
+    { id: 6, time: '3h ago', actor: 'CMO', action: 'drafted', subject: 'GCC importer outreach email', icon: '✉', tone: 'blue' },
   ];
 
   return (
@@ -8020,7 +8020,7 @@ function OperatingSpinePage({ navigate, onBack }) {
         <div className="deck-header-controls">
           <div className="coo-verified"><ShieldCheck size={16} /><span>Founder session verified</span></div>
           <div className="coo-status"><StatusPulse /><strong>Architecture Mode</strong></div>
-          <button className="ghost-button deck-logout" onClick={onBack}><ArrowLeft size={15} />? Command Deck</button>
+          <button className="ghost-button deck-logout" onClick={onBack}><ArrowLeft size={15} /> Command Deck</button>
         </div>
       </header>
       <section className="architecture-intro-panel">
@@ -9345,7 +9345,7 @@ function ExecutivePerformanceInsights({ insights = [] }) {
 function DirectorAIRecommendations({ recommendations = [] }) {
   return (
     <section className="director-panel">
-      <div className="approval-section-header"><div><span>AI Operational Recommendations</span><h2>AI Recommendation Ã¢â‚¬â€ Human Review Advised</h2></div><BrainCircuit size={18} /></div>
+      <div className="approval-section-header"><div><span>AI Operational Recommendations</span><h2>AI Recommendation -- Human Review Advised</h2></div><BrainCircuit size={18} /></div>
       <div className="director-card-list">
         {recommendations.map((item) => <article key={item.recommendation}><div><strong>{item.recommendation}</strong><SeverityBadge severity={item.risk_level} /></div><span>Confidence: {item.confidence}</span><p>{item.next_action}</p></article>)}
       </div>
@@ -9521,11 +9521,11 @@ function FounderApprovalWall({ onBack, onOpenTasks }) {
         setApprovalStatusMessage('Founder note saved to approval comments.');
       } else {
         setApprovalStatusMessage(result?.error?.message || 'Approval action failed.');
-        show('Action failed Ã¢â‚¬â€ please retry', 'error');
+        show('Action failed -- please retry', 'error');
       }
     } catch (error) {
       setApprovalStatusMessage(error?.message || 'Approval action failed.');
-      show('Action failed Ã¢â‚¬â€ please retry', 'error');
+      show('Action failed -- please retry', 'error');
     }
     setModalAction(null);
   }, [founderNote, replaceRequest, selectedRequest, show]);
@@ -9650,7 +9650,7 @@ function ApprovalWallHeader({ onBack, onOpenTasks, pendingCount, highRiskCount }
         <div className="coo-time"><CalendarClock size={16} /><span>{now.toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' })}</span></div>
         <button className="icon-button" aria-label="Notifications"><Bell size={18} /></button>
         <button className="ghost-button deck-logout" onClick={onOpenTasks}><Workflow size={15} />Task Engine</button>
-        <button className="ghost-button deck-logout" onClick={onBack}><ArrowLeft size={15} />? Command Deck</button>
+        <button className="ghost-button deck-logout" onClick={onBack}><ArrowLeft size={15} /> Command Deck</button>
       </div>
     </header>
   );
@@ -12081,7 +12081,7 @@ function QuotationSopPricingPage({ inputs, errors, costRows, calc, rates, risk, 
     <main className="quotation-sop-page">
       <section className="quotation-sop-section">
         <div className="quotation-section-title">
-          <h2>Section 1 Ã¢â‚¬â€ Inquiry Basics</h2>
+          <h2>Section 1 -- Inquiry Basics</h2>
           <p>Core inquiry details. Pricing result does not create or send a quotation.</p>
         </div>
         <div className="quotation-basics-grid">
@@ -12121,7 +12121,7 @@ function QuotationSopPricingPage({ inputs, errors, costRows, calc, rates, risk, 
 
       <section className="quotation-sop-section">
         <div className="quotation-section-title">
-          <h2>Section 2 Ã¢â‚¬â€ Cost Inputs</h2>
+          <h2>Section 2 -- Cost Inputs</h2>
           <p>Each row shows its basis and calculated line total. Incoterm excluded rows are disabled by default.</p>
         </div>
         <div className="quote-cost-table">
@@ -12160,7 +12160,7 @@ function QuotationSopPricingPage({ inputs, errors, costRows, calc, rates, risk, 
 
       <section className="quotation-sop-section">
         <div className="quotation-section-title">
-          <h2>Section 3 Ã¢â‚¬â€ Margin + Currency</h2>
+          <h2>Section 3 -- Margin + Currency</h2>
           <p>Currency and margin assumptions used for the result.</p>
         </div>
         <div className="quotation-margin-grid">
@@ -12179,7 +12179,7 @@ function QuotationSopPricingPage({ inputs, errors, costRows, calc, rates, risk, 
 
       <section className="quotation-sop-section">
         <div className="quotation-section-title">
-          <h2>Section 4 Ã¢â‚¬â€ Result</h2>
+          <h2>Section 4 -- Result</h2>
           <p>Live pricing preview. Results update from product, quantity, destination, Incoterm, freight, FX, and margin inputs.</p>
         </div>
         <div className="quotation-result-grid">
@@ -12399,8 +12399,8 @@ function currencySymbol(currency) {
   if (currency === 'USD') return '$';
   if (currency === 'INR') return '₹';
   if (currency === 'AED') return 'AED ';
-  if (currency === 'EUR') return 'Ã¢â€šÂ¬';
-  if (currency === 'GBP') return 'Ã‚Â£';
+  if (currency === 'EUR') return '€';
+  if (currency === 'GBP') return 'Ã‚£';
   if (currency === 'AUD') return 'A$';
   return `${currency} `;
 }
@@ -12483,7 +12483,7 @@ function SmartQuoteSetup({ inputs, errors, updateInput, productIntel, approvalRe
   const freightProfile = getFreightProfile(inputs.destination_country);
   return (
     <section className="pricing-panel cfo-smart-setup">
-      <div className="approval-section-header"><div><span>Section A Ã¢â‚¬â€ Product Inputs</span><h2>Live commercial pricing inputs</h2></div><SlidersHorizontal size={18} /></div>
+      <div className="approval-section-header"><div><span>Section A -- Product Inputs</span><h2>Live commercial pricing inputs</h2></div><SlidersHorizontal size={18} /></div>
       <div className="cfo-section-a-grid">
         <PricingSelect label="Product" value={inputs.product_name} options={[...pricingProducts, otherPricingOption]} error={errors.product_name} onChange={(value) => updateInput('product_name', value)} />
         <SecureInput label="Quantity" value={inputs.quantity} error={errors.quantity} onChange={(value) => updateInput('quantity', value.replace(/[^\d.]/g, ''))} />
@@ -12519,7 +12519,7 @@ function ProductIntelligenceSuggestions({ productIntel, approvalReasons }) {
     <div className="product-intelligence-box">
       <div>
         <span>Product Intelligence Suggestions</span>
-        <strong>AI suggestion Ã¢â‚¬â€ founder/CA/export consultant review required.</strong>
+        <strong>AI suggestion -- founder/CA/export consultant review required.</strong>
       </div>
       <div className="product-intelligence-grid">
         <div><span>Probable HSN</span><strong>{productIntel.hsn}</strong></div>
@@ -13450,7 +13450,7 @@ function PricingEngineHeader({ onBack, rates, onOpenTasks }) {
         <div className="coo-status"><CircleDollarSign size={15} /><strong>USD/INR {usd}</strong></div>
         <div className="coo-time"><CalendarClock size={16} /><span>{now.toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' })}</span></div>
         <button className="ghost-button deck-logout" onClick={onOpenTasks}><Workflow size={15} />Task Engine</button>
-        <button className="ghost-button deck-logout" onClick={onBack}><ArrowLeft size={15} />? Command Deck</button>
+        <button className="ghost-button deck-logout" onClick={onBack}><ArrowLeft size={15} /> Command Deck</button>
       </div>
     </header>
   );
@@ -13843,7 +13843,7 @@ function CFOCommandPage({ onBack, onOpenPricing, onOpenApprovalWall, onOpenPayme
           <button className="ghost-button deck-logout" onClick={onOpenPricing}><CircleDollarSign size={15} />Pricing Engine</button>
           <button className="ghost-button deck-logout" onClick={onOpenPaymentVault}><FileCheck2 size={15} />Payment Vault</button>
           <button className="ghost-button deck-logout" onClick={onOpenApprovalWall}><FileCheck2 size={15} />Director Queue</button>
-          <button className="ghost-button deck-logout" onClick={onBack}><ArrowLeft size={15} />? Command Deck</button>
+          <button className="ghost-button deck-logout" onClick={onBack}><ArrowLeft size={15} /> Command Deck</button>
         </div>
       </header>
       <section className="cfo-command-layout">
@@ -14578,11 +14578,11 @@ function LUTInvoicePanel({ snapshot, navigate }) {
   const inactive = !['Active', 'Verified'].includes(snapshot.lut_status);
   const notVerified = snapshot.lut_founder_verified_status !== 'Verified';
   const message = incomplete
-    ? 'LUT incomplete Ã¢â‚¬â€ invoice release blocked.'
+    ? 'LUT incomplete -- invoice release blocked.'
     : expired
-      ? 'LUT expired Ã¢â‚¬â€ invoice release blocked.'
+      ? 'LUT expired -- invoice release blocked.'
       : inactive
-        ? 'LUT status needs review Ã¢â‚¬â€ invoice release blocked.'
+        ? 'LUT status needs review -- invoice release blocked.'
         : notVerified
           ? 'Founder verification required before invoice release.'
           : 'LUT data available for invoice release validation.';
@@ -14643,7 +14643,7 @@ function ValidationChecklist({ validation, navigate }) {
   const failed = validation.filter((check) => check.status === 'Failed');
   const groups = ['Company', 'LUT', 'Buyer', 'Product', 'Export', 'Approval', 'Commercial', 'Bank', 'Packing', 'Release', 'Document Type', 'Invoice', 'System'];
   const grouped = groups.map((group) => [group, validation.filter((check) => check.group === group)]).filter(([, rows]) => rows.length);
-  return <section className="invoice-side-panel validation-checklist-panel"><div className="approval-section-header"><div><span>Validation Checklist</span><h2>{failed.length ? `${failed.length} blockers` : 'Validation Passed'}</h2></div><TriangleAlert size={18} /></div><div className="validation-list grouped">{grouped.map(([group, rows]) => <div className="validation-group" key={group}><h3>{group}</h3>{rows.map((check) => <div className={check.status.toLowerCase()} key={check.key}><strong>{check.status === 'Passed' ? 'Ã¢Å"â€œ' : 'Blocked'} {check.message}</strong><span>{check.owner}</span>{check.status === 'Failed' && <button onClick={() => navigate(check.group === 'LUT' || check.group === 'Company' ? '/export-os/company-master-data' : check.group === 'Commercial' ? '/export-os/pricing-engine' : '/export-os/director')}>Fix</button>}</div>)}</div>)}</div></section>;
+  return <section className="invoice-side-panel validation-checklist-panel"><div className="approval-section-header"><div><span>Validation Checklist</span><h2>{failed.length ? `${failed.length} blockers` : 'Validation Passed'}</h2></div><TriangleAlert size={18} /></div><div className="validation-list grouped">{grouped.map(([group, rows]) => <div className="validation-group" key={group}><h3>{group}</h3>{rows.map((check) => <div className={check.status.toLowerCase()} key={check.key}><strong>{check.status === 'Passed' ? '✓' : 'Blocked'} {check.message}</strong><span>{check.owner}</span>{check.status === 'Failed' && <button onClick={() => navigate(check.group === 'LUT' || check.group === 'Company' ? '/export-os/company-master-data' : check.group === 'Commercial' ? '/export-os/pricing-engine' : '/export-os/director')}>Fix</button>}</div>)}</div>)}</div></section>;
 }
 
 function ApprovalRoutingPanel({ invoice, blockers, navigate, onValidate, onCreateApproval }) {
@@ -15061,7 +15061,7 @@ function TaskEngineHeader({ onBack, onNewTask }) {
         <div className="coo-status"><Workflow size={15} /><strong>Task Engine: Monitoring</strong></div>
         <div className="coo-time"><CalendarClock size={16} /><span>{now.toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' })}</span></div>
         <button className="tactical-button" onClick={onNewTask}>New Task</button>
-        <button className="ghost-button deck-logout" onClick={onBack}><ArrowLeft size={15} />? Command Deck</button>
+        <button className="ghost-button deck-logout" onClick={onBack}><ArrowLeft size={15} /> Command Deck</button>
       </div>
     </header>
   );
@@ -15482,7 +15482,7 @@ function VaultHeader({ onBack, dataMode }) {
         <div className="coo-status"><StatusPulse /><strong>Vault Status: Online</strong></div>
         <div className="coo-status"><Database size={15} /><strong>{dataMode === 'Connected' ? 'Data Mode: Backend Connected' : 'Connect Supabase to activate - Backend not connected'}</strong></div>
         <div className="coo-time"><CalendarClock size={16} /><span>{now.toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' })}</span></div>
-        <button className="ghost-button deck-logout" onClick={onBack}><ArrowLeft size={15} />? Command Deck</button>
+        <button className="ghost-button deck-logout" onClick={onBack}><ArrowLeft size={15} /> Command Deck</button>
       </div>
     </header>
   );
@@ -15678,8 +15678,8 @@ const lutFieldList = [
   ];
 
 function getLutBlockMessage(lut) {
-  if (!lut?.lut_arn || !lut?.financial_year || !lut?.valid_from || !lut?.valid_to || !lut?.document_url) return 'LUT incomplete Ã¢â‚¬â€ invoice release blocked.';
-  if (new Date(lut.valid_to) < new Date()) return 'LUT expired Ã¢â‚¬â€ invoice release blocked.';
+  if (!lut?.lut_arn || !lut?.financial_year || !lut?.valid_from || !lut?.valid_to || !lut?.document_url) return 'LUT incomplete -- invoice release blocked.';
+  if (new Date(lut.valid_to) < new Date()) return 'LUT expired -- invoice release blocked.';
   if (!lut.founder_verified) return 'Founder verification required before invoice release.';
   return 'LUT data ready for draft invoice validation.';
 }
@@ -16519,7 +16519,7 @@ function CTOCommandPage({ navigate, onBack }) {
         <div className="deck-header-controls">
           <button className="tactical-button" onClick={refreshCTOStatus}><Activity size={15} />Run Health Check</button>
           <button className="ghost-button deck-logout" onClick={sendHealthReport}><Send size={15} />Send Report to Slack</button>
-          <button className="ghost-button deck-logout" onClick={onBack}><ArrowLeft size={15} />? Command Deck</button>
+          <button className="ghost-button deck-logout" onClick={onBack}><ArrowLeft size={15} /> Command Deck</button>
         </div>
       </header>
 
@@ -18045,7 +18045,7 @@ function PaymentVaultDashboard({ navigate, onBack, view = 'payment-vault', payme
           <StatusBadge label={paymentProviderConnected || billingMethods.length ? 'Live tokenized billing enabled' : 'Payment provider not connected'} state={paymentProviderConnected || billingMethods.length ? 'progress' : 'attention'} />
           <StatusBadge label={`${billingMethods.length} tokenized methods`} state="progress" />
           <div className="coo-status"><CircleDollarSign size={16} /><strong>{formatInr(payments.reduce((sum, item) => sum + item.amountInr, 0))} monthly view</strong></div>
-          <button className="ghost-button deck-logout" onClick={onBack}><ArrowLeft size={15} />? Command Deck</button>
+          <button className="ghost-button deck-logout" onClick={onBack}><ArrowLeft size={15} /> Command Deck</button>
         </div>
       </header>
 
@@ -18897,7 +18897,7 @@ function WorkflowGuidanceEngine({ navigate, onBack, initialView = 'Workflow Guid
           <StatusBadge label={data?.summary?.buyerStatus || 'Guidance Loading'} state="attention" />
           <StatusBadge label={`${data?.summary?.missingDependencies || 0} Missing Dependencies`} state="attention" />
           <div className="coo-time"><CalendarClock size={16} /><span>{now.toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' })}</span></div>
-          <button className="ghost-button deck-logout" onClick={onBack}><ArrowLeft size={15} />? Command Deck</button>
+          <button className="ghost-button deck-logout" onClick={onBack}><ArrowLeft size={15} /> Command Deck</button>
         </div>
       </header>
 
@@ -19014,7 +19014,7 @@ function WorkflowDependencyEngine({ navigate, onBack }) {
           <StatusBadge label={`${summary?.blockerCount || 0} blockers`} state={(summary?.criticalCount || 0) ? 'error' : 'attention'} />
           <StatusBadge label={`${summary?.averageHealth || 0}% health`} state={(summary?.averageHealth || 0) < 55 ? 'attention' : 'progress'} />
           <div className="coo-time"><CalendarClock size={16} /><span>{now.toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' })}</span></div>
-          <button className="ghost-button deck-logout" onClick={onBack}><ArrowLeft size={15} />? Command Deck</button>
+          <button className="ghost-button deck-logout" onClick={onBack}><ArrowLeft size={15} /> Command Deck</button>
         </div>
       </header>
 
@@ -19273,7 +19273,7 @@ function WorkflowJourneyDashboard({ navigate, onBack }) {
           <StatusBadge label={`${data?.summary?.blockedStages || 0} blocked stages`} state={(data?.summary?.blockedStages || 0) ? 'attention' : 'progress'} />
           <StatusBadge label={`${data?.summary?.approvalsRequired || 0} approvals`} state="attention" />
           <div className="coo-time"><CalendarClock size={16} /><span>{now.toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' })}</span></div>
-          <button className="ghost-button deck-logout" onClick={onBack}><ArrowLeft size={15} />? Command Deck</button>
+          <button className="ghost-button deck-logout" onClick={onBack}><ArrowLeft size={15} /> Command Deck</button>
         </div>
       </header>
 
@@ -19584,7 +19584,7 @@ function ExecutiveWarRoom({ navigate, onBack, mode = 'Sync' }) {
           <StatusBadge label={`${data?.warRoom?.criticalAlerts || 0} critical alerts`} state={(data?.warRoom?.criticalAlerts || 0) ? 'error' : 'progress'} />
           <StatusBadge label={`${data?.warRoom?.operationalReadiness || 0}% readiness`} state={(data?.warRoom?.operationalReadiness || 0) < 55 ? 'attention' : 'progress'} />
           <div className="coo-time"><CalendarClock size={16} /><span>{now.toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' })}</span></div>
-          <button className="ghost-button deck-logout" onClick={onBack}><ArrowLeft size={15} />? Command Deck</button>
+          <button className="ghost-button deck-logout" onClick={onBack}><ArrowLeft size={15} /> Command Deck</button>
         </div>
       </header>
 
@@ -19755,7 +19755,7 @@ function NotificationCenter({ navigate, onBack }) {
           <StatusBadge label={`${data?.counts?.critical || 0} Critical Alerts`} state="error" />
           <StatusBadge label={`${data?.counts?.pendingReviews || 0} Pending Reviews`} state="attention" />
           <div className="coo-time"><CalendarClock size={16} /><span>{now.toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' })}</span></div>
-          <button className="ghost-button deck-logout" onClick={onBack}><ArrowLeft size={15} />? Command Deck</button>
+          <button className="ghost-button deck-logout" onClick={onBack}><ArrowLeft size={15} /> Command Deck</button>
         </div>
       </header>
       <section className="notification-filter-bar">
@@ -20099,7 +20099,7 @@ function WarehouseDashboard({ navigate, onBack, view = 'warehouse', inventoryId 
           <StatusBadge label={`${lowStockCount} low stock`} state="attention" />
           <StatusBadge label={`${shipmentAllocationSeed.length} dispatch pending`} state="progress" />
           <span className="deck-time-chip">{currentDateTime}</span>
-          <button className="ghost-button deck-logout" onClick={onBack}><ArrowLeft size={15} />? Command Deck</button>
+          <button className="ghost-button deck-logout" onClick={onBack}><ArrowLeft size={15} /> Command Deck</button>
         </div>
       </header>
 
@@ -20365,7 +20365,7 @@ function SupplierProcurementDashboard({ navigate, onBack, view = 'suppliers', su
           <StatusBadge label={`${pendingConfirmations} pending confirmations`} state="attention" />
           <StatusBadge label={`${procurementRisks} procurement risks`} state="attention" />
           <span className="deck-time-chip">{currentDateTime}</span>
-          <button className="ghost-button deck-logout" onClick={onBack}><ArrowLeft size={15} />? Command Deck</button>
+          <button className="ghost-button deck-logout" onClick={onBack}><ArrowLeft size={15} /> Command Deck</button>
         </div>
       </header>
 
@@ -20632,7 +20632,7 @@ function CIOCommandPage({ navigate, onBack, view = 'overview', importerId }) {
           <StatusBadge label={`SAMPLE IMPORTERS: ${summary.activeImporterRecords || 0}`} state="progress" />
           <StatusBadge label="Live data not connected" state="attention" />
           <div className="coo-time"><CalendarClock size={16} /><span>{now.toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' })}</span></div>
-          <button className="ghost-button deck-logout" onClick={onBack}><ArrowLeft size={15} />? Command Deck</button>
+          <button className="ghost-button deck-logout" onClick={onBack}><ArrowLeft size={15} /> Command Deck</button>
         </div>
       </header>
 
@@ -20724,7 +20724,7 @@ function CIOGroupedSelect({ label, value, onChange, options }) {
 }
 
 function LiveDataNotice({ summary }) {
-  return <section className="cio-live-notice"><StatusPulse /><strong>{summary.dataMode || 'Live data not connected Ã¢â‚¬â€ using local/sample records.'}</strong><span>No live importer, trade, LinkedIn, Google, APEDA, Spice Board, or CSV source is claimed as connected.</span></section>;
+  return <section className="cio-live-notice"><StatusPulse /><strong>{summary.dataMode || 'Live data not connected -- using local/sample records.'}</strong><span>No live importer, trade, LinkedIn, Google, APEDA, Spice Board, or CSV source is claimed as connected.</span></section>;
 }
 
 function CIOOverviewTab({ data, importers, navigate }) {
@@ -21030,7 +21030,7 @@ function TrustCenterDashboard({ navigate, onBack, view = 'overview' }) {
           <StatusBadge label={`${data?.summary?.markets || 0} market regions`} state="progress" />
           <StatusBadge label={`${data?.summary?.certificationsUnderReview || 0} verification items`} state="attention" />
           <div className="coo-time"><CalendarClock size={16} /><span>{now.toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' })}</span></div>
-          <button className="ghost-button deck-logout" onClick={onBack}><ArrowLeft size={15} />? Command Deck</button>
+          <button className="ghost-button deck-logout" onClick={onBack}><ArrowLeft size={15} /> Command Deck</button>
         </div>
       </header>
 
@@ -21175,7 +21175,7 @@ function MarketIntelligenceDashboard({ navigate, onBack }) {
           <StatusBadge label={`${data?.summary?.activeSignals || 0} market signals`} state="progress" />
           <StatusBadge label={`${data?.summary?.highOpportunityAlerts || 0} high opportunities`} state="attention" />
           <div className="coo-time"><CalendarClock size={16} /><span>{now.toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' })}</span></div>
-          <button className="ghost-button deck-logout" onClick={onBack}><ArrowLeft size={15} />? Command Deck</button>
+          <button className="ghost-button deck-logout" onClick={onBack}><ArrowLeft size={15} /> Command Deck</button>
         </div>
       </header>
 
@@ -21340,7 +21340,7 @@ function BuyerCRMPage({ navigate, onBack, view = 'buyers', buyerId }) {
           <StatusBadge label={`${dueFollowups} follow-ups due`} state="attention" />
           <StatusBadge label={`${highValueBuyers} high-value buyers`} state="online" />
           <span className="deck-time-chip">{currentDateTime}</span>
-          <button className="ghost-button deck-logout" onClick={onBack}><ArrowLeft size={15} />? Command Deck</button>
+          <button className="ghost-button deck-logout" onClick={onBack}><ArrowLeft size={15} /> Command Deck</button>
         </div>
       </header>
 
@@ -21725,7 +21725,7 @@ function FounderIntelligenceDashboard({ navigate, onBack, view = 'analytics' }) 
           <StatusBadge label={`${highRiskAlerts} high risk alerts`} state="attention" />
           <StatusBadge label="No live pipeline data" state="progress" />
           <span className="deck-time-chip">{currentDateTime}</span>
-          <button className="ghost-button deck-logout" onClick={onBack}><ArrowLeft size={15} />? Command Deck</button>
+          <button className="ghost-button deck-logout" onClick={onBack}><ArrowLeft size={15} /> Command Deck</button>
         </div>
       </header>
 
@@ -22779,7 +22779,7 @@ function CMOCommandPage({ view = 'command', navigate, onBack }) {
           <div className="coo-status"><ClipboardList size={16} /><strong>{scheduledCount} scheduled</strong></div>
           <div className="coo-status"><TriangleAlert size={16} /><strong>{approvalCount} approvals</strong></div>
           <div className="coo-time"><CalendarClock size={16} /><span>{now.toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' })}</span></div>
-          <button className="ghost-button deck-logout" onClick={onBack}><ArrowLeft size={15} />? Command Deck</button>
+          <button className="ghost-button deck-logout" onClick={onBack}><ArrowLeft size={15} /> Command Deck</button>
         </div>
       </header>
 
@@ -25138,7 +25138,7 @@ function CMOAutomationFlow({ flow, contentMemoryArchive }) {
                   onOpen={(event) => openStepDetail(event, step)}
                   onKeyDown={(event) => handleStepKeyDown(event, step)}
                 />
-                {index < displaySteps.length - 1 ? <div className="cmo-flow-down" aria-hidden="true">Ã¢â€ â€œ</div> : null}
+                {index < displaySteps.length - 1 ? <div className="cmo-flow-down" aria-hidden="true">↓</div> : null}
               </Fragment>
             );
           }
@@ -25231,7 +25231,7 @@ function CMOAutomationFlow({ flow, contentMemoryArchive }) {
                 {(step.status === 'pending' || step.status === 'waiting') && step.healthMessage ? <p className="cmo-flow-pending">{step.healthMessage}</p> : null}
                 {step.id === 'ai-content-generation' ? <Step2ContentQualityPanel /> : null}
               </article>
-              {index < displaySteps.length - 1 ? <div className="cmo-flow-down" aria-hidden="true">Ã¢â€ â€œ</div> : null}
+              {index < displaySteps.length - 1 ? <div className="cmo-flow-down" aria-hidden="true">↓</div> : null}
             </Fragment>
           );
         })}
@@ -26670,7 +26670,7 @@ function CampaignBudgetPanel({ control, navigate }) {
                   <span>{campaign.cpc ? formatInrValue(campaign.cpc) : 'No data'}</span>
                   <span>{campaign.ctr ? `${campaign.ctr.toFixed(2)}%` : 'No data'}</span>
                   <span>{campaign.roi ? `${campaign.roi.toFixed(2)}x` : 'No data'}</span>
-                  <span>{campaign.startDate || 'Not set'} Ã¢â€ â€™ {campaign.endDate || 'Not set'}</span>
+                  <span>{campaign.startDate || 'Not set'} → {campaign.endDate || 'Not set'}</span>
                 </div>
               );
             })}
@@ -26692,11 +26692,11 @@ function CampaignBudgetPanel({ control, navigate }) {
       <section className="campaign-control-grid">
         <article className="cmo-panel">
           <div className="approval-section-header"><div><span>Marketing Calendar</span><h2>Campaign dates, scheduled posts, launches, approvals</h2></div><CalendarDays size={18} /></div>
-          <div className="approval-memory-list">{(campaignControl.schedule?.length ? campaignControl.schedule.map((item) => `${String(item.scheduled_at || '').slice(0, 10)} Ã¢â‚¬â€ ${item.title || item.campaign_name || item.schedule_type} / ${item.status}`) : ['No campaign calendar rows connected yet.']).map((item) => <span key={item}>{item}</span>)}</div>
+          <div className="approval-memory-list">{(campaignControl.schedule?.length ? campaignControl.schedule.map((item) => `${String(item.scheduled_at || '').slice(0, 10)} -- ${item.title || item.campaign_name || item.schedule_type} / ${item.status}`) : ['No campaign calendar rows connected yet.']).map((item) => <span key={item}>{item}</span>)}</div>
         </article>
         <article className="cmo-panel">
           <div className="approval-section-header"><div><span>Lead Tracking</span><h2>Inquiries, WhatsApp clicks, visits, importer responses</h2></div><UsersRound size={18} /></div>
-          <div className="approval-memory-list">{(campaignControl.leads?.length ? campaignControl.leads.map((item) => `${item.lead_name || item.importer_name || 'Campaign lead'} Ã¢â‚¬â€ ${item.source || item.lead_source || 'source pending'} / ${item.status || 'New'}`) : ['No campaign leads connected yet.']).map((item) => <span key={item}>{item}</span>)}</div>
+          <div className="approval-memory-list">{(campaignControl.leads?.length ? campaignControl.leads.map((item) => `${item.lead_name || item.importer_name || 'Campaign lead'} -- ${item.source || item.lead_source || 'source pending'} / ${item.status || 'New'}`) : ['No campaign leads connected yet.']).map((item) => <span key={item}>{item}</span>)}</div>
         </article>
       </section>
 
@@ -27365,7 +27365,7 @@ function BriefingHeader({ now, status, onBack }) {
         <div className="coo-status"><CalendarClock size={16} /><strong>{now.toLocaleDateString([], { dateStyle: 'full' })}</strong></div>
         <div className="coo-time"><TimerReset size={16} /><span>{now.toLocaleTimeString([], { timeStyle: 'short' })}</span></div>
         <StatusBadge label={`Briefing Status: ${status}`} state={status === 'Attention' ? 'attention' : status === 'Generating' ? 'progress' : 'online'} />
-        <button className="ghost-button deck-logout" onClick={onBack}><ArrowLeft size={15} />? Command Deck</button>
+        <button className="ghost-button deck-logout" onClick={onBack}><ArrowLeft size={15} /> Command Deck</button>
       </div>
     </header>
   );
@@ -27738,7 +27738,7 @@ function WhatsAppFounderCommand({ navigate, onBack, inboxMode = false }) {
           <div className="coo-verified"><ShieldCheck size={16} /><span>Founder session verified</span></div>
           <StatusBadge label="WhatsApp Status: Connect Supabase to activate" state="progress" />
           <div className="coo-status"><Mail size={16} /><strong>{whatsappCommandMessages.length} messages</strong></div>
-          <button className="ghost-button deck-logout" onClick={onBack}><ArrowLeft size={15} />? Command Deck</button>
+          <button className="ghost-button deck-logout" onClick={onBack}><ArrowLeft size={15} /> Command Deck</button>
         </div>
       </header>
 
@@ -28092,7 +28092,7 @@ function AutomationCenter({ navigate, onBack, view = 'automation-center' }) {
           <StatusBadge label={notice.includes('Backend Connected') ? 'Backend Connected' : 'Connect Supabase to activate'} state={notice.includes('Backend Connected') ? 'online' : 'progress'} />
           <button className="ghost-button deck-logout" onClick={() => navigate('/export-os/workflow-events')}><Workflow size={15} />Events</button>
           <button className="ghost-button deck-logout" onClick={() => navigate('/export-os/automation-logs')}><FileBarChart size={15} />Logs</button>
-          <button className="ghost-button deck-logout" onClick={onBack}><ArrowLeft size={15} />? Command Deck</button>
+          <button className="ghost-button deck-logout" onClick={onBack}><ArrowLeft size={15} /> Command Deck</button>
         </div>
       </header>
 
@@ -28509,7 +28509,7 @@ function SecurityDashboard({ navigate, onBack, view = 'security' }) {
           <button className="ghost-button deck-logout" onClick={() => navigate('/export-os/users')}><UsersRound size={15} />Users</button>
           <button className="ghost-button deck-logout" onClick={() => navigate('/export-os/roles')}><SlidersHorizontal size={15} />Roles</button>
           <button className="ghost-button deck-logout" onClick={() => navigate('/export-os/access-audit')}><FileBarChart size={15} />Audit</button>
-          <button className="ghost-button deck-logout" onClick={onBack}><ArrowLeft size={15} />? Command Deck</button>
+          <button className="ghost-button deck-logout" onClick={onBack}><ArrowLeft size={15} /> Command Deck</button>
         </div>
       </header>
 
@@ -28839,7 +28839,7 @@ function ExecutiveCommandPlaceholder({ command, onBack, onOpenApprovalWall, navi
           <div className="coo-verified"><ShieldCheck size={16} /><span>Founder session verified</span></div>
           {command?.id === 'cto' && <button className="ghost-button deck-logout" onClick={() => navigate('/export-os/executives/cto/integrations')}><KeyRound size={15} />{ctoLabels.integrationVaultButton}</button>}
           <button className="ghost-button deck-logout" onClick={onOpenApprovalWall}><FileCheck2 size={15} />Director Queue</button>
-          <button className="ghost-button deck-logout" onClick={onBack}><ArrowLeft size={15} />? Command Deck</button>
+          <button className="ghost-button deck-logout" onClick={onBack}><ArrowLeft size={15} /> Command Deck</button>
         </div>
       </header>
       <section className="placeholder-command-page">
@@ -29177,7 +29177,7 @@ function COOCommandPage({ navigate, onBack, onOpenApprovalWall, onOpenTasks }) {
     setLastCOOSlackNotification(result.data || null);
     const notConfigured = result.data?.status === 'Provider Not Connected';
     const message = notConfigured
-      ? 'Slack not configured Ã¢â‚¬â€ add SLACK_BOT_TOKEN to env'
+      ? 'Slack not configured -- add SLACK_BOT_TOKEN to env'
       : result.ok
         ? successMessage
         : 'Slack notification failed safely.';
@@ -29469,7 +29469,7 @@ function COOSlackAlertsPanel({ lastNotification, notice, onSendStatus }) {
       </div>
       <div className="coo-slack-alerts-body">
         <div>
-          <strong>{providerNotConnected ? 'Slack not configured Ã¢â‚¬â€ add SLACK_BOT_TOKEN to env' : 'Send current COO status to Slack'}</strong>
+          <strong>{providerNotConnected ? 'Slack not configured -- add SLACK_BOT_TOKEN to env' : 'Send current COO status to Slack'}</strong>
           <span>
             {lastNotification
               ? `Last notification: ${new Date(lastNotification.timestamp).toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' })} / ${lastNotification.status}`
@@ -29813,7 +29813,7 @@ function OperationalDetailDrawer({ item, note, setNote, onClose, onOpenWorkflow,
           <div className="drawer-timeline"><p>Intake checked.</p><p>{item.status} with owner: {item.owner}.</p><p>Next action: {item.nextAction}</p></div>
         </section>
         <section className="drawer-section director-ai-recommendation">
-          <span>AI Recommendation Ã¢â‚¬â€ Human Review Advised</span>
+          <span>AI Recommendation -- Human Review Advised</span>
           <p>{aiRecommendation.summary}</p>
           <div className="director-ai-grid">
             <div><strong>Risk</strong><small>{aiRecommendation.risk}</small></div>
@@ -30160,7 +30160,7 @@ function Stepper({ steps, current, onChange }) {
                 className="stepper-node"
                 onClick={() => done && onChange && onChange(i)}
                 disabled={!done}
-                aria-label={`${step.label}${done ? ' Ã¢â‚¬â€ completed' : active ? ' Ã¢â‚¬â€ current' : ' Ã¢â‚¬â€ upcoming'}`}
+                aria-label={`${step.label}${done ? ' -- completed' : active ? ' -- current' : ' -- upcoming'}`}
               >
                 {done
                   ? <CheckCircle2 size={16} aria-hidden="true" />
@@ -30332,17 +30332,17 @@ function ShipmentWizard({ onComplete, onCancel, buyers = [] }) {
             <h3 id="wizard-s3">Review & Confirm</h3>
             <div className="wizard-review-grid">
               {[
-                ['Buyer',        buyers.find((b) => b.id === form.buyer_id)?.company_name || 'Ã¢â‚¬â€'],
+                ['Buyer',        buyers.find((b) => b.id === form.buyer_id)?.company_name || '--'],
                 ['Product',      form.product_name],
                 ['Quantity',     `${form.quantity} ${form.unit}`],
                 ['Origin',       form.origin],
                 ['Destination',  form.destination],
                 ['Incoterm',     form.incoterm],
                 ['ETD',          form.etd],
-                ['ETA',          form.eta || 'Ã¢â‚¬â€'],
-                ['Vessel',       form.vessel || 'Ã¢â‚¬â€'],
-                ['B/L Number',   form.bl_number || 'Ã¢â‚¬â€'],
-                ['Packing',      form.packing_type || 'Ã¢â‚¬â€'],
+                ['ETA',          form.eta || '--'],
+                ['Vessel',       form.vessel || '--'],
+                ['B/L Number',   form.bl_number || '--'],
+                ['Packing',      form.packing_type || '--'],
               ].map(([label, value]) => (
                 <div key={label} className="wizard-review-row">
                   <span className="wizard-review-label">{label}</span>
@@ -30375,10 +30375,10 @@ const SHIPMENT_STAGE_LIST = [
   'Order Confirmed',
   'Production Ready',
   'Pre-Shipment Inspection',
-  'Customs Clearance Ã¢â‚¬â€ Export',
+  'Customs Clearance -- Export',
   'Port Loading',
   'In Transit',
-  'Customs Clearance Ã¢â‚¬â€ Import',
+  'Customs Clearance -- Import',
   'Port Discharge',
   'Delivered',
 ];
@@ -30421,7 +30421,7 @@ const ShipmentProgressTracker = React.memo(function ShipmentProgressTracker({ cu
         <div className="tracker-meta">
           <span>ETD <time dateTime={shipment.etd}>{new Date(shipment.etd).toLocaleDateString([], { day: 'numeric', month: 'short', year: 'numeric' })}</time></span>
           {shipment.eta && <span>ETA <time dateTime={shipment.eta}>{new Date(shipment.eta).toLocaleDateString([], { day: 'numeric', month: 'short', year: 'numeric' })}</time></span>}
-          {shipment.vessel && <span>Vessel Ã¢â‚¬â€ {shipment.vessel}</span>}
+          {shipment.vessel && <span>Vessel -- {shipment.vessel}</span>}
         </div>
       )}
     </div>
