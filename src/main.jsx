@@ -7937,19 +7937,55 @@ function ExecutiveActivityPanel({ items }) {
 }
 
 function MorningBriefingPreview({ onOpen }) {
+  const [briefings, setBriefings] = useState([]);
+  const [latestCampaigns, setLatestCampaigns] = useState([]);
+
+  useEffect(() => {
+    async function load() {
+      try {
+        const [bRes, cRes] = await Promise.all([
+          fetch('/api/cmo/briefing').then(r => r.json()),
+          fetch('/api/cmo/campaigns').then(r => r.json())
+        ]);
+        if (bRes.ok) setBriefings(bRes.briefings || []);
+        if (cRes.ok) setLatestCampaigns((cRes.campaigns || []).filter(c => c.status === 'active').slice(0, 3));
+      } catch {}
+    }
+    load();
+    const interval = setInterval(load, 5 * 60 * 1000);
+    return () => clearInterval(interval);
+  }, []);
+
+  const latest = briefings[0];
+  const latestPayload = latest?.payload || {};
+
   return (
     <section className="deck-live-panel morning-briefing-preview">
       <div className="coo-panel-header">
         <div>
-          <span>Morning Briefing Preview</span>
-          <h2>Next Director review</h2>
+          <span>Agent Briefing</span>
+          <h2>{latest ? `${latestPayload.period || 'Daily'} Briefing` : 'Daily Briefings'}</h2>
         </div>
         <ClipboardList size={20} />
       </div>
       <div className="briefing-lines">
-        <p>Review blocked LUT invoice data before release planning.</p>
-        <p>Check CFO margin queue before buyer-facing quote movement.</p>
-        <p>Confirm COO follow-ups for documentation and supplier actions.</p>
+        {latestCampaigns.length > 0 ? (
+          latestCampaigns.map(c => (
+            <p key={c.id}>{c.platform}: {c.current_value || 0}/{c.target_value} {c.goal_type} &mdash; &#8377;{c.budget_spent || 0} spent</p>
+          ))
+        ) : (
+          <>
+            <p>Review blocked LUT invoice data before release planning.</p>
+            <p>Check CFO margin queue before buyer-facing quote movement.</p>
+            <p>Confirm COO follow-ups for documentation and supplier actions.</p>
+          </>
+        )}
+        {latestPayload.wallet_balance !== undefined && (
+          <p>CFO Creative Wallet: &#8377;{latestPayload.wallet_balance} {Number(latestPayload.wallet_balance) < 100 ? '-- Low balance' : ''}</p>
+        )}
+        {briefings.length > 0 && (
+          <p className="briefing-timestamp">Last briefing: {new Date(latest.created_at).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })}</p>
+        )}
       </div>
       <button className="ghost-button" onClick={onOpen}>Open Morning Briefing <ChevronRight size={15} /></button>
     </section>
@@ -13726,6 +13762,70 @@ function SavedQuotesPanel({ quotes }) {
   );
 }
 
+function CreativeWalletCard() {
+  const [wallet, setWallet] = useState(null);
+  const [topupAmount, setTopupAmount] = useState('500');
+  const [loading, setLoading] = useState(false);
+  const [msg, setMsg] = useState('');
+
+  async function load() {
+    try {
+      const res = await fetch('/api/cfo/wallet');
+      const json = await res.json();
+      if (json.ok) setWallet(json.wallet);
+    } catch {}
+  }
+
+  useEffect(() => { load(); }, []);
+
+  async function doTopup() {
+    const amount = Number(topupAmount);
+    if (!amount || amount <= 0) return setMsg('Enter a valid amount.');
+    setLoading(true);
+    try {
+      const res = await fetch('/api/cfo/wallet/topup', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ amount, note: 'Founder top-up' }) });
+      const json = await res.json();
+      if (json.ok) { setMsg(`Topped up ₹${amount}. New balance: ₹${json.balance}`); await load(); }
+      else setMsg(json.message || 'Top-up failed.');
+    } catch { setMsg('Request failed.'); }
+    setLoading(false);
+  }
+
+  const balance = Number(wallet?.balance ?? 0);
+  const threshold = Number(wallet?.threshold ?? wallet?.auto_topup_threshold ?? 100);
+  const tone = balance < threshold ? 'red' : balance < 300 ? 'amber' : 'green';
+  const recent = (wallet?.transactions || []).slice(-5).reverse();
+
+  return (
+    <section className="pricing-panel cfo-creative-wallet">
+      <div className="approval-section-header">
+        <div><span>CFO Creative Wallet</span><h2>Marketing Campaign Budget</h2></div>
+        <CircleDollarSign size={18} />
+      </div>
+      <div className="wallet-balance-row">
+        <span className={`wallet-balance wallet-balance-${tone}`}>&#8377;{balance.toFixed(0)}</span>
+        <span className="wallet-threshold">Auto top-up below &#8377;{threshold}</span>
+      </div>
+      <div className="wallet-topup-row">
+        <input type="number" value={topupAmount} onChange={e => setTopupAmount(e.target.value)} className="wallet-topup-input" min="1" placeholder="Amount (INR)" />
+        <button className="tactical-button" onClick={doTopup} disabled={loading}>{loading ? 'Processing...' : 'Top Up'}</button>
+      </div>
+      {msg && <p className="wallet-msg">{msg}</p>}
+      {recent.length > 0 && (
+        <div className="wallet-txns">
+          <span className="wallet-txn-header">Recent transactions</span>
+          {recent.map((tx, i) => (
+            <div key={tx.id || i} className={`wallet-txn wallet-txn-${tx.type}`}>
+              <span>{tx.description}</span>
+              <strong>{tx.amount > 0 ? '+' : ''}&#8377;{Math.abs(tx.amount)}</strong>
+            </div>
+          ))}
+        </div>
+      )}
+    </section>
+  );
+}
+
 function CFOCommandPage({ onBack, onOpenPricing, onOpenApprovalWall, onOpenPaymentVault }) {
   const { rates, status } = useLiveForexRates();
   return (
@@ -13764,6 +13864,7 @@ function CFOCommandPage({ onBack, onOpenPricing, onOpenApprovalWall, onOpenPayme
             <DiscountExceptionPanel />
             <CFOIntelligenceMemory />
           </div>
+          <CreativeWalletCard />
           <PaymentGovernancePanel />
           <PricingAuditTrail audit={pricingAuditEvents} />
         </main>
@@ -23141,6 +23242,7 @@ function CMOFocusedOverviewTab({ data, output, realRunStatus, onNewContent, onSc
         </div>
         {output ? <p className="cmo-posting-message">{output}</p> : null}
       </section>
+      <CMOActiveCampaignsPanel />
       <section className="cmo-panel">
         <div className="approval-section-header"><div><span>Quick Actions</span><h2>Common CMO workflows</h2></div><Zap size={18} /></div>
         <div className="cmo-quick-action-grid">
@@ -23150,6 +23252,45 @@ function CMOFocusedOverviewTab({ data, output, realRunStatus, onNewContent, onSc
           <button className="ghost-button" onClick={onViewPublished}>View Published</button>
         </div>
       </section>
+    </section>
+  );
+}
+
+function CMOActiveCampaignsPanel() {
+  const [campaigns, setCampaigns] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetch('/api/cmo/campaigns').then(r => r.json()).then(json => {
+      if (json.ok) setCampaigns(json.campaigns || []);
+    }).catch(() => {}).finally(() => setLoading(false));
+  }, []);
+
+  const active = campaigns.filter(c => ['active', 'pending_founder_approval', 'pending_budget'].includes(c.status));
+  if (loading || !active.length) return null;
+
+  const statusTone = { active: 'green', pending_founder_approval: 'amber', pending_budget: 'muted', paused: 'amber', completed: 'green', rejected: 'red' };
+
+  return (
+    <section className="cmo-panel">
+      <div className="approval-section-header"><div><span>Slack Commands</span><h2>Active Marketing Campaigns</h2></div><TrendingUp size={18} /></div>
+      <div className="campaign-list">
+        {active.map(c => {
+          const pct = c.target_value > 0 ? Math.min(100, Math.round(((c.current_value || 0) / c.target_value) * 100)) : 0;
+          return (
+            <div key={c.id} className="campaign-row">
+              <div className="campaign-platform">{c.platform}</div>
+              <div className="campaign-goal">Get {(c.target_value || 0).toLocaleString()} {c.goal_type}</div>
+              <div className="campaign-progress-wrap">
+                <div className="campaign-progress-bar" style={{ width: `${pct}%` }} />
+                <span>{c.current_value || 0}/{c.target_value}</span>
+              </div>
+              <span className={`campaign-status campaign-status-${statusTone[c.status] || 'muted'}`}>{c.status.replace(/_/g, ' ')}</span>
+              <span className="campaign-budget">&#8377;{c.budget_allocated || c.budget_requested || 0}</span>
+            </div>
+          );
+        })}
+      </div>
     </section>
   );
 }
