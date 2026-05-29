@@ -327,8 +327,28 @@ function buildReply(result: any) {
 }
 
 export default async function handler(req: any, res: any) {
+  // Health check — lets us verify endpoint is live and config is set
+  if (req.method === "GET") {
+    const botToken = Boolean(env("SLACK_BOT_TOKEN"));
+    const channelId = Boolean(env("SLACK_CHANNEL_ID"));
+    const signingSecret = Boolean(env("SLACK_SIGNING_SECRET"));
+    const supabase = Boolean(getSupabaseUrl() && env("SUPABASE_SERVICE_ROLE_KEY"));
+    return res.status(200).json({
+      ok: true,
+      endpoint: "/api/slack/events",
+      status: botToken && signingSecret ? "ready" : "missing_config",
+      config: {
+        bot_token: botToken,
+        channel_id: channelId,
+        signing_secret: signingSecret,
+        supabase: supabase,
+      },
+      instructions: "POST Slack events here. Message must contain: lead, buyer, product, quote, enquiry, or pricing.",
+    });
+  }
+
   if (req.method !== "POST") {
-    res.setHeader("Allow", "POST");
+    res.setHeader("Allow", "GET, POST");
     return res.status(405).json({ ok: false, status: "method_not_allowed", message: "POST required." });
   }
 
@@ -340,7 +360,10 @@ export default async function handler(req: any, res: any) {
   }
 
   const verification = verifySlackSignature(req, rawBody);
-  if (!verification.ok) return res.status(401).json(verification);
+  if (!verification.ok) {
+    console.error("[slack/events] signature verification failed", verification);
+    return res.status(401).json(verification);
+  }
 
   let payload: Record<string, any>;
   try {
@@ -353,8 +376,17 @@ export default async function handler(req: any, res: any) {
 
   const event = payload.event || {};
   const text = normalizeText(event.text || "");
-  if (event.bot_id || event.subtype === "bot_message" || !["message", "app_mention"].includes(event.type) || !isLeadMessage(text)) {
-    return res.status(200).json({ ok: true, status: "ignored" });
+
+  console.log("[slack/events] received", { type: event.type, bot_id: event.bot_id, subtype: event.subtype, isLead: isLeadMessage(text), textPreview: text.slice(0, 80) });
+
+  if (event.bot_id || event.subtype === "bot_message") {
+    return res.status(200).json({ ok: true, status: "ignored_bot" });
+  }
+  if (!["message", "app_mention"].includes(event.type)) {
+    return res.status(200).json({ ok: true, status: "ignored_event_type", event_type: event.type });
+  }
+  if (!isLeadMessage(text)) {
+    return res.status(200).json({ ok: true, status: "ignored_not_lead", hint: "Message must contain: lead, buyer, product, quote, enquiry, or pricing" });
   }
 
   try {
