@@ -5,8 +5,6 @@ on:
     branches:
       - 'claude/**'
   workflow_dispatch:
-  schedule:
-    - cron: '*/5 * * * *'
 
 permissions:
   contents: write
@@ -67,10 +65,19 @@ jobs:
 
             for commit in "${commits[@]}"; do
               echo "Cherry-picking ${commit}"
-              git cherry-pick -x "${commit}"
+              if ! git cherry-pick -x "${commit}"; then
+                echo "Cherry-pick conflict on ${commit} — aborting this commit, continuing."
+                git cherry-pick --abort || true
+                continue
+              fi
             done
 
-            git push origin HEAD:main
-            git fetch origin main --prune
-            git reset --hard origin/main
+            # Only push if we actually moved ahead of origin/main
+            if git diff --quiet HEAD origin/main; then
+              echo "Nothing new to push for ${branch}."
+            else
+              git push origin HEAD:main
+              git fetch origin main --prune
+              git reset --hard origin/main
+            fi
           done
