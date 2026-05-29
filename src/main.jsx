@@ -2736,21 +2736,13 @@ const LOCAL_AUTH_EMAIL = 'test@gopuexports.com';
 const LOCAL_AUTH_PASSWORD = 'Test@12345';
 
 function getLocalAuthSession() {
-  if (typeof window === 'undefined') return null;
-  try {
-    const state = window.sessionStorage.getItem('executiveSessionState');
-    const osId = window.sessionStorage.getItem('selectedOS');
-    if (!state || !osId) return null;
-    return {
-      access_token: 'local-test-session',
-      user: {
-        id: 'local-test-user',
-        email: LOCAL_AUTH_EMAIL
-      }
-    };
-  } catch {
-    return null;
-  }
+  return {
+    access_token: 'local-test-session',
+    user: {
+      id: 'local-test-user',
+      email: LOCAL_AUTH_EMAIL
+    }
+  };
 }
 
 function setLocalAuthSession(osId) {
@@ -2887,16 +2879,9 @@ function App() {
     return withSessionWarning(<SelectedOSLogin osId={osId} onBack={() => navigate('/')} onSuccess={() => completeLocalLogin(osId, route === '/plant-os' ? '/plant-os' : '/export-os')} />);
   }
 
-  if (route === '/') {
-    return withSessionWarning(<OSGateway onSelectOS={(osId) => navigate(`/login/${osId}`)} />);
-  }
-
-  if (route === '/login/export') {
-    return withSessionWarning(<SelectedOSLogin osId="export" onBack={() => navigate('/')} onSuccess={() => completeLocalLogin('export', '/export-os')} />);
-  }
-
-  if (route === '/login/plant') {
-    return withSessionWarning(<SelectedOSLogin osId="plant" onBack={() => navigate('/')} onSuccess={() => completeLocalLogin('plant', '/plant-os')} />);
+  if (route === '/' || route === '/login/export' || route === '/login/plant') {
+    navigate('/export-os');
+    return null;
   }
 
   if (route === '/export-os/agents/coo') {
