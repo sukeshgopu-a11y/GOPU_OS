@@ -490,7 +490,8 @@ export default async function handler(req: any, res: any) {
   if (payload.type === "url_verification") return res.status(200).json({ challenge: payload.challenge });
 
   const event = payload.event || {};
-  const text = normalizeText(event.text || "");
+  const rawText = String(event.text || "");
+  const text = normalizeText(rawText);
 
   console.log("[slack/events] received", { type: event.type, bot_id: event.bot_id, subtype: event.subtype, isLead: isLeadMessage(text), textPreview: text.slice(0, 80) });
 
@@ -507,7 +508,7 @@ export default async function handler(req: any, res: any) {
   }
   if (isMarketingCommand(text)) {
     try {
-      const result = await processMarketingCommand(event, text);
+      const result = await processMarketingCommand(event, rawText);
       await sendSlackBotMessage({ channel: event.channel, thread_ts: event.thread_ts || event.ts, text: buildMarketingReply(result) });
       return res.status(200).json({ ok: true, status: 'marketing_command_routed', campaignId: result.campaignId });
     } catch (error: any) {
@@ -521,7 +522,7 @@ export default async function handler(req: any, res: any) {
   }
 
   try {
-    const result = await processLead(event, text);
+    const result = await processLead(event, rawText);
     await sendSlackBotMessage({
       channel: event.channel,
       thread_ts: event.thread_ts || event.ts,
