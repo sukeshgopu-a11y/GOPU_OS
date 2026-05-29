@@ -6973,7 +6973,7 @@ function HomeDirectorPreview({ navigate }) {
     <section className="home-panel">
       <div className="home-panel-header">
         <h2>Director Queue</h2>
-        <button className="ghost-button" onClick={() => navigate('/export-os/director')}>View all â†’</button>
+        <button className="ghost-button" onClick={() => navigate(‘/export-os/director’)}>View all →</button>
       </div>
       {items.length === 0
         ? <p className="home-panel-empty">No pending decisions. Agents are running.</p>

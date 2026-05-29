@@ -32769,3 +32769,106 @@ a,
 .home-quick-item:hover { background: var(--surface-hover, rgba(255,255,255,0.05)); }
 .home-quick-item strong { font-size: var(--text-sm); color: var(--fg); font-weight: 600; }
 .home-quick-item span { font-size: var(--text-xs); color: var(--dim); }
+
+/* ── Mobile fixes (≤ 760px) ──────────────────────────────── */
+@media (max-width: 760px) {
+
+  /* Header: stack controls neatly, prevent icon overflow */
+  .deck-header {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+    padding: 12px 14px;
+  }
+
+  .deck-header-controls {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    justify-content: flex-start;
+    width: 100%;
+  }
+
+  /* Hide verbose status pills on mobile — keep only icon buttons + End Session */
+  .top-command-control {
+    display: none;
+  }
+
+  .top-icon-button {
+    width: 40px;
+    min-height: 40px;
+  }
+
+  .deck-logout {
+    flex: 1;
+    min-height: 40px;
+    font-size: 0.78rem;
+  }
+
+  /* Hero: prevent title overflow */
+  .home-hero {
+    flex-direction: column;
+    align-items: flex-start;
+    width: calc(100% - 24px);
+    padding: 18px;
+    overflow: hidden;
+  }
+
+  .home-hero-title {
+    font-size: clamp(1.6rem, 8vw, 2.2rem);
+    word-break: break-word;
+    white-space: normal;
+  }
+
+  .home-hero-actions {
+    width: 100%;
+    justify-content: flex-start;
+  }
+
+  .home-hero-actions button {
+    flex: 1 1 120px;
+  }
+
+  /* KPI strip: scroll horizontally, prevent clipping */
+  .home-kpi-strip {
+    width: calc(100% - 24px);
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+
+  .home-kpi-chip {
+    min-width: 110px;
+  }
+
+  /* Agent/executive grid: 2 columns */
+  .home-agent-grid {
+    grid-template-columns: 1fr 1fr;
+    width: calc(100% - 24px);
+  }
+
+  /* Forex ticker: clip instead of overflow */
+  .forex-ticker {
+    overflow: hidden;
+  }
+
+  /* Executive command deck copy: reduce size */
+  .executive-home-shell .deck-header-copy h1 {
+    font-size: 1.1rem;
+  }
+
+  .executive-home-shell .deck-header-copy p {
+    display: none;
+  }
+}
+
+/* Extra small (≤ 420px): single column agents */
+@media (max-width: 420px) {
+  .home-agent-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .home-hero-title {
+    font-size: clamp(1.4rem, 9vw, 1.8rem);
+  }
+}
