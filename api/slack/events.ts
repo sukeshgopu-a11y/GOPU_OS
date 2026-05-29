@@ -135,6 +135,10 @@ function isMarketingCommand(text = "") {
     && !isLeadMessage(text);
 }
 
+function isGopuSystemReply(text = "") {
+  return /GOPU OS Slack lead received|GOPU OS Marketing Command Received|GOPU OS could not process|No quote, posting, or final invoice|Codex verified Slack outbound|Slack Connection Test/i.test(text);
+}
+
 function parseMarketingCommand(text = "") {
   const lower = text.toLowerCase();
   const platforms = ['instagram', 'linkedin', 'youtube', 'facebook', 'twitter'];
@@ -490,8 +494,13 @@ export default async function handler(req: any, res: any) {
 
   console.log("[slack/events] received", { type: event.type, bot_id: event.bot_id, subtype: event.subtype, isLead: isLeadMessage(text), textPreview: text.slice(0, 80) });
 
-  if (event.bot_id || event.subtype === "bot_message") {
-    return res.status(200).json({ ok: true, status: "ignored_bot" });
+  if (isGopuSystemReply(text)) {
+    return res.status(200).json({ ok: true, status: "ignored_system_reply" });
+  }
+
+  const inboundCommand = isLeadMessage(text) || isMarketingCommand(text);
+  if ((event.bot_id || event.subtype === "bot_message") && !inboundCommand) {
+    return res.status(200).json({ ok: true, status: "ignored_bot_non_command" });
   }
   if (!["message", "app_mention"].includes(event.type)) {
     return res.status(200).json({ ok: true, status: "ignored_event_type", event_type: event.type });
