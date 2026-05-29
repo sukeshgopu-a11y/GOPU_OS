@@ -494,9 +494,9 @@ const KEYBOARD_SHORTCUTS = [
   {
     section: 'Navigation',
     shortcuts: [
-      { keys: ['Ã¢Å’Ëœ', 'K'], action: 'Command palette', desc: 'Open the global command palette' },
-      { keys: ['Ã¢Å’Ëœ', '/'], action: 'Focus search', desc: 'Jump to the search input' },
-      { keys: ['Ã¢Å’Ëœ', 'B'], action: 'Toggle sidebar', desc: 'Collapse or expand the sidebar' },
+      { keys: ['⌘', 'K'], action: 'Command palette', desc: 'Open the global command palette' },
+      { keys: ['⌘', '/'], action: 'Focus search', desc: 'Jump to the search input' },
+      { keys: ['⌘', 'B'], action: 'Toggle sidebar', desc: 'Collapse or expand the sidebar' },
       { keys: ['G', 'H'], action: 'Go to Home', desc: 'Navigate to Executive Command Deck' },
       { keys: ['G', 'A'], action: 'Go to Analytics', desc: 'Open analytics dashboard' },
       { keys: ['G', 'S'], action: 'Go to Shipments', desc: 'Open shipment tracking' },
@@ -505,10 +505,10 @@ const KEYBOARD_SHORTCUTS = [
   {
     section: 'Actions',
     shortcuts: [
-      { keys: ['Ã¢Å’Ëœ', 'N'], action: 'New command', desc: 'Create a new executive command' },
-      { keys: ['Ã¢Å’Ëœ', 'E'], action: 'Export CSV', desc: 'Export current view as CSV' },
-      { keys: ['Ã¢Å’Ëœ', 'Enter'], action: 'Submit / Approve', desc: 'Submit form or approve selected item' },
-      { keys: ['Ã¢Å’Ëœ', 'Z'], action: 'Undo', desc: 'Undo last action' },
+      { keys: ['⌘', 'N'], action: 'New command', desc: 'Create a new executive command' },
+      { keys: ['⌘', 'E'], action: 'Export CSV', desc: 'Export current view as CSV' },
+      { keys: ['⌘', 'Enter'], action: 'Submit / Approve', desc: 'Submit form or approve selected item' },
+      { keys: ['⌘', 'Z'], action: 'Undo', desc: 'Undo last action' },
     ],
   },
   {
@@ -516,7 +516,7 @@ const KEYBOARD_SHORTCUTS = [
     shortcuts: [
       { keys: ['Ã¢â€ â€˜', 'Ã¢â€ â€œ'], action: 'Navigate list', desc: 'Move focus up or down in any list' },
       { keys: ['Space'], action: 'Select row', desc: 'Toggle selection of focused row' },
-      { keys: ['Ã¢Å’Ëœ', 'A'], action: 'Select all', desc: 'Select all rows in current view' },
+      { keys: ['⌘', 'A'], action: 'Select all', desc: 'Select all rows in current view' },
       { keys: ['Esc'], action: 'Clear selection', desc: 'Deselect all / close panel' },
     ],
   },
@@ -524,15 +524,15 @@ const KEYBOARD_SHORTCUTS = [
     section: 'Filters',
     shortcuts: [
       { keys: ['F'], action: 'Focus filter bar', desc: 'Jump to the filter search input' },
-      { keys: ['Ã¢Å’Ëœ', 'Shift', 'X'], action: 'Clear filters', desc: 'Reset all active filters' },
+      { keys: ['⌘', 'Shift', 'X'], action: 'Clear filters', desc: 'Reset all active filters' },
     ],
   },
   {
     section: 'System',
     shortcuts: [
       { keys: ['?'], action: 'Shortcuts', desc: 'Show this keyboard shortcuts reference' },
-      { keys: ['Ã¢Å’Ëœ', 'D'], action: 'Toggle dark mode', desc: 'Switch between dark and light theme' },
-      { keys: ['Ã¢Å’Ëœ', 'Shift', 'L'], action: 'End Session', desc: 'Securely end current session' },
+      { keys: ['⌘', 'D'], action: 'Toggle dark mode', desc: 'Switch between dark and light theme' },
+      { keys: ['⌘', 'Shift', 'L'], action: 'End Session', desc: 'Securely end current session' },
     ],
   },
 ];
@@ -556,11 +556,13 @@ const executiveCommandDeck = [
     id: 'coo',
     name: 'COO Command',
     title: 'Chief Operating Officer',
-    role: 'Runs export operations, shipments, documentation, workflow execution, supplier coordination, quality control, SOPs, and daily task monitoring.',
+    role: 'Runs end-to-end export operations for Indian spices and agri commodities. Manages container stuffing, shipping bill (SB) filing via CHA, phytosanitary inspections (APEDA/PQ), fumigation scheduling, BL/AWB coordination, and supplier follow-up. Tracks LEO (Let Export Order), DPD (Direct Port Delivery), and port cutoff compliance at JNPT, Mundra, and Chennai. Prevents MRL rejections and LC document mismatches.',
     status: 'Online',
     category: 'Operations',
-    current_focus: 'Shipment execution, documentation accuracy, supplier follow-up, operational bottleneck prevention.',
-    key_modules: ['Orders & Pipeline', 'Documentation', 'Logistics', 'Quality & Claims', 'SOP Improvement'],
+    current_focus: 'Container dispatch, SB filing, phyto certificate issuance, supplier delivery adherence, COO review queue clearance.',
+    kpis: ['Shipments dispatched vs. planned', 'Container stuffing %', 'Documentation TAT (hrs)', 'Supplier delivery adherence %', 'Quality rejection rate %', 'Port cutoff compliance', 'Fumigation certificate TAT'],
+    key_modules: ['Shipment Execution', 'SB & Customs Docs', 'Supplier Follow-up', 'Quality & Claims', 'Phyto & Fumigation'],
+    domain_terms: ['SB', 'BL', 'CHA', 'LEO', 'DPD', 'Phyto', 'CO', 'APEDA', 'FIEO', 'Stuffing', 'MRL', 'FOB', 'CIF', 'Fumigation'],
     route: '/export-os/executives/coo',
     last_checked_at: new Date().toISOString(),
     icon: COOIcon,
@@ -570,11 +572,13 @@ const executiveCommandDeck = [
     id: 'cto',
     name: 'CTO Command',
     title: 'Chief Technology Officer',
-    role: 'Manages website, automations, system health, integrations, data pipelines, security, and technical improvements.',
+    role: 'Manages the Export OS platform reliability, Supabase RLS and edge functions, Slack webhook health, shipment data sync pipelines, and API integrations. Maintains HS code and Incoterm lookup tables, export document generation accuracy, and buyer/pricing data security. Monitors CRON jobs, ENV secrets rotation, and system uptime.',
     status: 'Online',
     category: 'Technology',
-    current_focus: 'System reliability, automation health, dashboard improvements, security checks.',
-    key_modules: ['Product & UX', 'Backend & Data', 'Dev Coordination', 'Automation', 'Security'],
+    current_focus: 'API uptime, Supabase edge function health, Slack event delivery, shipment record integrity, document generation accuracy.',
+    kpis: ['API uptime %', 'Shipment sync latency (ms)', 'Document generation error rate', 'Webhook delivery success %', 'Supabase edge function errors', 'Alert response time', 'Active integrations live'],
+    key_modules: ['API & Integrations', 'Supabase & RLS', 'Slack Webhooks', 'Document Engine', 'Security & Secrets'],
+    domain_terms: ['RLS', 'Edge Functions', 'Webhook', 'CRON', 'ENV secrets', 'REST API', 'Supabase', 'Vercel', 'OpenAI'],
     route: '/export-os/executives/cto',
     last_checked_at: new Date().toISOString(),
     icon: CTOIcon,
@@ -584,11 +588,13 @@ const executiveCommandDeck = [
     id: 'cmo',
     name: 'CMO Command',
     title: 'Chief Marketing Officer',
-    role: 'Manages content, buyer outreach, branding, social media, lead generation, market positioning, and campaign planning.',
+    role: 'Drives B2B buyer acquisition and brand positioning for Indian spice and agri exports. Manages RFQ pipeline from Alibaba, TradeIndia, and IndiaMART, LinkedIn content on crop updates and certifications, trade show follow-ups (Gulfood, SIAL, Anuga), and product spec sheet distribution. Tracks ASTA color values, moisture %, HS codes, and Kharif/Rabi crop season communications.',
     status: 'Online',
     category: 'Growth',
-    current_focus: 'Buyer outreach, LinkedIn content, lead pipeline, brand positioning, campaign ideas.',
-    key_modules: ['Market Research', 'Content & Brand', 'Campaigns', 'CRM Follow-up', 'Customer Insights'],
+    current_focus: 'RFQ response speed, LinkedIn buyer outreach, sample dispatch-to-order conversion, trade show lead nurturing.',
+    kpis: ['New RFQs received', 'RFQ response time (hrs)', 'LinkedIn reach & connections', 'Sample-to-order conversion %', 'Trade show pipeline value', 'Country revenue concentration %', 'Active buyer conversations'],
+    key_modules: ['RFQ Pipeline', 'LinkedIn & Content', 'Sample Management', 'Trade Shows', 'Product Catalogue'],
+    domain_terms: ['RFQ', 'PI (Proforma Invoice)', 'ASTA', 'HS Code', 'FOB Offer', 'Kharif', 'Rabi', 'B2B Portal', 'Gulfood', 'SIAL', 'FSSAI', 'Organic', 'Halal', 'Kosher'],
     route: '/export-os/executives/cmo',
     last_checked_at: new Date().toISOString(),
     icon: CMOIcon,
@@ -598,11 +604,13 @@ const executiveCommandDeck = [
     id: 'cfo',
     name: 'CFO Command',
     title: 'Chief Financial Officer',
-    role: 'Monitors pricing, margins, cash flow, expenses, payment tracking, financial risk, cost control, and founder approval flags.',
+    role: 'Manages export finance, forex risk, and working capital for spice and agri commodity exports. Tracks USD/INR realization vs. forward cover, LC document compliance, BRC/FIRC reconciliation, RoDTEP and duty drawback ledgers, EDPMS filings, and packing credit (PCFC) utilization. Flags FEMA non-compliance on overdue payments and margin erosion from input cost inflation at APMC mandis.',
     status: 'Online',
     category: 'Finance',
-    current_focus: 'Quote margins, cash safety, overdue payments, cost control, FX exposure.',
-    key_modules: ['Management Reports', 'Cash & Collections', 'Pricing & Margin', 'Cost Control', 'FX & Risk'],
+    current_focus: 'USD realization rate, LC discrepancy prevention, RoDTEP credit tracking, CFO pricing review queue, forex forward cover.',
+    kpis: ['USD/INR realization vs. forward cover', 'Outstanding LC value', 'Forex P&L on open positions', 'Debtor aging (30/60/90d)', 'RoDTEP & Drawback receivables', 'Working capital utilization %', 'Margin per shipment %'],
+    key_modules: ['Forex & Forward Cover', 'LC Management', 'BRC/FIRC Reconciliation', 'RoDTEP & Drawback', 'PCFC & Working Capital'],
+    domain_terms: ['BRC', 'FIRC', 'EDPMS', 'RoDTEP', 'Duty Drawback', 'AD Code', 'LC', 'DA', 'DP', 'TT', 'PCFC', 'SDF', 'FEMA', 'Forward Cover', 'MEP'],
     route: '/export-os/executives/cfo',
     last_checked_at: new Date().toISOString(),
     icon: CFOIcon,
@@ -612,11 +620,13 @@ const executiveCommandDeck = [
     id: 'cio',
     name: 'CIO Command',
     title: 'Chief Intelligence Officer',
-    role: 'Runs importer intelligence, global buyer discovery, trade signals, APEDA and Spice Board opportunity mapping, and outreach readiness.',
+    role: 'Runs global importer intelligence for Indian spice and agri exports. Monitors Volza, Zauba, and ImportGenius for competitor shipment data, scores buyers on payment history and country risk, tracks DGFT policy changes (MEP, export quotas), and benchmarks FOB prices vs. NCDEX/APMC mandi rates. Maps APEDA and Spice Board corridors, monitors EU MRL tightening and SPS regulation changes at destination.',
     status: 'Online',
     category: 'Intelligence',
-    current_focus: 'Importer discovery, buyer verification, corridor signals, opportunity scoring, and CRM handoff.',
-    key_modules: ['Importer Database', 'Trade Signals', 'Buyer Outreach', 'Opportunity Scoring', 'CRM Handoff'],
+    current_focus: 'New importer discovery, buyer credit scoring, MEP compliance, DGFT policy alerts, competitor price benchmarking.',
+    kpis: ['New importers identified', 'Buyer credit score updates', 'Country import volume trend', 'Competitor price movement', 'DGFT policy changes tracked', 'SPS regulation alerts', 'Market intelligence reports/week'],
+    key_modules: ['Importer Database', 'Buyer Scoring', 'DGFT & MEP Alerts', 'Price Benchmarking', 'SPS & Compliance'],
+    domain_terms: ['MEP', 'DGFT', 'NCDEX', 'APMC', 'ITC-HS', 'Zauba', 'Volza', 'SPS', 'Country Risk', 'CAGR', 'APEDA', 'Spice Board', 'ImportGenius'],
     route: '/export-os/executives/cio',
     last_checked_at: new Date().toISOString(),
     icon: CIOIcon,
@@ -1846,7 +1856,7 @@ function KeyboardShortcutsModal({ onClose }) {
         </div>
 
         <div className="kbd-modal-footer">
-          <span>Mac: use <kbd className="kbd">Ã¢Å’Ëœ</kbd> &nbsp;Ã‚Â·&nbsp; Windows/Linux: use <kbd className="kbd">Ctrl</kbd></span>
+          <span>Mac: use <kbd className="kbd">⌘</kbd> &nbsp;·&nbsp; Windows/Linux: use <kbd className="kbd">Ctrl</kbd></span>
         </div>
       </div>
     </div>
@@ -2410,7 +2420,7 @@ const ANALYTICS_DATA = {
     revenue: [42, 38, 55, 61, 49, 67, 72],
     shipments: [3, 2, 4, 5, 3, 6, 5],
     labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
-    totalRevenue: 'Ã¢â€šÂ¹48.2L',
+    totalRevenue: '₹48.2L',
     revenueChange: 12,
     totalShipments: 28,
     shipmentChange: 8,
@@ -2423,7 +2433,7 @@ const ANALYTICS_DATA = {
     revenue: [120, 135, 118, 142, 155, 148, 163, 171, 158, 168, 175, 182, 170, 188, 195, 182, 199, 210, 198, 215, 208, 222, 218, 235, 228, 242, 238, 251, 245, 258],
     shipments: [8, 10, 7, 12, 11, 9, 14, 13, 10, 15, 12, 16, 11, 14, 18, 13, 17, 20, 15, 19, 16, 21, 18, 23, 20, 24, 22, 26, 21, 25],
     labels: Array.from({ length: 30 }, (_, i) => `${i + 1}`),
-    totalRevenue: 'Ã¢â€šÂ¹2.14Cr',
+    totalRevenue: '₹2.14Cr',
     revenueChange: 18,
     totalShipments: 124,
     shipmentChange: 15,
@@ -2436,7 +2446,7 @@ const ANALYTICS_DATA = {
     revenue: [380, 420, 395, 445, 468, 432, 478, 512, 488, 524, 506, 548, 532, 568, 552, 589, 575, 610, 592, 628, 614, 645, 630, 658, 645, 672, 660, 685, 670, 694, 682, 708, 695, 720, 708, 732, 718, 745, 730, 755, 742, 768, 755, 778, 765, 790, 778, 802, 790, 815],
     shipments: [22, 26, 24, 28, 30, 27, 32, 35, 31, 36, 34, 38, 36, 40, 38, 42, 40, 45, 43, 47, 45, 49, 47, 52, 50, 54, 52, 56, 54, 58],
     labels: ['Jan W1', 'Jan W2', 'Jan W3', 'Jan W4', 'Feb W1', 'Feb W2', 'Feb W3', 'Feb W4', 'Mar W1', 'Mar W2', 'Mar W3', 'Mar W4'],
-    totalRevenue: 'Ã¢â€šÂ¹6.8Cr',
+    totalRevenue: '₹6.8Cr',
     revenueChange: 24,
     totalShipments: 412,
     shipmentChange: 22,
@@ -2449,7 +2459,7 @@ const ANALYTICS_DATA = {
     revenue: [820, 940, 880, 1020, 980, 1150, 1080, 1240, 1180, 1320, 1260, 1420],
     shipments: [48, 56, 52, 62, 58, 70, 66, 76, 72, 82, 78, 90],
     labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
-    totalRevenue: 'Ã¢â€šÂ¹28.4Cr',
+    totalRevenue: '₹28.4Cr',
     revenueChange: 31,
     totalShipments: 1810,
     shipmentChange: 28,
@@ -2461,19 +2471,19 @@ const ANALYTICS_DATA = {
 };
 
 const TOP_MARKETS = [
-  { country: 'UAE', flag: 'Ã°Å¸â€¡Â¦Ã°Å¸â€¡Âª', revenue: 'Ã¢â€šÂ¹8.2L', share: 72, shipments: 34, trend: 'up' },
-  { country: 'Saudi Arabia', flag: 'Ã°Å¸â€¡Â¸Ã°Å¸â€¡Â¦', revenue: 'Ã¢â€šÂ¹5.6L', share: 49, shipments: 22, trend: 'up' },
-  { country: 'USA', flag: 'Ã°Å¸â€¡ÂºÃ°Å¸â€¡Â¸', revenue: 'Ã¢â€šÂ¹4.1L', share: 36, shipments: 16, trend: 'stable' },
-  { country: 'UK', flag: 'Ã°Å¸â€¡Â¬Ã°Å¸â€¡Â§', revenue: 'Ã¢â€šÂ¹2.8L', share: 25, shipments: 11, trend: 'up' },
-  { country: 'Germany', flag: 'Ã°Å¸â€¡Â©Ã°Å¸â€¡Âª', revenue: 'Ã¢â€šÂ¹1.9L', share: 17, shipments: 8, trend: 'down' },
+  { country: 'UAE', flag: '🇦🇪', revenue: '₹8.2L', share: 72, shipments: 34, trend: 'up' },
+  { country: 'Saudi Arabia', flag: '🇸🇦', revenue: '₹5.6L', share: 49, shipments: 22, trend: 'up' },
+  { country: 'USA', flag: '🇺🇸', revenue: '₹4.1L', share: 36, shipments: 16, trend: 'stable' },
+  { country: 'UK', flag: '🇬🇧', revenue: '₹2.8L', share: 25, shipments: 11, trend: 'up' },
+  { country: 'Germany', flag: '🇩🇪', revenue: '₹1.9L', share: 17, shipments: 8, trend: 'down' },
 ];
 
 const PRODUCT_MIX = [
-  { name: 'Turmeric', share: 38, color: '#f59e0b' },
-  { name: 'Black Pepper', share: 27, color: '#2ef2ff' },
-  { name: 'Cardamom', share: 18, color: '#a78bfa' },
-  { name: 'Chilli', share: 11, color: '#f472b6' },
-  { name: 'Others', share: 6, color: '#60a5fa' },
+  { name: 'Chilli Powder', share: 32, color: '#ef4444' },
+  { name: 'Turmeric', share: 26, color: '#f59e0b' },
+  { name: 'Black Pepper', share: 22, color: '#2ef2ff' },
+  { name: 'Cumin / Jeera', share: 12, color: '#a78bfa' },
+  { name: 'Coriander / Others', share: 8, color: '#60a5fa' },
 ];
 
 function LineChart({ data, labels, color = 'var(--accent)', height = 160, title }) {
@@ -3415,7 +3425,7 @@ function OSSelectionCard({ id, title, subtitle, description, icon: Icon, selecte
         <p>{description}</p>
       </div>
       <div className="os-card-footer">
-        <span>{selected ? 'StartingÃ¢â‚¬Â¦' : 'Launch'}</span>
+        <span>{selected ? 'Starting…' : 'Launch'}</span>
         <ChevronRight size={17} />
       </div>
     </motion.button>
@@ -3527,7 +3537,7 @@ function PageHero({ current }) {
       <button className="tactical-button">
         <Zap size={16} />
         Execute Command
-        <kbd className="kbd-hint">Ã¢Å’ËœK</kbd>
+        <kbd className="kbd-hint">⌘K</kbd>
       </button>
     </div>
   );
@@ -5851,7 +5861,7 @@ function CommandPalette({ open, onClose, onNavigate, onAction }) {
             value={query}
             onChange={(e) => { setQuery(e.target.value); setCursor(0); }}
             onKeyDown={handleKey}
-            placeholder="Search pages, actions, settingsÃ¢â‚¬Â¦"
+            placeholder="Search pages, actions, settings…"
             aria-label="Command search"
             aria-autocomplete="list"
             aria-controls="cmd-list"
@@ -5898,7 +5908,7 @@ function CommandPalette({ open, onClose, onNavigate, onAction }) {
           <span><kbd>Ã¢â€ â€˜Ã¢â€ â€œ</kbd> navigate</span>
           <span><kbd>Ã¢â€ Âµ</kbd> select</span>
           <span><kbd>ESC</kbd> close</span>
-          <span><kbd>Ã¢Å’ËœK</kbd> toggle</span>
+          <span><kbd>⌘K</kbd> toggle</span>
         </footer>
       </div>
     </div>
@@ -7105,7 +7115,7 @@ function HeroCommandPanel({ navigate }) {
       <div className="hero-command-actions">
         <button className="tactical-button" onClick={() => navigate('/export-os/director')}>
           Open Director Console
-          <kbd className="kbd-hint">Ã¢Å’ËœK</kbd>
+          <kbd className="kbd-hint">⌘K</kbd>
         </button>
         <button className="ghost-button" onClick={() => navigate('/export-os/workflows')}>View Workflows</button>
       </div>
@@ -7785,24 +7795,27 @@ function getExecutivePriorities(command) {
 }
 
 const activeFounderWorkflows = [
-  { id: 'workflow-quote', title: 'Black pepper quotation review', owner: 'CFO Command', status: 'Waiting Director Action', route: '/export-os/pricing-engine', priority: 'High' },
-  { id: 'workflow-lut', title: 'LUT invoice validation blocked', owner: 'Director / Finance', status: 'Blocked', route: '/export-os/invoices/new', priority: 'Critical' },
-  { id: 'workflow-docs', title: 'CO document field review', owner: 'COO Command', status: 'Review Pending', route: '/export-os/executives/coo', priority: 'High' },
-  { id: 'workflow-cio', title: 'Importer intelligence board live', owner: 'CIO Command', status: 'Monitoring', route: '/export-os/executives/cio', priority: 'High' },
-  { id: 'workflow-task', title: 'Daily follow-up board scan', owner: 'COO Command', status: 'In Progress', route: '/export-os/tasks', priority: 'Medium' }
+  { id: 'workflow-phyto', title: 'Phytosanitary certificate — SHP-2026-047 chilli powder', owner: 'COO Command', status: 'Blocked', route: '/export-os/executives/coo', priority: 'Critical' },
+  { id: 'workflow-lut', title: 'LUT invoice release gate — IEC & AD Code missing', owner: 'Director / Finance', status: 'Blocked', route: '/export-os/invoices/new', priority: 'Critical' },
+  { id: 'workflow-quote', title: 'Black pepper CFO pricing review — margin 14.2%', owner: 'CFO Command', status: 'Waiting Director Action', route: '/export-os/pricing-engine', priority: 'High' },
+  { id: 'workflow-sb', title: 'Shipping Bill filing — turmeric container JNPT', owner: 'COO Command', status: 'In Progress', route: '/export-os/executives/coo', priority: 'High' },
+  { id: 'workflow-lc', title: 'LC document presentation — UAE buyer Khalid Trading', owner: 'CFO Command', status: 'Review Pending', route: '/export-os/executives/cfo', priority: 'High' },
+  { id: 'workflow-cio', title: 'EU MRL update — chilli MRL tightened to 0.01 ppm', owner: 'CIO Command', status: 'Alert Active', route: '/export-os/executives/cio', priority: 'High' },
+  { id: 'workflow-rodtep', title: 'RoDTEP credit reconciliation — Q1 pending', owner: 'CFO Command', status: 'Monitoring', route: '/export-os/executives/cfo', priority: 'Medium' }
 ];
 
 const founderCriticalAlerts = [
-  { id: 'alert-lut', title: 'LUT release gate blocked', detail: 'Invoices under LUT remain draft-only until vault LUT details and founder verification are complete.', tone: 'attention', owner: 'Document Factory' },
-  { id: 'alert-margin', title: 'Margin review pending', detail: 'Pricing Engine has a quote that needs CFO review before founder release.', tone: 'attention', owner: 'CFO Command' },
-  { id: 'alert-spine', title: 'Company data needs review', detail: 'Company Master Data Vault has missing uploads and registration fields marked for review.', tone: 'error', owner: 'Foundation Layer' }
+  { id: 'alert-lut', title: 'LUT release gate blocked', detail: 'Invoices under LUT remain draft-only until vault LUT details and founder verification are complete. No shipment can proceed without this.', tone: 'attention', owner: 'Document Factory' },
+  { id: 'alert-margin', title: 'Low-margin quote pending CFO review', detail: 'A chilli powder quotation is showing 14.2% margin — below the 18% floor. CFO review required before Director release to buyer.', tone: 'attention', owner: 'CFO Command' },
+  { id: 'alert-phyto', title: 'Phytosanitary certificate delayed', detail: 'APEDA inspection for Shipment #SHP-2026-047 is overdue by 2 days. Port cutoff at JNPT is in 36 hours. COO escalation required.', tone: 'error', owner: 'COO Command' },
+  { id: 'alert-spine', title: 'IEC and AD Code missing in vault', detail: 'Company Master Data Vault is missing IEC registration and AD Code. Shipping Bill cannot be filed without these. Founder action required.', tone: 'error', owner: 'Foundation Layer' }
 ];
 
 const operationalKpis = [
-  { label: 'Active workflows', value: '12', status: 'Monitoring' },
-  { label: 'Blocked workflows', value: '03', status: 'Attention' },
-  { label: 'Approvals waiting', value: '03', status: 'Director Review' },
-  { label: 'Draft documents', value: '07', status: 'Validation' }
+  { label: 'Shipments active', value: '08', status: 'Monitoring' },
+  { label: 'Docs pending', value: '05', status: 'Attention' },
+  { label: 'Director approvals', value: '03', status: 'Director Review' },
+  { label: 'Blocked workflows', value: '02', status: 'Blocked' }
 ];
 
 function FounderOperationalOverview({ navigate, newsItems = [], newsStatus = 'Monitoring' }) {
@@ -9146,12 +9159,12 @@ function buildDirectorCommandResponse(query, items = [], directorData = {}) {
 }
 
 function DirectorCommandConsole({ value, setValue, onRun, response, history, navigate, onEscalate, onCreateFollowup }) {
-  const suggestions = ['What is pending this month?', 'How much marketing budget pending?', 'Show delayed shipments.', 'Any high-risk buyers?', 'What is blocking invoices?', 'What payments are pending?', 'Any Country pending opportunities?', 'Show todayÃ¢â‚¬â„¢s priorities.'];
+  const suggestions = ['What is pending this month?', 'How much marketing budget pending?', 'Show delayed shipments.', 'Any high-risk buyers?', 'What is blocking invoices?', 'What payments are pending?', 'Any Country pending opportunities?', 'Show today's priorities.'];
   return (
     <section className="director-panel director-command-console">
       <div className="approval-section-header"><div><span>Director Command Input</span><h2>Ask GOPU OS anything operational</h2></div><Bot size={18} /></div>
       <div className="director-input-row">
-        <textarea aria-label="Command prompt" value={value} onChange={(event) => setValue(event.target.value)} onKeyDown={(event) => { if ((event.ctrlKey || event.metaKey) && event.key === 'Enter') onRun(); }} placeholder="What is pending this month?  Ã¢â‚¬Â¢  Show delayed shipments.  Ã¢â‚¬Â¢  Any Country pending opportunities?  Ã¢â‚¬Â¢  What is blocking invoices?" />
+        <textarea aria-label="Command prompt" value={value} onChange={(event) => setValue(event.target.value)} onKeyDown={(event) => { if ((event.ctrlKey || event.metaKey) && event.key === 'Enter') onRun(); }} placeholder="What is pending this month?  •  Show delayed shipments.  •  Any Country pending opportunities?  •  What is blocking invoices?" />
         <button className="tactical-button" onClick={() => onRun()}>Ask Director</button>
       </div>
       <div className="director-suggestion-row">
@@ -10408,7 +10421,7 @@ const defaultPricingInputs = {
   minimum_margin_percent: '12',
   market_reference_price: '320',
   previous_customer_price: '',
-  notes: '----- MARKET PRICE AUTO CHECK START -----\nMARKET PRICE CHECK\nStatus: REFERENCE ESTIMATE\nProduct: Red Chilli Powder\nGrade/source match: Red Chilli/Guntur Chilli\nLive/reference price: Ã¢â€šÂ¹180.00/kg | Ã¢â€šÂ¹180,000.00/ton\nManual source check required before buyer-facing quote.'
+  notes: '----- MARKET PRICE AUTO CHECK START -----\nMARKET PRICE CHECK\nStatus: REFERENCE ESTIMATE\nProduct: Red Chilli Powder\nGrade/source match: Red Chilli/Guntur Chilli\nLive/reference price: ₹180.00/kg | ₹180,000.00/ton\nManual source check required before buyer-facing quote.'
 };
 
 function buildPricingCostRows(incoterm = 'FOB', currency = 'INR') {
@@ -10961,8 +10974,8 @@ function parsePricingChannelMessage(message) {
   const currencyMatch = text.match(/\b(INR|USD|AUD|EUR|GBP|AED|SAR|SGD)\b/i);
   if (currencyMatch) updates.currency = currencyMatch[1].toUpperCase();
 
-  const priceMatch = text.match(/(?:price|rate|buyer price|target price|required price)\D{0,18}(?:inr|rs\.?|Ã¢â€šÂ¹)?\s*(\d+(?:\.\d+)?)/i)
-    || text.match(/(?:Ã¢â€šÂ¹|inr|rs\.?)\s*(\d+(?:\.\d+)?)(?:\s*\/?\s*(?:kg|per kg))?/i);
+  const priceMatch = text.match(/(?:price|rate|buyer price|target price|required price)\D{0,18}(?:inr|rs\.?|₹)?\s*(\d+(?:\.\d+)?)/i)
+    || text.match(/(?:₹|inr|rs\.?)\s*(\d+(?:\.\d+)?)(?:\s*\/?\s*(?:kg|per kg))?/i);
   if (priceMatch?.[1]) updates.market_reference_price = priceMatch[1];
   return updates;
 }
@@ -11522,12 +11535,12 @@ function formatDualMoney(line, currency) {
 }
 
 function formatPricingInr(value) {
-  return `Ã¢â€šÂ¹${Number(value || 0).toLocaleString(undefined, { maximumFractionDigits: 2 })}`;
+  return `₹${Number(value || 0).toLocaleString(undefined, { maximumFractionDigits: 2 })}`;
 }
 
 function formatPricingInrLive(value) {
   if (!Number.isFinite(Number(value)) || Number(value) <= 0) return 'Awaiting calculation';
-  return `Ã¢â€šÂ¹${Number(value || 0).toLocaleString(undefined, { maximumFractionDigits: 2 })}`;
+  return `₹${Number(value || 0).toLocaleString(undefined, { maximumFractionDigits: 2 })}`;
 }
 
 function getCfoApprovalReasons(inputs, calc, risk, costRows, productIntel) {
@@ -12335,11 +12348,11 @@ function splitPricingRange(range) {
 }
 
 function formatInrZero(value) {
-  return `Ã¢â€šÂ¹${Number(value || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+  return `₹${Number(value || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 }
 
 function formatInrFixed(value) {
-  return `Ã¢â€šÂ¹${Number(value || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+  return `₹${Number(value || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 }
 
 function formatCurrencyZero(value, currency = 'USD') {
@@ -12348,7 +12361,7 @@ function formatCurrencyZero(value, currency = 'USD') {
 
 function currencySymbol(currency) {
   if (currency === 'USD') return '$';
-  if (currency === 'INR') return 'Ã¢â€šÂ¹';
+  if (currency === 'INR') return '₹';
   if (currency === 'AED') return 'AED ';
   if (currency === 'EUR') return 'Ã¢â€šÂ¬';
   if (currency === 'GBP') return 'Ã‚Â£';
@@ -12522,7 +12535,7 @@ function PricingResultPanel({ calc, inputs, approvalReasons }) {
       <div className="cfo-result-hero">
         <div><span>Margin</span><strong>{calc.margin.toFixed(2)}%</strong><small>Target: {inputs.target_margin_percent}%</small></div>
         <div><span>Unit Price</span><strong>{formatPricingValue(calc.recommendedUnitPrice, inputs.currency)}</strong><small>{formatPricingInrLive(convertCurrency(calc.recommendedUnitPrice, inputs.currency, 'INR', moneyNumber(inputs.exchange_rate)))}</small></div>
-        <div><span>FX Basis</span><strong>1 USD = Ã¢â€šÂ¹{inputs.exchange_rate}</strong><small>Manual override allowed, approval tracked.</small></div>
+        <div><span>FX Basis</span><strong>1 USD = ₹{inputs.exchange_rate}</strong><small>Manual override allowed, approval tracked.</small></div>
       </div>
       <div className="ai-quote-grid">
         <div><span>Safe Quote</span><strong>{formatPricingValue(calc.safeQuotePrice, inputs.currency)}</strong><small>Conservative margin for freight/FX uncertainty.</small></div>
@@ -12672,49 +12685,49 @@ function FinanceNotesPanel({ productIntel, forexStatus, rates }) {
 
 const cfoFinanceData = {
   overviewMetrics: [
-    ['Pending quote approvals', '4', 'Founder review active'],
-    ['Margin risk alerts', '3', 'Below 20% or freight sensitive'],
-    ['Invoice approval pending', '2', 'LUT/HSN gates active'],
-    ['Payment vault summary', 'Ã¢â€šÂ¹42,800', 'Infrastructure spend monitor'],
-    ['Receivables pending', '5', 'No payment received claim'],
-    ['Payables pending', '6', 'CFO controlled'],
-    ['Monthly spend', 'Ã¢â€šÂ¹18,450', 'Infrastructure view'],
-    ['High-risk finance items', '5', 'Founder attention']
+    ['Pending quote approvals', '4', 'Director review gate active — no buyer release'],
+    ['Margin risk alerts', '3', 'Black pepper 14.2% — below 18% floor'],
+    ['Invoice approval pending', '2', 'LUT gate + HSN verification active'],
+    ['RoDTEP & Drawback receivable', '₹2.4L', 'Q1 claim filed, ICEGATE pending'],
+    ['Receivables (LC/TT)', '5', 'USD 48,200 outstanding — 30-90d aging'],
+    ['Payables (supplier + freight)', '6', 'CFO controlled — no auto-pay'],
+    ['Monthly working capital (PCFC)', '₹18.5L', 'Packing credit utilised this cycle'],
+    ['High-risk finance items', '5', 'Founder attention — FEMA overdue watch']
   ],
   cashRows: [
-    ['Cash position pending', 'No live data', 'Bank balance not connected', 'Monitoring'],
-    ['OpenAI credit forecast', 'Ã¢â€šÂ¹1,200 expected', 'Founder approval if cap exceeded', 'Review Required'],
-    ['Supabase renewal', 'Ã¢â€šÂ¹999 expected', 'Trusted infrastructure category', 'Monitoring'],
-    ['Vercel renewal', 'Ã¢â€šÂ¹1,499 expected', 'CFO + COO confirmation required', 'Attention'],
-    ['Low balance warning pending', 'Not connected', 'Use real bank feed later', 'Monitoring']
+    ['PCFC utilisation', '₹18.5L drawn', 'Packing credit against confirmed LC — standard', 'Monitoring'],
+    ['Forward cover open', 'USD 25,000 @ 83.40', 'Hedged against USD/INR volatility — 90d', 'Covered'],
+    ['RoDTEP credit ledger', '₹2.4L pending', 'ICEGATE claim filed — awaiting credit', 'Review Required'],
+    ['Duty drawback claim', '₹68,000', 'Filed with customs — 45d expected realisation', 'Monitoring'],
+    ['Overdue EDPMS entries', '2 shipments', 'BRC/FIRC not filed — FEMA risk if >9 months', 'Attention']
   ],
   receivablesRows: [
-    ['Buyer pending', 'GOPU-INV-DRAFT', 'No live amount', 'Draft', 'Draft', 'CFO Command'],
-    ['Oman Wholesale Foods', 'PI-OMN-022', 'USD 9,800', '2026-06-03', 'Due Soon', 'COO Command'],
-    ['Country pending Distributor', 'PI-VNM-014', 'USD 7,200', '2026-06-08', 'Pending', 'Finance Staff'],
-    ['Singapore Buyer', 'CI-SGP-009', 'USD 4,950', 'Review', 'Review Required', 'CFO Command']
+    ['Khalid Trading LLC', 'CI-UAE-031', 'USD 18,500', '2026-06-05', 'LC Presented', 'CFO Command'],
+    ['Oman Wholesale Foods', 'PI-OMN-022', 'USD 9,800', '2026-06-10', 'TT Due', 'COO Command'],
+    ['Mueller Imports GmbH', 'PI-DEU-014', 'USD 12,200', '2026-06-18', 'LC Pending', 'Finance'],
+    ['Singapore Spice House', 'CI-SGP-009', 'USD 4,950', '2026-07-01', 'DA 30 days', 'CFO Command']
   ],
   payableRows: [
-    ['OpenAI', 'Infrastructure credits', 'Ã¢â€šÂ¹1,200', 'Founder Approval Required', 'Payment Vault'],
-    ['Supabase', 'Database subscription', 'Ã¢â€šÂ¹999', 'CFO Auto-renew Eligible', 'Payment Vault'],
-    ['Vercel', 'Hosting renewal', 'Ã¢â€šÂ¹1,499', 'CFO + COO Confirmation', 'Payment Vault'],
-    ['Supplier payable pending', 'Procurement', 'Manual review', 'Never auto-pay', 'Supplier Control'],
-    ['Freight payable pending', 'Logistics', 'Manual review', 'Never auto-pay', 'Shipment System']
+    ['Rajkot Chilli Mandi', 'Raw material procurement', '₹4,20,000', 'COO confirmation required', 'Supplier Control'],
+    ['Freight forwarder — JNPT', 'Sea freight + THC charges', '₹85,000', 'COO + CFO approval', 'Shipment System'],
+    ['CHA charges — SB filing', 'Custom house agent fees', '₹12,500', 'COO controlled', 'Customs'],
+    ['Fumigation agency', 'Methyl bromide treatment', '₹8,200', 'COO + quality clearance', 'Quality'],
+    ['Insurance premium', 'Marine cargo insurance', '₹6,800', 'CFO auto-eligible', 'Payment Vault']
   ],
   marginRows: [
-    ['Product pending', 'Buyer pending', 'Country pending', '18.2%', 'Founder Review Required'],
-    ['Turmeric Powder', 'Oman Wholesale', 'Oman', '22.4%', 'CFO Review Ready'],
-    ['Coriander Seeds', 'Country pending Distributor', 'Country pending', '20.1%', 'Monitoring'],
-    ['Cardamom', 'Singapore Buyer', 'Singapore', '16.8%', 'Low Margin Alert']
+    ['Chilli Powder 100MT', 'Khalid Trading UAE', 'UAE', '14.2%', 'Low Margin — Director Block'],
+    ['Turmeric Finger 50MT', 'Oman Wholesale', 'Oman', '22.4%', 'CFO Review Ready'],
+    ['Cumin Seeds 30MT', 'Mueller Imports', 'Germany', '20.1%', 'Monitoring'],
+    ['Black Pepper 20MT', 'Singapore Spice House', 'Singapore', '18.8%', 'Approved — Dispatch Ready']
   ],
   riskRows: [
-    ['Low margin risk', 'High', 'Black pepper Country pending quote below 20% guardrail'],
-    ['FX risk', 'Medium', 'Manual exchange-rate override must be reviewed'],
-    ['Payment term risk', 'High', 'New buyer requesting non-advance terms'],
-    ['Unknown buyer risk', 'High', 'Founder visibility required before quote release'],
-    ['Freight volatility', 'Medium', 'CIF/CFR quotations need freight confirmation'],
-    ['Approval backlog', 'Attention', 'Pricing/invoice/document approvals waiting'],
-    ['Missing cost inputs', 'Critical', 'Raw material, freight, or insurance not entered']
+    ['Low margin — chilli', 'High', 'Chilli powder quote at 14.2% — below 18% CFO floor. Director block active.'],
+    ['FEMA overdue payments', 'High', '2 shipments without BRC/FIRC beyond 180 days. EDPMS filing required immediately.'],
+    ['USD/INR open exposure', 'Medium', 'USD 44,950 unhedged receivables — forward cover recommended at current 96.34 rate.'],
+    ['DA payment term risk', 'High', 'Singapore buyer requesting DA 30 days — first order, no credit history. Advance TT recommended.'],
+    ['Freight cost volatility', 'Medium', 'CIF/CFR quotes need updated freight confirmation — JNPT rates up 12% this month.'],
+    ['LC discrepancy risk', 'Medium', 'UAE LC clause requires specific phyto certificate wording — COO to verify before presentation.'],
+    ['Missing cost inputs', 'Critical', 'Raw material mandi rate not updated since last week — pricing engine using stale APMC data.']
   ],
   reportRows: [
     ['Monthly finance summary', 'Draft report', 'Cash, payables, approvals, spend'],
@@ -12826,7 +12839,7 @@ function CfoOverviewTab({ onOpenPricing }) {
       </div>
       <div className="cfo-finance-grid two">
         <CfoFinancePanel title="Approval Control" subtitle="Founder-sensitive finance queue" icon={FileCheck2} rows={['Low margin quotations require founder approval.', 'Invoice release remains blocked until approval.', 'Document release must route through Director Queue.', 'Payment caps remain INR-governed.']} />
-        <CfoFinancePanel title="Payment Vault Summary" subtitle="Infrastructure spend and renewals" icon={CircleDollarSign} rows={['Auto-pay allowed only for trusted infrastructure vendors.', 'Above Ã¢â€šÂ¹1,500 requires founder approval.', 'OTP is never stored or logged.', 'Receipts remain audit-controlled.']} />
+        <CfoFinancePanel title="Payment Vault Summary" subtitle="Infrastructure spend and renewals" icon={CircleDollarSign} rows={['Auto-pay allowed only for trusted infrastructure vendors.', 'Above ₹1,500 requires founder approval.', 'OTP is never stored or logged.', 'Receipts remain audit-controlled.']} />
       </div>
       <button className="tactical-button" onClick={onOpenPricing}>Open Quotations Pricing Engine</button>
     </section>
@@ -13214,16 +13227,16 @@ function CfoPaymentVaultInteractiveTab({ data }) {
       {activeVaultTab === 'Overview' && (
         <>
           <BillingVaultOverview billingMethods={billingMethods} providerConnected={billingMethods.length > 0} onConnect={() => setConnectModalOpen(true)} />
-          <CfoFinanceTable title="Recent Payment Vault Records" subtitle="CFO-controlled infrastructure payment evidence" columns={['Vendor', 'Amount INR', 'Payment status', 'Receipt status']} rows={vaultRecentPayments.length ? vaultRecentPayments : [['OpenAI', 'Ã¢â€šÂ¹950', 'OTP Required', 'Receipt Pending']]} />
+          <CfoFinanceTable title="Recent Payment Vault Records" subtitle="CFO-controlled infrastructure payment evidence" columns={['Vendor', 'Amount INR', 'Payment status', 'Receipt status']} rows={vaultRecentPayments.length ? vaultRecentPayments : [['OpenAI', '₹950', 'OTP Required', 'Receipt Pending']]} />
         </>
       )}
-      {activeVaultTab === 'Payments' && <CfoFinanceTable title="Recent Payment Vault Records" subtitle="CFO-controlled infrastructure payment evidence" columns={['Vendor', 'Amount INR', 'Payment status', 'Receipt status']} rows={vaultRecentPayments.length ? vaultRecentPayments : [['OpenAI', 'Ã¢â€šÂ¹950', 'OTP Required', 'Receipt Pending']]} />}
+      {activeVaultTab === 'Payments' && <CfoFinanceTable title="Recent Payment Vault Records" subtitle="CFO-controlled infrastructure payment evidence" columns={['Vendor', 'Amount INR', 'Payment status', 'Receipt status']} rows={vaultRecentPayments.length ? vaultRecentPayments : [['OpenAI', '₹950', 'OTP Required', 'Receipt Pending']]} />}
       {activeVaultTab === 'Renewals' && <RenewalForecastPanel forecasts={paymentForecastSeed} expanded={paymentForecastSeed[0]?.id} onToggle={() => setNotice('Renewal forecast opened. Payment execution still requires token, INR limit, and approval rule.')} />}
       {activeVaultTab === 'Vendors' && <VendorTrustRegistry vendors={vendorTrustSeed} />}
       {activeVaultTab === 'Receipts' && <ReceiptRepository receipts={paymentReceiptsSeed} onMarkReviewed={(id) => setNotice(`Receipt ${id} marked reviewed locally.`)} />}
       {activeVaultTab === 'Audit' && <BillingAuditPanel audit={billingAudit} />}
       <div className="cfo-finance-grid two">
-        <CfoFinancePanel title="Payment Governance Rules" subtitle="INR-capped and founder-controlled" icon={ShieldCheck} rows={['Ã¢â€°Â¤ Ã¢â€šÂ¹1,000: CFO-controlled auto-renew only for trusted infrastructure vendors.', 'Ã¢â€šÂ¹1,001-Ã¢â€šÂ¹1,500: CFO + COO confirmation required.', '> Ã¢â€šÂ¹1,500: Director review required.', 'Never auto-pay suppliers, freight, customs, tax, salaries, refunds, or arbitrary invoices.']} />
+        <CfoFinancePanel title="Payment Governance Rules" subtitle="INR-capped and founder-controlled" icon={ShieldCheck} rows={['≤ ₹1,000: CFO-controlled auto-renew only for trusted infrastructure vendors.', '₹1,001-₹1,500: CFO + COO confirmation required.', '> ₹1,500: Director review required.', 'Never auto-pay suppliers, freight, customs, tax, salaries, refunds, or arbitrary invoices.']} />
         <CfoFinancePanel title="OTP Security Rule" subtitle="CFO payment confirmation" icon={LockKeyhole} rows={['Founder receives OTP externally.', 'Founder securely shares OTP with CFO.', 'CFO enters OTP once in secure confirmation screen.', 'OTP is never stored, logged, reused, or included in AI memory.']} />
       </div>
       {connectModalOpen && <ConnectBillingMethodModal onCancel={() => setConnectModalOpen(false)} onTokenize={connectCfoBillingMethod} />}
@@ -13248,9 +13261,9 @@ function CfoPaymentVaultTab({ data }) {
           return <article key={`${label}-${index}`}><span>{label}</span><strong>{value}</strong><small>{status}</small></article>;
         })}
       </div>
-      <CfoFinanceTable title="Recent Payment Vault Records" subtitle="CFO-controlled infrastructure payment evidence" columns={['Vendor', 'Amount INR', 'Payment status', 'Receipt status']} rows={vaultRecentPayments.length ? vaultRecentPayments : [['OpenAI', 'Ã¢â€šÂ¹950', 'OTP Required', 'Receipt Pending']]} />
+      <CfoFinanceTable title="Recent Payment Vault Records" subtitle="CFO-controlled infrastructure payment evidence" columns={['Vendor', 'Amount INR', 'Payment status', 'Receipt status']} rows={vaultRecentPayments.length ? vaultRecentPayments : [['OpenAI', '₹950', 'OTP Required', 'Receipt Pending']]} />
       <div className="cfo-finance-grid two">
-        <CfoFinancePanel title="Payment Governance Rules" subtitle="INR-capped and founder-controlled" icon={ShieldCheck} rows={['Ã¢â€°Â¤ Ã¢â€šÂ¹1,000: CFO-controlled auto-renew only for trusted infrastructure vendors.', 'Ã¢â€šÂ¹1,001-Ã¢â€šÂ¹1,500: CFO + COO confirmation required.', '> Ã¢â€šÂ¹1,500: Founder approval mandatory.', 'Never auto-pay suppliers, freight, customs, tax, salaries, refunds, or arbitrary invoices.']} />
+        <CfoFinancePanel title="Payment Governance Rules" subtitle="INR-capped and founder-controlled" icon={ShieldCheck} rows={['≤ ₹1,000: CFO-controlled auto-renew only for trusted infrastructure vendors.', '₹1,001-₹1,500: CFO + COO confirmation required.', '> ₹1,500: Founder approval mandatory.', 'Never auto-pay suppliers, freight, customs, tax, salaries, refunds, or arbitrary invoices.']} />
         <CfoFinancePanel title="OTP Security Rule" subtitle="CFO payment confirmation" icon={LockKeyhole} rows={['Founder receives OTP externally.', 'Founder securely shares OTP with CFO.', 'CFO enters OTP once in secure confirmation screen.', 'OTP is never stored, logged, reused, or included in AI memory.']} />
       </div>
       <CfoFinancePanel title="Payment Workflow" subtitle="CTO detects, CFO executes" icon={Route} rows={vaultWorkflowSteps.length ? vaultWorkflowSteps : ['CTO detects renewal.', 'COO confirms need.', 'CFO validates and executes.', 'Founder approval/OTP if required.', 'CFO stores receipt in Payment Vault.']} />
@@ -13311,7 +13324,7 @@ function CfoIntelligencePanel({ data, onOpenPricing, onOpenPaymentVault }) {
       {openedItem && <div className="cfo-inline-detail"><strong>Risk opened</strong><span>{openedItem}</span><small>Route to pricing, Payment Vault, or Director approval if this risk blocks release.</small></div>}
       <div className="cfo-intelligence-subpanel">
         <strong>Renewal Risks</strong>
-        {(renewals.length ? renewals : [['OpenAI credits', '2026-05-31', 'Ã¢â€šÂ¹950', 'Attention']]).map((row, index) => {
+        {(renewals.length ? renewals : [['OpenAI credits', '2026-05-31', '₹950', 'Attention']]).map((row, index) => {
           const rowKey = safeCfoJoin(row, '-');
           const rowDetail = safeCfoJoin(row, ' / ');
           return <button type="button" key={`${rowKey}-${index}`} onClick={() => setOpenedItem(`Renewal: ${rowDetail}`)}>{row[0]} / {row[2]} / {row[4] || row[3]}</button>;
@@ -13319,7 +13332,7 @@ function CfoIntelligencePanel({ data, onOpenPricing, onOpenPaymentVault }) {
       </div>
       <div className="cfo-intelligence-subpanel">
         <strong>Approval Logic</strong>
-        {['Margin < 20% requires founder approval.', 'Payment > Ã¢â€šÂ¹1,500 requires founder approval.', 'Unknown vendor or high-risk buyer requires founder approval.', 'Aggressive pricing or freight uncertainty requires review.'].map((item) => <button type="button" key={item} onClick={() => setOpenedItem(item)}>{item}</button>)}
+        {['Margin < 20% requires founder approval.', 'Payment > ₹1,500 requires founder approval.', 'Unknown vendor or high-risk buyer requires founder approval.', 'Aggressive pricing or freight uncertainty requires review.'].map((item) => <button type="button" key={item} onClick={() => setOpenedItem(item)}>{item}</button>)}
       </div>
       <div className="cfo-report-actions">
         <button className="tactical-button" onClick={onOpenPricing}>Review Quotations</button>
@@ -14373,8 +14386,8 @@ function InvoiceWorkspaceHeader({ invoice, blockers, canRelease, onSaveDraft, on
     <section className="invoice-workspace-header">
       <div>
         <span>Professional Invoice Workspace</span>
-        <h2>{invoice.invoice_number || 'Draft invoice'} Ã‚Â· {invoice.invoice_type}</h2>
-        <p>{invoice.export_mode} Ã‚Â· IGST 0% under LUT Ã‚Â· {blockers.length ? `${blockers.length} critical blocker(s)` : 'Validation clear'}</p>
+        <h2>{invoice.invoice_number || 'Draft invoice'} · {invoice.invoice_type}</h2>
+        <p>{invoice.export_mode} · IGST 0% under LUT · {blockers.length ? `${blockers.length} critical blocker(s)` : 'Validation clear'}</p>
       </div>
       <div className="invoice-action-bar">
         <button className="ghost-button" onClick={onSaveDraft}>Save Draft</button>
@@ -16132,16 +16145,16 @@ const paymentGovernanceRules = {
 const trustedInfrastructureVendors = ['OpenAI credits', 'Supabase', 'Vercel', 'Cloudflare', 'Domain / SSL renewals', 'Email provider', 'Automation tools'];
 const neverAutoPayCategories = ['Supplier payments', 'Freight', 'Customs', 'Tax', 'Salaries', 'Refunds', 'Unknown invoices', 'Bank transfers', 'Manual vendor invoices'];
 const paymentApprovalBands = [
-  ['Safe auto-pay', 'Ã¢â€šÂ¹0-Ã¢â€šÂ¹1,000', 'Trusted infrastructure vendor only', 'CFO can approve after COO confirms operational need'],
-  ['Controlled auto-pay', 'Ã¢â€šÂ¹1,001-Ã¢â€šÂ¹1,500', 'Trusted infrastructure vendor only', 'CFO + COO confirmation required before auto-pay'],
-  ['Founder approval required', 'Above Ã¢â€šÂ¹1,500', 'Any vendor', 'Founder approval required before payment'],
+  ['Safe auto-pay', '₹0-₹1,000', 'Trusted infrastructure vendor only', 'CFO can approve after COO confirms operational need'],
+  ['Controlled auto-pay', '₹1,001-₹1,500', 'Trusted infrastructure vendor only', 'CFO + COO confirmation required before auto-pay'],
+  ['Founder approval required', 'Above ₹1,500', 'Any vendor', 'Founder approval required before payment'],
   ['Auto-pay blocked', 'Any amount', 'Unknown, high-risk, or non-infrastructure', 'Route to Director Command Center']
 ];
 const paymentVaultRecords = [
-  ['OpenAI credits', 'Ã¢â€šÂ¹950', 'AI workflow credit top-up', 'Trusted Infrastructure', 'CTO requirement -> COO necessity -> CFO validation/execution', 'Receipt pending', 'CFO Command', 'Requirement raised', 'Confirmed', 'Ready to initiate', 'Not required', 'Pending until gateway OTP completes', 'Draft audit event'],
-  ['Supabase', 'Ã¢â€šÂ¹1,250', 'Database platform renewal buffer', 'Trusted Infrastructure', 'CTO requirement -> COO + CFO confirmation', 'Invoice pending', 'CFO Command', 'Requirement raised', 'Pending', 'Review', 'Not required', 'Pending until CFO + COO confirmation', 'Controlled auto-pay review'],
-  ['Freight vendor invoice', 'Ã¢â€šÂ¹1,200', 'Manual shipment invoice', 'Freight', 'Blocked -> Founder Review', 'Not uploaded', 'Not paid', 'Blocked', 'Blocked', 'Blocked', 'Required', 'No payment timestamp', 'Non-infrastructure category blocked'],
-  ['Unknown SaaS vendor', 'Ã¢â€šÂ¹800', 'Unverified renewal request', 'Unknown Vendor', 'Blocked -> Founder Review', 'Missing', 'Not paid', 'Pending', 'Pending', 'Blocked', 'Required', 'No payment timestamp', 'New vendor approval required']
+  ['OpenAI credits', '₹950', 'AI workflow credit top-up', 'Trusted Infrastructure', 'CTO requirement -> COO necessity -> CFO validation/execution', 'Receipt pending', 'CFO Command', 'Requirement raised', 'Confirmed', 'Ready to initiate', 'Not required', 'Pending until gateway OTP completes', 'Draft audit event'],
+  ['Supabase', '₹1,250', 'Database platform renewal buffer', 'Trusted Infrastructure', 'CTO requirement -> COO + CFO confirmation', 'Invoice pending', 'CFO Command', 'Requirement raised', 'Pending', 'Review', 'Not required', 'Pending until CFO + COO confirmation', 'Controlled auto-pay review'],
+  ['Freight vendor invoice', '₹1,200', 'Manual shipment invoice', 'Freight', 'Blocked -> Founder Review', 'Not uploaded', 'Not paid', 'Blocked', 'Blocked', 'Blocked', 'Required', 'No payment timestamp', 'Non-infrastructure category blocked'],
+  ['Unknown SaaS vendor', '₹800', 'Unverified renewal request', 'Unknown Vendor', 'Blocked -> Founder Review', 'Missing', 'Not paid', 'Pending', 'Pending', 'Blocked', 'Required', 'No payment timestamp', 'New vendor approval required']
 ].map(([vendor_name, amount_inr, payment_reason, category, approval_path, receipt_invoice, paid_by, cto_confirmation, coo_confirmation, cfo_confirmation, founder_approval, payment_timestamp, audit_trail], index) => ({
   id: `payment-vault-${index}`,
   vendor_name,
@@ -17429,9 +17442,9 @@ function PaymentGovernancePanel({ compact = false }) {
     <section className={`cto-panel payment-governance-panel ${compact ? 'compact' : ''}`}>
       <div className="approval-section-header"><div><span>Payment Governance</span><h2>CFO execution / Founder OTP authority</h2></div><LockKeyhole size={18} /></div>
       <div className="payment-limit-grid">
-        <div><span>Safe auto-pay</span><strong>Ã¢â€šÂ¹0-Ã¢â€šÂ¹1,000</strong><small>Trusted infrastructure only</small></div>
-        <div><span>Controlled cap</span><strong>Ã¢â€šÂ¹1,001-Ã¢â€šÂ¹1,500</strong><small>CFO + COO confirmation</small></div>
-        <div><span>Founder required</span><strong>Above Ã¢â€šÂ¹1,500</strong><small>No auto-pay above cap</small></div>
+        <div><span>Safe auto-pay</span><strong>₹0-₹1,000</strong><small>Trusted infrastructure only</small></div>
+        <div><span>Controlled cap</span><strong>₹1,001-₹1,500</strong><small>CFO + COO confirmation</small></div>
+        <div><span>Founder required</span><strong>Above ₹1,500</strong><small>No auto-pay above cap</small></div>
         <div><span>OTP owner</span><strong>Founder</strong><small>CFO enters once after founder shares</small></div>
       </div>
       <div className="payment-policy-callout">
@@ -17592,11 +17605,11 @@ const paymentRecordsSeed = [];
 const paymentReceiptsSeed = [];
 
 const vendorTrustSeed = [
-  ['OpenAI', 'Trusted Infrastructure', 'Trusted', 'Ã¢â€šÂ¹1,000', 'Allowed under cap', 'Low', 'Pending', 'Usage-based'],
-  ['Supabase', 'Trusted Infrastructure', 'Trusted', 'Ã¢â€šÂ¹1,500', 'Controlled', 'Medium', 'Pending', 'Monthly'],
-  ['Vercel', 'Trusted Infrastructure', 'Trusted', 'Ã¢â€šÂ¹1,000', 'Allowed under cap', 'Low', 'May 24, 2026', 'Monthly'],
-  ['Cloudflare', 'Domain / SSL renewal', 'Review Required', 'Ã¢â€šÂ¹1,500', 'Founder approval over cap', 'High', 'Pending', 'Annual'],
-  ['Unknown SaaS vendor', 'Unknown Vendor', 'Blocked', 'Ã¢â€šÂ¹0', 'Not allowed', 'Critical', 'Never paid', 'Unknown']
+  ['OpenAI', 'Trusted Infrastructure', 'Trusted', '₹1,000', 'Allowed under cap', 'Low', 'Pending', 'Usage-based'],
+  ['Supabase', 'Trusted Infrastructure', 'Trusted', '₹1,500', 'Controlled', 'Medium', 'Pending', 'Monthly'],
+  ['Vercel', 'Trusted Infrastructure', 'Trusted', '₹1,000', 'Allowed under cap', 'Low', 'May 24, 2026', 'Monthly'],
+  ['Cloudflare', 'Domain / SSL renewal', 'Review Required', '₹1,500', 'Founder approval over cap', 'High', 'Pending', 'Annual'],
+  ['Unknown SaaS vendor', 'Unknown Vendor', 'Blocked', '₹0', 'Not allowed', 'Critical', 'Never paid', 'Unknown']
 ].map(([vendorName, category, trustLevel, monthlyLimit, autoPayEligibility, riskLevel, lastPayment, renewalFrequency], index) => ({ id: `vendor-${index}`, vendorName, category, trustLevel, monthlyLimit, autoPayEligibility, riskLevel, lastPayment, renewalFrequency }));
 
 const paymentForecastSeed = [];
@@ -17657,7 +17670,7 @@ function buildRenewalDashboardItems(payments = paymentRecordsSeed, forecasts = p
 
 const paymentRiskSeed = [
   ['Missing receipt', 'Medium', 'Resend receipt still pending review.', 'CFO Command'],
-  ['Founder approval missing', 'High', 'Cloudflare amount exceeds Ã¢â€šÂ¹1,500 cap.', 'Founder'],
+  ['Founder approval missing', 'High', 'Cloudflare amount exceeds ₹1,500 cap.', 'Founder'],
   ['Duplicate renewal risk', 'Low', 'No duplicate charge detected; monitor next cycle.', 'CFO Command'],
   ['Failed payment retry', 'Medium', 'WhatsApp API payment processing should be checked after OTP step.', 'CFO Command']
 ].map(([title, severity, detail, owner], index) => ({ id: `payment-risk-${index}`, title, severity, detail, owner }));
@@ -18207,9 +18220,9 @@ function BillingSecurityRulesPanel({ rules = billingVendorRuleSeed }) {
     <section className="payment-vault-panel billing-rules-panel">
       <div className="approval-section-header"><div><span>Auto-Renew Security Rules</span><h2>Limits and OTP policy</h2></div><ShieldCheck size={18} /></div>
       <div className="billing-rule-list">
-        <span>Ã¢â€°Â¤ Ã¢â€šÂ¹1,000: safe auto-renew allowed only for trusted infrastructure vendors with approved token and no risk flag.</span>
-        <span>Ã¢â€šÂ¹1,001-Ã¢â€šÂ¹1,500: CFO + COO confirmation required.</span>
-        <span>&gt; Ã¢â€šÂ¹1,500: Director review required.</span>
+        <span>≤ ₹1,000: safe auto-renew allowed only for trusted infrastructure vendors with approved token and no risk flag.</span>
+        <span>₹1,001-₹1,500: CFO + COO confirmation required.</span>
+        <span>&gt; ₹1,500: Director review required.</span>
         <span>Unknown vendor or high-risk vendor: blocked.</span>
         <span>OTP is entered once, submitted to provider, then cleared immediately. Audit never records OTP value.</span>
       </div>
@@ -18326,7 +18339,7 @@ function ConnectBillingMethodModal({ request = renewalRequestFromPayment(), bill
       amountInr: safeAmount,
       cardName: cardName.trim(),
       bankName: bankName.trim(),
-      maskedReference: `${cardBrand} Ã¢â‚¬Â¢Ã¢â‚¬Â¢Ã¢â‚¬Â¢Ã¢â‚¬Â¢ ${last4}`,
+      maskedReference: `${cardBrand} •••• ${last4}`,
       expiryMonth: expiryMonth.padStart(2, '0').slice(0, 2),
       expiryYear
     });
@@ -18711,7 +18724,7 @@ function getPaymentState(status) {
 }
 
 function formatInr(value) {
-  return `Ã¢â€šÂ¹${Number(value || 0).toLocaleString('en-IN')}`;
+  return `₹${Number(value || 0).toLocaleString('en-IN')}`;
 }
 
 function WorkflowGuidanceEngine({ navigate, onBack, initialView = 'Workflow Guidance' }) {
@@ -19871,7 +19884,7 @@ function MobilePaymentPanel({ data, navigate }) {
 }
 
 function MobileBriefingPanel({ data, navigate }) {
-  return <div className="mobile-screen-stack"><MobileExecutiveSummary summaries={data.executiveSummaries} navigate={navigate} /><section className="mobile-card"><div className="mobile-section-title"><span>Founder Action Plan</span><strong>TodayÃ¢â‚¬â„¢s mobile briefing</strong></div><div className="mobile-brief-list">{data.briefingPlan.map((item) => <span key={item}>{item}</span>)}</div><div className="mobile-card-actions"><button onClick={() => navigate('/export-os/morning-briefing')}>Open Full Briefing</button><button onClick={() => navigate('/export-os/director')}>Open Director Queue</button></div></section></div>;
+  return <div className="mobile-screen-stack"><MobileExecutiveSummary summaries={data.executiveSummaries} navigate={navigate} /><section className="mobile-card"><div className="mobile-section-title"><span>Founder Action Plan</span><strong>Today's mobile briefing</strong></div><div className="mobile-brief-list">{data.briefingPlan.map((item) => <span key={item}>{item}</span>)}</div><div className="mobile-card-actions"><button onClick={() => navigate('/export-os/morning-briefing')}>Open Full Briefing</button><button onClick={() => navigate('/export-os/director')}>Open Director Queue</button></div></section></div>;
 }
 
 const warehouseInventorySeed = [];
@@ -19981,7 +19994,7 @@ function WarehouseDashboard({ navigate, onBack, view = 'warehouse', inventoryId 
         </div>
         <div className="deck-header-controls">
           <div className="coo-verified"><ShieldCheck size={16} /><span>Founder session verified</span></div>
-          <div className="coo-status"><PackageCheck size={16} /><strong>Stock Value: Ã¢â€šÂ¹18.4L Local</strong></div>
+          <div className="coo-status"><PackageCheck size={16} /><strong>Stock Value: ₹18.4L Local</strong></div>
           <StatusBadge label={`${lowStockCount} low stock`} state="attention" />
           <StatusBadge label={`${shipmentAllocationSeed.length} dispatch pending`} state="progress" />
           <span className="deck-time-chip">{currentDateTime}</span>
@@ -25562,7 +25575,7 @@ function CMOPostingTimeSettings({ preference }) {
 
 function CMOTopStatusStrip({ data }) {
   const items = [
-    ['TodayÃ¢â‚¬â„¢s Focus', data.summary?.todayRunbook || '9:00 AM IST', CalendarClock],
+    ['Today's Focus', data.summary?.todayRunbook || '9:00 AM IST', CalendarClock],
     ['Growth Objective', '10% Optimization', Target],
     ['Budget Governance', 'CFO-Controlled', CircleDollarSign],
     ['Publishing Rule', 'Approval Queue First', ClipboardCheck],
@@ -25741,7 +25754,7 @@ function CMOApprovalQueueClean({ rows, navigate }) {
         {items.map((row) => (
           <div key={row[0]}>
             <strong>{row[0]}</strong>
-            <p>{row[2]} Ã‚Â· {row[4]}</p>
+            <p>{row[2]} · {row[4]}</p>
             <small>{row[3]}</small>
           </div>
         ))}
@@ -25992,7 +26005,7 @@ function CMOOverviewWorkspaceV2({ data, output, onGenerateTodayPlan, onGenerateF
 function CMOOverviewWorkspace({ data, output, onGenerateTodayPlan, onGenerateFounderSummary, navigate }) {
   const summary = data.summary || {};
   const metrics = [
-    ['TodayÃ¢â‚¬â„¢s content runbook', summary.todayRunbook || '8:39 AM IST', 'Monitoring'],
+    ['Today's content runbook', summary.todayRunbook || '8:39 AM IST', 'Monitoring'],
     ['Pending approvals', summary.pendingApprovals || 4, 'Founder review queue'],
     ['Campaign activity', summary.campaignActivity || 5, 'Active campaigns'],
     ['Buyer outreach activity', summary.buyerOutreachActivity || 7, 'Buyer CRM linked'],
@@ -26089,7 +26102,7 @@ const campaignObjectives = ['Brand Awareness', 'Lead Generation', 'Website Traff
 
 function formatInrValue(value) {
   const amount = Number(value) || 0;
-  return `Ã¢â€šÂ¹${new Intl.NumberFormat('en-IN', { maximumFractionDigits: 0 }).format(amount)}`;
+  return `₹${new Intl.NumberFormat('en-IN', { maximumFractionDigits: 0 }).format(amount)}`;
 }
 
 function CampaignBudgetPanel({ control, navigate }) {
@@ -26878,7 +26891,7 @@ function FounderSummaryHero({ onGenerate, generatedNote }) {
     <section className="briefing-hero">
       <div>
         <span className="coo-kicker">Today's Founder Briefing</span>
-        <h2>Executive command intelligence for todayÃ¢â‚¬â„¢s decisions</h2>
+        <h2>Executive command intelligence for today's decisions</h2>
         <p>Consolidated from COO, CFO, CTO, and CMO command units. Connect Supabase to activate only: no issue is marked resolved and no release action is claimed.</p>
         <div className="briefing-status-chips">
           {['COO Monitoring', 'CFO Review Active', 'CTO Risk Scan', 'CMO Content Runbook'].map((chip) => <StatusBadge key={chip} label={chip} state="progress" />)}
