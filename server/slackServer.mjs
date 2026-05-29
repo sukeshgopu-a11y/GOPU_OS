@@ -1151,6 +1151,35 @@ async function handleSlackStatus(_request, response) {
   });
 }
 
+function handleCtoIntegrationsStatus(_request, response) {
+  function hasEnv(...names) {
+    return names.every((n) => Boolean(env(n)));
+  }
+  function partialEnv(...names) {
+    const count = names.filter((n) => Boolean(env(n))).length;
+    return count > 0 && count < names.length;
+  }
+  function row(service, ...names) {
+    const live = hasEnv(...names);
+    const partial = !live && partialEnv(...names);
+    return {
+      service,
+      status: live ? 'live' : partial ? 'partial' : 'unconfigured',
+      message: live ? `${service} configured` : partial ? `${service} partially configured` : `${service} not configured`,
+      last_checked: new Date().toISOString()
+    };
+  }
+  const data = [
+    row('Supabase', 'VITE_SUPABASE_URL', 'VITE_SUPABASE_ANON_KEY'),
+    row('OpenAI', 'OPENAI_API_KEY'),
+    row('Slack', 'SLACK_BOT_TOKEN', 'SLACK_CHANNEL_ID', 'SLACK_SIGNING_SECRET'),
+    row('Resend', 'RESEND_API_KEY'),
+    row('Twilio', 'TWILIO_ACCOUNT_SID', 'TWILIO_AUTH_TOKEN'),
+    { service: 'Vercel', status: 'unconfigured', message: 'Local development runtime', last_checked: new Date().toISOString() }
+  ];
+  sendJson(response, 200, { ok: true, data });
+}
+
 loadLocalEnv();
 
 const server = http.createServer((request, response) => {
@@ -1237,6 +1266,10 @@ const server = http.createServer((request, response) => {
   }
   if (request.method === 'POST' && routePath === '/api/lead-email/notify') {
     handleLeadEmail(request, response);
+    return;
+  }
+  if (request.method === 'GET' && routePath === '/api/cto/integrations/status') {
+    handleCtoIntegrationsStatus(request, response);
     return;
   }
   sendJson(response, 404, { ok: false, status: 'not_found', message: 'Route not found.' });
