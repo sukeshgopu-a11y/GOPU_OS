@@ -22910,14 +22910,17 @@ function CMOPlatformsTab({ connectedCount, navigate }) {
 }
 
 const linkedInComposerHashtags = {
-  'Product Showcase': '#IndianSpiceExporter #ChilliExport #TurmericExporter #CuminExporter #BlackPepperExport #CorianderExport #SpiceBoardIndia #APEDAExport #FoodIngredientsIndia #IndianExports #GlobalSpiceTrade #B2BImporter #ExportFromIndia #MakeInIndia #BulkSpices #WholesaleSpices #QualityCertified #FSSAIApproved',
-  'Shipment Milestone': '#IndianSpiceExporter #ShipmentMilestone #FOBIndia #ContainerExport #GlobalSpiceTrade #IndianExports #B2BImporter #ExportBusiness #JNPTPort #MundraPort #SpiceExportIndia #TradeFinance #LetterOfCredit #APEDAExport #ExportFromIndia #ISOCertified #SpiceBoardIndia',
-  'Market Intelligence': '#IndianSpiceMarket #MandiPrices #KharifSeason #RabiSeason #SpicePriceUpdate #GlobalSpiceTrade #IndianExports #B2BImporter #ChilliMarket #TurmericMarket #CuminMarket #ExportBusiness #AgriExport #FoodCommodity #SpiceTrade #IndiaAgri',
-  'Behind the Scenes': '#SpiceFactory #ExportWarehouse #QualityControl #SpicePacking #IndianManufacturing #FoodGrade #ExportProcess #FounderLife #ExportBusiness #IndianExports #SpiceBoardIndia #APEDAExport #MakeInIndia #FoodIngredientsIndia #SpiceExportIndia #FactoryTour',
-  Educational: '#ExportTips #ImporterGuide #HowToImport #IndianSpices #SpiceQuality #FSSAIStandards #ISOCertified #HACCPCertified #ExportCompliance #TradeFinance #SpiceBoardIndia #APEDAExport #GlobalTrade #B2BImporter #IndianExports #ExportFromIndia',
-  'Founder Story': '#FounderLed #IndianExporter #ExportJourney #MadeInIndia #GlobalTrade #SpiceExportIndia #IndianSpiceExporter #Entrepreneurship #ExportBusiness #IndiaToWorld #FounderLife #TradeStory #B2BImporter #APEDAExport #GlobalSpiceTrade #ExportFromIndia',
-  Instagram: '#IndianSpices #SpicePhotography #SpicesOfInstagram #ColourfulSpices #SpiceLife #NaturalSpices #OrganicSpices #PureSpices #SpiceLovers #IndianFlavours #SpiceMarket #BulkSpices #FoodPhotography #SpiceBowl #TurmericLover #ChilliPowder #CuminSeeds #BlackPepper #CorianderSeeds #IndianFood #FoodIngredients #SpiceWorld #ExportIndia #FarmToTable #GlobalFlavours',
-  Facebook: '#IndianSpiceExporter #SpiceExportIndia #GlobalSpiceTrade #IndianExports #B2BImporter #BulkSpices #WholesaleSpices #SpiceBoardIndia #APEDAExport #FSSAIApproved #ISOCertified #ExportFromIndia #MakeInIndia #IndianAgri #FoodIngredients'
+  'Product Showcase': '#IndianSpices #SpiceExporter #ChilliPowder #TurmericPowder #BlackPepper #CuminSeeds #SpicesOfIndia #FSSAIApproved #APEDAIndia #SpiceBoardIndia #ISOCertified #HACCPCertified #ExportFromIndia #B2BImporter #FoodIngredientsIndia',
+  'Shipment Milestone': '#IndianSpices #SpiceExporter #FoodExport #IndianExports #ExportFromIndia #APEDAIndia #SpiceBoardIndia #AgriExport #B2BFood #GlobalTrade',
+  'Market Intelligence': '#IndianSpices #SpiceExporter #AgriExport #FoodIndustry #IndianExports #GlobalTrade #FoodCommodity #SpiceTrade #B2BFood #ExportBusiness',
+  'Behind the Scenes': '#IndianSpices #SpiceExporter #FoodManufacturing #FoodSafety #QualityControl #MakeInIndia #ExportBusiness #FoodGrade #IndianExports #AgriExport',
+  Educational: '#IndianSpices #SpiceExporter #FoodExport #ImporterGuide #FoodSafety #ISOCertified #HACCPCertified #FSSAIApproved #APEDAIndia #GlobalTrade',
+  'Founder Story': '#IndianSpices #ExportBusiness #FounderLed #IndianExporter #MadeInIndia #GlobalTrade #AgriExport #IndiaToWorld #SpiceExporter #Entrepreneurship',
+  'Carousel / Education': '#IndianSpices #SpiceExporter #FoodExport #AgriExport #B2BFood #GlobalTrade #IndianExports #FoodIndustry #SupplyChain #Procurement',
+  Instagram: '#IndianSpices #SpiceExporter #ChilliPowder #TurmericPowder #BlackPepper #CuminSeeds #CorianderPowder #SpicesOfIndia #OrganicSpices #NaturalSpices #SpiceLovers #FarmToFork #FoodPhotography #MadeInIndia #ExportFromIndia',
+  'Instagram Reel': '#IndianSpices #SpiceExport #GunturChilli #AlleppeyTurmeric #MalabarPepper #BehindTheScenes #FoodFactory #ExportGrade #HACCPCertified #APEDAIndia #SpicesOfIndia #NaturalSpices #FarmToTable #FoodIngredients #MadeInIndia',
+  Facebook: '#IndianSpices #SpiceExporter #BulkSpices #FoodExport #HalalCertified #IndianExports #APEDAIndia #FSSAIApproved #ISOCertified #ExportFromIndia',
+  'Trade Offer': '#ChilliPowder #TurmericPowder #BlackPepper #CuminSeeds #CorianderPowder #IndianSpices #SpiceExporter #HalalCertified #BulkSpices #ExportFromIndia #APEDAIndia #FSSAIApproved #ISOCertified #WholesaleSpices #B2BImporter'
 };
 
 function CMOLinkedInComposerTab({ onCreateApprovalRequest }) {
