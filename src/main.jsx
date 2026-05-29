@@ -2661,7 +2661,7 @@ function AnalyticsDashboard({ onBack }) {
                 color: (k.trend === 'up-good' ? k.change >= 0 : k.change < 0) ? '#22c55e' : '#ff4d6d'
               }}
             >
-              {k.change >= 0 ? 'Ã¢â€“Â²' : 'Ã¢â€“Â¼'} {Math.abs(k.change)}%
+              {k.change >= 0 ? 'Ã¢â€"Â²' : 'Ã¢â€"Â¼'} {Math.abs(k.change)}%
             </span>
           </div>
         ))}
@@ -2712,7 +2712,7 @@ function AnalyticsDashboard({ onBack }) {
                   </td>
                   <td>{m.shipments}</td>
                   <td style={{ color: m.trend === 'up' ? '#22c55e' : m.trend === 'down' ? '#ff4d6d' : 'var(--dim)' }}>
-                    {m.trend === 'up' ? 'Ã¢â€“Â²' : m.trend === 'down' ? 'Ã¢â€“Â¼' : 'Ã¢â‚¬â€'}
+                    {m.trend === 'up' ? 'Ã¢â€"Â²' : m.trend === 'down' ? 'Ã¢â€"Â¼' : 'Ã¢â‚¬â€'}
                   </td>
                 </tr>
               ))}
@@ -3818,7 +3818,7 @@ function LearningCentrePage({ navigate, onBack, reportMode = false }) {
                   <span>{finding.source_url ? <a href={finding.source_url} target="_blank" rel="noreferrer">Open source</a> : 'Source unavailable.'}</span>
                   <span title="Model self-assessment only. This is not a verified truth score.">{Number(finding.confidence_score || 0).toFixed(2)}</span>
                   <span>{finding.status}</span>
-                  <span>{finding.memory_saved ? 'Ã¢Å“â€œ' : 'Ã¢Å“â€”'}</span>
+                  <span>{finding.memory_saved ? 'Ã¢Å"â€œ' : 'Ã¢Å"â€"'}</span>
                   <span>{finding.tokens_processed || 0}</span>
                 </div>
               );
@@ -6345,7 +6345,7 @@ function BulkActionBar({ count, actions, onClear, onExport }) {
         )}
       </div>
       <button className="bulk-clear" onClick={onClear} aria-label="Clear selection">
-        Ã¢Å“â€¢ Clear
+        Ã¢Å"â€¢ Clear
       </button>
     </div>
   );
@@ -6779,7 +6779,7 @@ function RichKpiCard({ label, value, unit = '', change, trend, sparkData, color,
         <span className="rich-kpi-label">{label}</span>
         {change !== undefined && (
           <span className="rich-kpi-change" style={{ color: trendColor }}>
-            {isPositive ? 'Ã¢â€“Â²' : 'Ã¢â€“Â¼'} {Math.abs(change)}%
+            {isPositive ? 'Ã¢â€"Â²' : 'Ã¢â€"Â¼'} {Math.abs(change)}%
           </span>
         )}
       </div>
@@ -6900,9 +6900,9 @@ function DashboardActivityFeed() {
     { id: 1, time: '2m ago', actor: 'CFO', action: 'reviewed', subject: 'Q3 margin report', icon: 'Ã°Å¸â€œâ€¹', tone: 'blue' },
     { id: 2, time: '11m ago', actor: 'COO', action: 'escalated', subject: 'GCC shipment delay', icon: 'Ã¢Å¡Â Ã¯Â¸Â', tone: 'amber' },
     { id: 3, time: '28m ago', actor: 'System', action: 'generated', subject: 'Morning briefing draft', icon: 'Ã¢Å¡Â¡', tone: 'cyan' },
-    { id: 4, time: '1h ago', actor: 'CTO', action: 'resolved', subject: 'Automation retry queue', icon: 'Ã¢Å“â€¦', tone: 'green' },
-    { id: 5, time: '2h ago', actor: 'Director', action: 'approved', subject: 'New buyer quotation release', icon: 'Ã¢Å“â€œ', tone: 'green' },
-    { id: 6, time: '3h ago', actor: 'CMO', action: 'drafted', subject: 'GCC importer outreach email', icon: 'Ã¢Å“â€°', tone: 'blue' },
+    { id: 4, time: '1h ago', actor: 'CTO', action: 'resolved', subject: 'Automation retry queue', icon: 'Ã¢Å"â€¦', tone: 'green' },
+    { id: 5, time: '2h ago', actor: 'Director', action: 'approved', subject: 'New buyer quotation release', icon: 'Ã¢Å"â€œ', tone: 'green' },
+    { id: 6, time: '3h ago', actor: 'CMO', action: 'drafted', subject: 'GCC importer outreach email', icon: 'Ã¢Å"â€°', tone: 'blue' },
   ];
 
   return (
@@ -6929,7 +6929,7 @@ function DashboardActivityFeed() {
 }
 
 function HomeKpiStrip({ navigate }) {
-  const [kpis, setKpis] = useState({ leads: 0, pending: 0, tasks: 0, revenue: 'â€”', health: 'Checking...' });
+  const [kpis, setKpis] = useState({ leads: 0, pending: 0, tasks: 0, revenue: 'â€"', health: 'Checking...' });
 
   useEffect(() => {
     async function load() {
@@ -6943,7 +6943,7 @@ function HomeKpiStrip({ navigate }) {
           leads: (leadsResult.data || []).length,
           pending: (approvalsResult.data || []).filter(a => a.status === 'Pending Approval').length,
           tasks: (tasksResult.data || []).filter(t => !['Done', 'Completed'].includes(t.status)).length,
-          revenue: 'â€”',
+          revenue: 'â€"',
           health: 'Live',
         });
       } catch {
@@ -6983,7 +6983,7 @@ function HomeDirectorPreview({ navigate }) {
     <section className="home-panel">
       <div className="home-panel-header">
         <h2>Director Queue</h2>
-        <button className="ghost-button" onClick={() => navigate(‘/export-os/director’)}>View all →</button>
+        <button className="ghost-button" onClick={() => navigate('/export-os/director')}>View all →</button>
       </div>
       {items.length === 0
         ? <p className="home-panel-empty">No pending decisions. Agents are running.</p>
@@ -7795,18 +7795,18 @@ function getExecutivePriorities(command) {
 }
 
 const activeFounderWorkflows = [
-  { id: 'workflow-phyto', title: 'Phytosanitary certificate — SHP-2026-047 chilli powder', owner: 'COO Command', status: 'Blocked', route: '/export-os/executives/coo', priority: 'Critical' },
-  { id: 'workflow-lut', title: 'LUT invoice release gate — IEC & AD Code missing', owner: 'Director / Finance', status: 'Blocked', route: '/export-os/invoices/new', priority: 'Critical' },
-  { id: 'workflow-quote', title: 'Black pepper CFO pricing review — margin 14.2%', owner: 'CFO Command', status: 'Waiting Director Action', route: '/export-os/pricing-engine', priority: 'High' },
-  { id: 'workflow-sb', title: 'Shipping Bill filing — turmeric container JNPT', owner: 'COO Command', status: 'In Progress', route: '/export-os/executives/coo', priority: 'High' },
-  { id: 'workflow-lc', title: 'LC document presentation — UAE buyer Khalid Trading', owner: 'CFO Command', status: 'Review Pending', route: '/export-os/executives/cfo', priority: 'High' },
-  { id: 'workflow-cio', title: 'EU MRL update — chilli MRL tightened to 0.01 ppm', owner: 'CIO Command', status: 'Alert Active', route: '/export-os/executives/cio', priority: 'High' },
-  { id: 'workflow-rodtep', title: 'RoDTEP credit reconciliation — Q1 pending', owner: 'CFO Command', status: 'Monitoring', route: '/export-os/executives/cfo', priority: 'Medium' }
+  { id: 'workflow-phyto', title: 'Phytosanitary certificate -- SHP-2026-047 chilli powder', owner: 'COO Command', status: 'Blocked', route: '/export-os/executives/coo', priority: 'Critical' },
+  { id: 'workflow-lut', title: 'LUT invoice release gate -- IEC & AD Code missing', owner: 'Director / Finance', status: 'Blocked', route: '/export-os/invoices/new', priority: 'Critical' },
+  { id: 'workflow-quote', title: 'Black pepper CFO pricing review -- margin 14.2%', owner: 'CFO Command', status: 'Waiting Director Action', route: '/export-os/pricing-engine', priority: 'High' },
+  { id: 'workflow-sb', title: 'Shipping Bill filing -- turmeric container JNPT', owner: 'COO Command', status: 'In Progress', route: '/export-os/executives/coo', priority: 'High' },
+  { id: 'workflow-lc', title: 'LC document presentation -- UAE buyer Khalid Trading', owner: 'CFO Command', status: 'Review Pending', route: '/export-os/executives/cfo', priority: 'High' },
+  { id: 'workflow-cio', title: 'EU MRL update -- chilli MRL tightened to 0.01 ppm', owner: 'CIO Command', status: 'Alert Active', route: '/export-os/executives/cio', priority: 'High' },
+  { id: 'workflow-rodtep', title: 'RoDTEP credit reconciliation -- Q1 pending', owner: 'CFO Command', status: 'Monitoring', route: '/export-os/executives/cfo', priority: 'Medium' }
 ];
 
 const founderCriticalAlerts = [
   { id: 'alert-lut', title: 'LUT release gate blocked', detail: 'Invoices under LUT remain draft-only until vault LUT details and founder verification are complete. No shipment can proceed without this.', tone: 'attention', owner: 'Document Factory' },
-  { id: 'alert-margin', title: 'Low-margin quote pending CFO review', detail: 'A chilli powder quotation is showing 14.2% margin — below the 18% floor. CFO review required before Director release to buyer.', tone: 'attention', owner: 'CFO Command' },
+  { id: 'alert-margin', title: 'Low-margin quote pending CFO review', detail: 'A chilli powder quotation is showing 14.2% margin -- below the 18% floor. CFO review required before Director release to buyer.', tone: 'attention', owner: 'CFO Command' },
   { id: 'alert-phyto', title: 'Phytosanitary certificate delayed', detail: 'APEDA inspection for Shipment #SHP-2026-047 is overdue by 2 days. Port cutoff at JNPT is in 36 hours. COO escalation required.', tone: 'error', owner: 'COO Command' },
   { id: 'alert-spine', title: 'IEC and AD Code missing in vault', detail: 'Company Master Data Vault is missing IEC registration and AD Code. Shipping Bill cannot be filed without these. Founder action required.', tone: 'error', owner: 'Foundation Layer' }
 ];
@@ -9159,7 +9159,7 @@ function buildDirectorCommandResponse(query, items = [], directorData = {}) {
 }
 
 function DirectorCommandConsole({ value, setValue, onRun, response, history, navigate, onEscalate, onCreateFollowup }) {
-  const suggestions = ['What is pending this month?', 'How much marketing budget pending?', 'Show delayed shipments.', 'Any high-risk buyers?', 'What is blocking invoices?', 'What payments are pending?', 'Any Country pending opportunities?', 'Show today's priorities.'];
+  const suggestions = ['What is pending this month?', 'How much marketing budget pending?', 'Show delayed shipments.', 'Any high-risk buyers?', 'What is blocking invoices?', 'What payments are pending?', 'Any Country pending opportunities?', "Show today's priorities."];
   return (
     <section className="director-panel director-command-console">
       <div className="approval-section-header"><div><span>Director Command Input</span><h2>Ask GOPU OS anything operational</h2></div><Bot size={18} /></div>
@@ -11893,7 +11893,7 @@ function PricingEnginePage({ onBack, onOpenApprovalWall, onOpenTasks }) {
     const response = await initiatePayment(payload, demoTenantId);
     const status = response.data?.status || 'Payment request processed';
     const label = status === 'Auto-Paid'
-      ? 'Auto-Paid âœ“'
+      ? 'Auto-Paid âœ"'
       : status.includes('Director')
         ? 'Escalated to Director'
         : 'Sent to Slack for approval';
@@ -12685,21 +12685,21 @@ function FinanceNotesPanel({ productIntel, forexStatus, rates }) {
 
 const cfoFinanceData = {
   overviewMetrics: [
-    ['Pending quote approvals', '4', 'Director review gate active — no buyer release'],
-    ['Margin risk alerts', '3', 'Black pepper 14.2% — below 18% floor'],
+    ['Pending quote approvals', '4', 'Director review gate active -- no buyer release'],
+    ['Margin risk alerts', '3', 'Black pepper 14.2% -- below 18% floor'],
     ['Invoice approval pending', '2', 'LUT gate + HSN verification active'],
     ['RoDTEP & Drawback receivable', '₹2.4L', 'Q1 claim filed, ICEGATE pending'],
-    ['Receivables (LC/TT)', '5', 'USD 48,200 outstanding — 30-90d aging'],
-    ['Payables (supplier + freight)', '6', 'CFO controlled — no auto-pay'],
+    ['Receivables (LC/TT)', '5', 'USD 48,200 outstanding -- 30-90d aging'],
+    ['Payables (supplier + freight)', '6', 'CFO controlled -- no auto-pay'],
     ['Monthly working capital (PCFC)', '₹18.5L', 'Packing credit utilised this cycle'],
-    ['High-risk finance items', '5', 'Founder attention — FEMA overdue watch']
+    ['High-risk finance items', '5', 'Founder attention -- FEMA overdue watch']
   ],
   cashRows: [
-    ['PCFC utilisation', '₹18.5L drawn', 'Packing credit against confirmed LC — standard', 'Monitoring'],
-    ['Forward cover open', 'USD 25,000 @ 83.40', 'Hedged against USD/INR volatility — 90d', 'Covered'],
-    ['RoDTEP credit ledger', '₹2.4L pending', 'ICEGATE claim filed — awaiting credit', 'Review Required'],
-    ['Duty drawback claim', '₹68,000', 'Filed with customs — 45d expected realisation', 'Monitoring'],
-    ['Overdue EDPMS entries', '2 shipments', 'BRC/FIRC not filed — FEMA risk if >9 months', 'Attention']
+    ['PCFC utilisation', '₹18.5L drawn', 'Packing credit against confirmed LC -- standard', 'Monitoring'],
+    ['Forward cover open', 'USD 25,000 @ 83.40', 'Hedged against USD/INR volatility -- 90d', 'Covered'],
+    ['RoDTEP credit ledger', '₹2.4L pending', 'ICEGATE claim filed -- awaiting credit', 'Review Required'],
+    ['Duty drawback claim', '₹68,000', 'Filed with customs -- 45d expected realisation', 'Monitoring'],
+    ['Overdue EDPMS entries', '2 shipments', 'BRC/FIRC not filed -- FEMA risk if >9 months', 'Attention']
   ],
   receivablesRows: [
     ['Khalid Trading LLC', 'CI-UAE-031', 'USD 18,500', '2026-06-05', 'LC Presented', 'CFO Command'],
@@ -12709,25 +12709,25 @@ const cfoFinanceData = {
   ],
   payableRows: [
     ['Rajkot Chilli Mandi', 'Raw material procurement', '₹4,20,000', 'COO confirmation required', 'Supplier Control'],
-    ['Freight forwarder — JNPT', 'Sea freight + THC charges', '₹85,000', 'COO + CFO approval', 'Shipment System'],
-    ['CHA charges — SB filing', 'Custom house agent fees', '₹12,500', 'COO controlled', 'Customs'],
+    ['Freight forwarder -- JNPT', 'Sea freight + THC charges', '₹85,000', 'COO + CFO approval', 'Shipment System'],
+    ['CHA charges -- SB filing', 'Custom house agent fees', '₹12,500', 'COO controlled', 'Customs'],
     ['Fumigation agency', 'Methyl bromide treatment', '₹8,200', 'COO + quality clearance', 'Quality'],
     ['Insurance premium', 'Marine cargo insurance', '₹6,800', 'CFO auto-eligible', 'Payment Vault']
   ],
   marginRows: [
-    ['Chilli Powder 100MT', 'Khalid Trading UAE', 'UAE', '14.2%', 'Low Margin — Director Block'],
+    ['Chilli Powder 100MT', 'Khalid Trading UAE', 'UAE', '14.2%', 'Low Margin -- Director Block'],
     ['Turmeric Finger 50MT', 'Oman Wholesale', 'Oman', '22.4%', 'CFO Review Ready'],
     ['Cumin Seeds 30MT', 'Mueller Imports', 'Germany', '20.1%', 'Monitoring'],
-    ['Black Pepper 20MT', 'Singapore Spice House', 'Singapore', '18.8%', 'Approved — Dispatch Ready']
+    ['Black Pepper 20MT', 'Singapore Spice House', 'Singapore', '18.8%', 'Approved -- Dispatch Ready']
   ],
   riskRows: [
-    ['Low margin — chilli', 'High', 'Chilli powder quote at 14.2% — below 18% CFO floor. Director block active.'],
+    ['Low margin -- chilli', 'High', 'Chilli powder quote at 14.2% -- below 18% CFO floor. Director block active.'],
     ['FEMA overdue payments', 'High', '2 shipments without BRC/FIRC beyond 180 days. EDPMS filing required immediately.'],
-    ['USD/INR open exposure', 'Medium', 'USD 44,950 unhedged receivables — forward cover recommended at current 96.34 rate.'],
-    ['DA payment term risk', 'High', 'Singapore buyer requesting DA 30 days — first order, no credit history. Advance TT recommended.'],
-    ['Freight cost volatility', 'Medium', 'CIF/CFR quotes need updated freight confirmation — JNPT rates up 12% this month.'],
-    ['LC discrepancy risk', 'Medium', 'UAE LC clause requires specific phyto certificate wording — COO to verify before presentation.'],
-    ['Missing cost inputs', 'Critical', 'Raw material mandi rate not updated since last week — pricing engine using stale APMC data.']
+    ['USD/INR open exposure', 'Medium', 'USD 44,950 unhedged receivables -- forward cover recommended at current 96.34 rate.'],
+    ['DA payment term risk', 'High', 'Singapore buyer requesting DA 30 days -- first order, no credit history. Advance TT recommended.'],
+    ['Freight cost volatility', 'Medium', 'CIF/CFR quotes need updated freight confirmation -- JNPT rates up 12% this month.'],
+    ['LC discrepancy risk', 'Medium', 'UAE LC clause requires specific phyto certificate wording -- COO to verify before presentation.'],
+    ['Missing cost inputs', 'Critical', 'Raw material mandi rate not updated since last week -- pricing engine using stale APMC data.']
   ],
   reportRows: [
     ['Monthly finance summary', 'Draft report', 'Cash, payables, approvals, spend'],
@@ -14542,7 +14542,7 @@ function ValidationChecklist({ validation, navigate }) {
   const failed = validation.filter((check) => check.status === 'Failed');
   const groups = ['Company', 'LUT', 'Buyer', 'Product', 'Export', 'Approval', 'Commercial', 'Bank', 'Packing', 'Release', 'Document Type', 'Invoice', 'System'];
   const grouped = groups.map((group) => [group, validation.filter((check) => check.group === group)]).filter(([, rows]) => rows.length);
-  return <section className="invoice-side-panel validation-checklist-panel"><div className="approval-section-header"><div><span>Validation Checklist</span><h2>{failed.length ? `${failed.length} blockers` : 'Validation Passed'}</h2></div><TriangleAlert size={18} /></div><div className="validation-list grouped">{grouped.map(([group, rows]) => <div className="validation-group" key={group}><h3>{group}</h3>{rows.map((check) => <div className={check.status.toLowerCase()} key={check.key}><strong>{check.status === 'Passed' ? 'Ã¢Å“â€œ' : 'Blocked'} {check.message}</strong><span>{check.owner}</span>{check.status === 'Failed' && <button onClick={() => navigate(check.group === 'LUT' || check.group === 'Company' ? '/export-os/company-master-data' : check.group === 'Commercial' ? '/export-os/pricing-engine' : '/export-os/director')}>Fix</button>}</div>)}</div>)}</div></section>;
+  return <section className="invoice-side-panel validation-checklist-panel"><div className="approval-section-header"><div><span>Validation Checklist</span><h2>{failed.length ? `${failed.length} blockers` : 'Validation Passed'}</h2></div><TriangleAlert size={18} /></div><div className="validation-list grouped">{grouped.map(([group, rows]) => <div className="validation-group" key={group}><h3>{group}</h3>{rows.map((check) => <div className={check.status.toLowerCase()} key={check.key}><strong>{check.status === 'Passed' ? 'Ã¢Å"â€œ' : 'Blocked'} {check.message}</strong><span>{check.owner}</span>{check.status === 'Failed' && <button onClick={() => navigate(check.group === 'LUT' || check.group === 'Company' ? '/export-os/company-master-data' : check.group === 'Commercial' ? '/export-os/pricing-engine' : '/export-os/director')}>Fix</button>}</div>)}</div>)}</div></section>;
 }
 
 function ApprovalRoutingPanel({ invoice, blockers, navigate, onValidate, onCreateApproval }) {
@@ -14879,7 +14879,7 @@ function TaskFollowupEngine({ navigate, onBack }) {
       actionRequired: planText,
       source: 'COO Command'
     });
-    setTaskNotice('Plan sent to Slack âœ“');
+    setTaskNotice('Plan sent to Slack âœ"');
   }
 
   function prepareFounderSummary() {
@@ -16367,7 +16367,7 @@ function CTOCommandPage({ navigate, onBack }) {
       const result = await response.json().catch(() => ({}));
       setSaveState((current) => ({
         ...current,
-        [fieldId]: result.ok ? 'Saved âœ“ Restart dev server to apply' : result.message || 'Save failed'
+        [fieldId]: result.ok ? 'Saved âœ" Restart dev server to apply' : result.message || 'Save failed'
       }));
       if (result.ok) setInputs((current) => ({ ...current, [fieldId]: '' }));
     } catch (error) {
@@ -25575,7 +25575,7 @@ function CMOPostingTimeSettings({ preference }) {
 
 function CMOTopStatusStrip({ data }) {
   const items = [
-    ['Today's Focus', data.summary?.todayRunbook || '9:00 AM IST', CalendarClock],
+    ["Today's Focus", data.summary?.todayRunbook || '9:00 AM IST', CalendarClock],
     ['Growth Objective', '10% Optimization', Target],
     ['Budget Governance', 'CFO-Controlled', CircleDollarSign],
     ['Publishing Rule', 'Approval Queue First', ClipboardCheck],
@@ -26005,7 +26005,7 @@ function CMOOverviewWorkspaceV2({ data, output, onGenerateTodayPlan, onGenerateF
 function CMOOverviewWorkspace({ data, output, onGenerateTodayPlan, onGenerateFounderSummary, navigate }) {
   const summary = data.summary || {};
   const metrics = [
-    ['Today's content runbook', summary.todayRunbook || '8:39 AM IST', 'Monitoring'],
+    ["Today's content runbook", summary.todayRunbook || '8:39 AM IST', 'Monitoring'],
     ['Pending approvals', summary.pendingApprovals || 4, 'Founder review queue'],
     ['Campaign activity', summary.campaignActivity || 5, 'Active campaigns'],
     ['Buyer outreach activity', summary.buyerOutreachActivity || 7, 'Buyer CRM linked'],
