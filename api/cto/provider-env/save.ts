@@ -2,11 +2,6 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import { getCtoProviderEnvConfig } from "../../../lib/ctoEnvKeys.mjs";
 
-function isLocalRequest(req: any) {
-  const host = String(req.headers.host || "");
-  return host.startsWith("127.0.0.1") || host.startsWith("localhost");
-}
-
 function normalizeBody(req: any) {
   return typeof req.body === "string" ? JSON.parse(req.body || "{}") : (req.body || {});
 }
@@ -55,7 +50,7 @@ export default async function handler(req: any, res: any) {
     return res.status(405).json({ ok: false, status: "method_not_allowed" });
   }
 
-  if (process.env.VERCEL || !isLocalRequest(req)) {
+  if (process.env.VERCEL) {
     return res.status(200).json({
       ok: false,
       status: "manual_env_required",

@@ -1,7 +1,6 @@
 import crypto from "node:crypto";
 import { createClient } from "@supabase/supabase-js";
 
-const processedApprovalKeys = new Set<string>();
 const demoTenantId = "11111111-1111-1111-1111-111111111111";
 
 function env(name: string) {
@@ -200,11 +199,6 @@ export default async function handler(req: any, res: any) {
 
   const fallbackHash = crypto.createHash("sha256").update(rawBody).digest("hex");
   const idempotencyKey = String(payload.idempotency_key || action.action_ts || action.value || payload.callback_id || payload.trigger_id || payload.container?.message_ts || fallbackHash);
-  if (processedApprovalKeys.has(idempotencyKey)) {
-    res.status(200).json({ ok: true, status: "duplicate", message: "Slack approval already processed." });
-    return;
-  }
-
   const auditResult = await writeApprovalAuditLog(decision, {
     approval_id: String((value as any).approval_id || ""),
     module: String((value as any).module || "Founder Approval"),
@@ -226,7 +220,6 @@ export default async function handler(req: any, res: any) {
     return;
   }
 
-  processedApprovalKeys.add(idempotencyKey);
   const integrationResult = await upsertSlackIntegrationStatus("live", {
     event: "approval_action",
     decision,

@@ -487,7 +487,6 @@ async function recordApprovalAction(tenantId, request, actionType, nextStatus, r
       reason
     });
   }
-  if (error) await writeApprovalAudit(tenantId, request.id, { event: actionType, actor: 'Founder', status: nextStatus, reason });
   return syncWorkflowStatus(tenantId, request, nextStatus);
 }
 
