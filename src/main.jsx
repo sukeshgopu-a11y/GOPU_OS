@@ -4410,8 +4410,20 @@ function ShipmentTrackerPage({ navigate, onBack, shipmentId }) {
             onClear={clear}
             onExport={() => exportCSV(selectedItems, SHIPMENT_COLS, 'shipments')}
             actions={[
-              { label: 'Mark Completed', icon: CheckCircle2, onClick: () => {} },
-              { label: 'Escalate', icon: TriangleAlert, onClick: () => {} },
+              { label: 'Mark Completed', icon: CheckCircle2, onClick: async () => {
+                for (const s of selectedItems) {
+                  await updateShipmentStage(s, 'Delivered');
+                }
+                clear();
+                setNotice(`${selectedItems.length} shipment(s) marked as Delivered.`);
+              }},
+              { label: 'Escalate', icon: TriangleAlert, onClick: async () => {
+                for (const s of selectedItems) {
+                  await updateShipmentStage(s, 'Issue / Hold');
+                }
+                clear();
+                setNotice(`${selectedItems.length} shipment(s) escalated to Issue / Hold.`);
+              }},
             ]}
           />
           <SortableTableHeader
@@ -9670,6 +9682,20 @@ function FounderApprovalWall({ onBack, onOpenTasks }) {
           onFilterChange={(filters) => setActiveFilters(filters)}
           selectedId={selectedRequest?.id}
           onSelect={handleApprovalSelect}
+          onBulkApprove={async (items) => {
+            for (const item of items) {
+              const r = await approveRequest(demoTenantId, item, 'Bulk approved by Founder');
+              if (r?.ok && r.data?.id) replaceRequest(r.data);
+            }
+            show(`${items.length} request(s) approved`);
+          }}
+          onBulkReject={async (items) => {
+            for (const item of items) {
+              const r = await rejectRequest(demoTenantId, item, 'Bulk rejected by Founder');
+              if (r?.ok && r.data?.id) replaceRequest(r.data);
+            }
+            show(`${items.length} request(s) rejected`, 'warning');
+          }}
         />
         <div className="approval-center-stack">
           <ApprovalDetailPanel request={selectedRequest} onAction={requestApprovalAction} />
@@ -9731,7 +9757,7 @@ function ApprovalWallHeader({ onBack, onOpenTasks, pendingCount, highRiskCount }
   );
 }
 
-function ApprovalQueueList({ requests, filters, activeFilter, setActiveFilter, onFilterChange, selectedId, onSelect }) {
+function ApprovalQueueList({ requests, filters, activeFilter, setActiveFilter, onFilterChange, selectedId, onSelect, onBulkApprove, onBulkReject }) {
   const [page, setPage] = React.useState(1);
   const PER_PAGE = 20;
   const approvalRows = React.useMemo(() => requests.map((request) => ({
@@ -9798,8 +9824,8 @@ function ApprovalQueueList({ requests, filters, activeFilter, setActiveFilter, o
         onClear={aClear}
         onExport={() => exportCSV(aItems, APPROVAL_COLS, 'approvals')}
         actions={[
-          { label: 'Approve All', icon: CheckCircle2, onClick: () => {} },
-          { label: 'Reject All', icon: AlertTriangle, cls: 'danger-button', onClick: () => {} },
+          { label: 'Approve All', icon: CheckCircle2, onClick: async () => { if (onBulkApprove) { await onBulkApprove(aItems); aClear(); } } },
+          { label: 'Reject All', icon: AlertTriangle, cls: 'danger-button', onClick: async () => { if (onBulkReject) { await onBulkReject(aItems); aClear(); } } },
         ]}
       />
       <SortableTableHeader
