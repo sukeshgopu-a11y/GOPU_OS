@@ -425,3 +425,107 @@ notify pgrst, 'reload schema';
 | 6 Shipping | COO uploads BL, confirms vessel/ETA | CFO presents docs to bank | Director notified: goods shipped, BL date confirmed |
 | 7 Payment | COO marks order complete | CFO records payment, generates eBRC | Director receives final P&L summary |
 
+---
+
+## FULL API REFERENCE — All Endpoints in GOPU OS
+
+### Slack
+
+| Method | Path | Purpose |
+|---|---|---|
+| POST | `/api/slack/events` | Slack event webhook — receives messages, detects leads, runs COO→CFO→Director pipeline |
+| GET/POST | `/api/slack/sync-leads` | Cron: every 5 min — syncs lead status back to Slack thread (runs `*/5 * * * *`) |
+
+### CFO / Pricing
+
+| Method | Path | Purpose |
+|---|---|---|
+| GET | `/api/prices/market` | Returns live commodity prices from `commodity_prices` table, merged with reference fallbacks. Used by CFO Pricing Engine and Quotations tab |
+| POST | `/api/prices/market` | CFO manually updates a commodity price with source and note |
+
+### Export Pipeline
+
+| Method | Path | Purpose |
+|---|---|---|
+| POST | `/api/export/stages` | Creates a new export order (Stage 1) or advances an order to the next stage. Called internally by Slack handler and COO pipeline UI |
+
+### Cron Jobs (Scheduled — Vercel)
+
+| Schedule | Path | Purpose |
+|---|---|---|
+| `30 3 * * *` (9 AM IST) | `/api/cron/morning-price-fetch` | Fetches live commodity prices from Agmarknet (data.gov.in), updates `commodity_prices` table, sends Slack price report |
+| `0 3 * * *` (8:30 AM IST) | `/api/cron/daily-social-trigger` | Triggers CMO daily social media posts (LinkedIn, Instagram, Facebook) |
+| `*/5 * * * *` | `/api/slack/sync-leads` | Syncs leads every 5 minutes |
+
+### CTO Integrations
+
+| Method | Path | Purpose |
+|---|---|---|
+| GET | `/api/cto/integrations` | Returns status of all platform integrations (Slack, WhatsApp, Meta, etc.) |
+
+---
+
+## FULL ENV VARS REFERENCE — Add in Vercel Dashboard
+
+Vercel → Project → Settings → Environment Variables
+
+### Required Right Now (System Broken Without These)
+
+| Variable | Value / Where to Get |
+|---|---|
+| `SUPABASE_URL` | `https://ogrmmhlaxfxrtpdzzwti.supabase.co` |
+| `SUPABASE_SERVICE_ROLE_KEY` | Supabase → Project Settings → API → service_role key |
+| `SLACK_BOT_TOKEN` | Slack API → Your App → OAuth & Permissions → Bot User OAuth Token |
+| `SLACK_CHANNEL_ID` | Right-click channel in Slack → Copy Link → last part is the ID |
+| `SLACK_SIGNING_SECRET` | Slack API → Your App → Basic Information → Signing Secret |
+
+### Required for Live Commodity Prices (Morning Cron)
+
+| Variable | Value / Where to Get |
+|---|---|
+| `DATA_GOV_API_KEY` | Register free at data.gov.in → My Account → API Keys. Unlocks Agmarknet live mandi prices |
+| `CRON_SECRET` | Generate any random string (e.g. `openssl rand -hex 32`) — secures cron endpoints |
+
+### Required for Social Media Posting (CMO)
+
+| Variable | Value / Where to Get |
+|---|---|
+| `META_ACCESS_TOKEN` | Meta Business → Graph API Explorer → generate long-lived token |
+| `INSTAGRAM_BUSINESS_ACCOUNT_ID` | Meta Business → Instagram Account → Settings → ID |
+| `FACEBOOK_PAGE_ID` | Facebook Page → About → Page ID |
+| `LINKEDIN_ACCESS_TOKEN` | LinkedIn Developer Portal → OAuth 2.0 → `w_member_social` scope |
+| `LINKEDIN_ORGANIZATION_ID` | LinkedIn Company Page URL — last number in the URL |
+
+### Optional
+
+| Variable | Value / Where to Get |
+|---|---|
+| `NEXT_PUBLIC_SUPABASE_URL` | Same as SUPABASE_URL — used by frontend |
+| `VITE_SUPABASE_URL` | Same as SUPABASE_URL — used by Vite frontend build |
+| `VITE_SUPABASE_ANON_KEY` | Supabase → Project Settings → API → anon/public key |
+
+---
+
+## QUICK CHECKLIST — What to Run / Set Up
+
+### One-time Supabase SQL (run in order)
+- [ ] Step 0 — `commodity_prices` table
+- [ ] Step 1 — `lead_intake`, `pricing_requests`, `tasks`, `ai_agent_runs`, `integration_services`, `slack_event_dedup`
+- [ ] Step 2 — `founder_approvals` missing columns
+- [ ] Step 3 — permissions (service_role grants)
+- [ ] Step 4 — `export_orders`, `export_documents`, `export_stage_logs`, `export_agent_comms`
+
+### Vercel Env Vars to Add
+- [ ] `SUPABASE_URL` + `SUPABASE_SERVICE_ROLE_KEY`
+- [ ] `SLACK_BOT_TOKEN` + `SLACK_CHANNEL_ID` + `SLACK_SIGNING_SECRET`
+- [ ] `DATA_GOV_API_KEY` — for live 9 AM price fetch
+- [ ] `CRON_SECRET` — for securing cron endpoints
+- [ ] Meta / LinkedIn tokens — for CMO social posting
+
+### After SQL + Env Vars — Test This Flow
+Send in Slack `#exports-command-center`:
+```
+New lead: 10 MT Red Chilli, buyer Ahmed Trading from Dubai, need FOB quote
+```
+Expected: Bot replies with price, COO shows lead, Director shows approval, 9 AM cron updates prices daily.
+
