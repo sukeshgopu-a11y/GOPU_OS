@@ -709,6 +709,8 @@ export function buildReply(result: any) {
   return rows.join("\n");
 }
 
+export const config = { api: { bodyParser: false } };
+
 export default async function handler(req: any, res: any) {
   // Health check — lets us verify endpoint is live and config is set
   if (req.method === "GET") {
