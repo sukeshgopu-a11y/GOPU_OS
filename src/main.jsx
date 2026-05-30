@@ -2860,6 +2860,7 @@ function setLocalAuthSession(osId) {
 function App() {
   useRipple();
   usePrintReady();
+  const [isPending, startTransition] = React.useTransition();
   const [route, setRoute] = useState(() => window.location.pathname);
   const [authState, setAuthState] = useState(() => ({
     ready: true,
@@ -2898,13 +2899,13 @@ function App() {
   ) : null;
   const withSessionWarning = (node) => (
     <>
-      <AnimatePresence mode="wait">
+      <AnimatePresence>
         <motion.div
           key={route}
-          initial={{ opacity: 0, y: 8 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: -8 }}
-          transition={{ duration: 0.18, ease: [0.16, 1, 0.3, 1] }}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.1 }}
           style={{ minHeight: 0 }}
         >
           {node}
@@ -2972,7 +2973,7 @@ function App() {
     if (window.location.pathname !== path) {
       window.history.pushState({}, '', path);
     }
-    setRoute(path);
+    startTransition(() => setRoute(path));
     announceToSR(`Navigated to ${getRouteAnnouncement(path)}`);
   }
 
