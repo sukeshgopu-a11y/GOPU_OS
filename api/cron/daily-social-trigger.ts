@@ -1,6 +1,7 @@
 // @ts-nocheck
 import { createClient } from "@supabase/supabase-js";
 import { DateTime } from "luxon";
+import { runCmoPublishingEngine } from "../../lib/cmoPublishingEngine.mjs";
 
 type PostingSetting = {
   id: string;
@@ -337,6 +338,41 @@ export default async function handler(req: any, res: any) {
 
     if (dueSchedules.length) {
       await writeAudit(activeClient, "vercel_cron_schedule_due", "success", `${dueSchedules.length} due schedule(s) found.`, { tenant_id: selectedSetting.tenant_id, due_count: dueSchedules.length });
+
+      // Trigger actual publishing for all due platforms
+      const dryRun = env("DRY_RUN") === "true";
+      let publishSummary = null;
+      try {
+        publishSummary = await runCmoPublishingEngine({ client: activeClient, limit: 10, dryRun });
+        await writeAudit(activeClient, "vercel_cron_publish_triggered", publishSummary.ok ? "success" : "failed",
+          dryRun ? "Dry-run publish completed." : `Publishing completed: ${publishSummary.processed} processed, ${publishSummary.results?.filter((r: any) => r.ok).length || 0} succeeded.`,
+          { tenant_id: selectedSetting.tenant_id, dry_run: dryRun, processed: publishSummary.processed, selected: publishSummary.selected }
+        );
+      } catch (publishError) {
+        const msg = publishError instanceof Error ? publishError.message : "Unknown publishing error";
+        console.error("[cron] Publishing engine failed safely:", msg);
+        await writeAudit(activeClient, "vercel_cron_publish_triggered", "failed", `Publishing engine failed safely: ${msg}`, { tenant_id: selectedSetting.tenant_id });
+      }
+
+      // Send Slack summary of what was posted
+      const webhookUrl = env("SLACK_WEBHOOK_URL");
+      if (webhookUrl && publishSummary) {
+        const succeeded = (publishSummary.results || []).filter((r: any) => r.ok);
+        const failed = (publishSummary.results || []).filter((r: any) => !r.ok);
+        const lines = [
+          `*GOPU OS — Daily Post Summary* (9am IST)`,
+          dryRun ? "_Dry-run mode — no posts were published_" : "",
+          `✓ Published: ${succeeded.length}`,
+          failed.length ? `✗ Failed: ${failed.length}` : "",
+          ...succeeded.map((r: any) => `  • ${r.content_history?.platform || "Platform"}: ${r.content_history?.post_url || r.message || "posted"}`),
+          failed.length ? `\nFailed items require manual review in GOPU OS CMO.` : ""
+        ].filter(Boolean).join("\n");
+        fetch(webhookUrl, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ text: lines })
+        }).catch(() => null);
+      }
     } else {
       await writeAudit(activeClient, "vercel_cron_schedule_not_due", "success", "No CMO social schedule due in this cron window.", { tenant_id: selectedSetting.tenant_id });
     }
