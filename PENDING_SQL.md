@@ -465,6 +465,59 @@ notify pgrst, 'reload schema';
 
 ---
 
+### Required APIs — To Build
+
+These endpoints are needed to power the live dashboards. Currently returning mock/static data; backend implementation required.
+
+#### CTO Required APIs
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `GET` | `/api/cto/integrations` | Live integration status for all platforms (Slack, WhatsApp, Meta, LinkedIn, Email, Supabase) |
+| `POST` | `/api/cto/integrations/:platform/test` | Test connection for a specific integration |
+| `GET` | `/api/cto/incidents` | Active system incidents and alerts |
+| `GET` | `/api/cto/health` | System health summary (DB, API, cron jobs, latency) |
+| `POST` | `/api/cto/payment-requirements` | Log a new tool/service payment requirement |
+
+#### CFO Required APIs
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `GET` | `/api/cfo/dashboard` | Full CFO dashboard data (P&L, receivables, payables) |
+| `GET` | `/api/cfo/receivables` | All pending receivables with aging |
+| `GET` | `/api/cfo/payables` | Upcoming payables and subscription renewals |
+| `GET` | `/api/cfo/margin-analytics` | Product margin breakdown by commodity |
+| `POST` | `/api/cfo/payment` | Initiate a payment record |
+
+#### COO Required APIs
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `GET` | `/api/coo/tasks` | All active tasks with status and owner |
+| `GET` | `/api/coo/summary` | COO dashboard summary (pipeline, blocked, priorities) |
+| `GET` | `/api/coo/shipments` | Active shipment tracker data |
+| `POST` | `/api/coo/tasks/:id/status` | Update task status |
+
+#### Director Required APIs
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `GET` | `/api/director/approvals` | Pending approval queue with full context |
+| `POST` | `/api/director/approvals/:id/approve` | Approve a request |
+| `POST` | `/api/director/approvals/:id/reject` | Reject a request with reason |
+| `GET` | `/api/director/summary` | Director command data (P&L snapshot, top risks, pipeline) |
+
+#### CMO Required APIs
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `GET` | `/api/cmo/campaigns` | All active campaigns |
+| `GET` | `/api/cmo/content-calendar` | Content calendar with approval queue |
+| `POST` | `/api/cmo/social/publish` | Trigger a social post (Meta/LinkedIn/Instagram) |
+| `GET` | `/api/cmo/analytics` | Social and marketing analytics |
+
+---
+
 ## FULL ENV VARS REFERENCE — Add in Vercel Dashboard
 
 Vercel → Project → Settings → Environment Variables

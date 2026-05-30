@@ -444,6 +444,7 @@ import {
 } from './services/learningCentreService.js';
 import { getTrustCenterData } from './services/trustCenterService.js';
 import './styles.css';
+import './premium.css';
 
 function announceToSR(message, priority = 'polite') {
   const id = priority === 'assertive' ? 'sr-alert' : 'sr-announcer';
