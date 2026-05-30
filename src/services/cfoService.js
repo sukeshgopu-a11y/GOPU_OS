@@ -388,7 +388,7 @@ export async function getCFODashboard(tenantId = demoTenantId) {
           .from('lead_intake')
           .select('id, company_name, estimated_value, status, created_at')
           .eq('tenant_id', tenantId)
-          .in('status', ['Won', 'Invoiced', 'Active', 'Negotiation'])
+          .in('status', ['Won', 'Invoiced', 'Active', 'Negotiation', 'Pending COO Verification', 'Completed'])
           .order('created_at', { ascending: false })
           .limit(20),
       ]);

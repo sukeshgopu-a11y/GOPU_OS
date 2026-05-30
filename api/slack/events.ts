@@ -690,23 +690,33 @@ export async function processLead(event: Record<string, any>, text: string, opti
 
 export function buildReply(result: any) {
   const { lead, pricing, amount, issues, cooTask, cfoTask, approval } = result;
+  const pricePerUnit = formatMoney(pricing.recommendedPricePerUnit, pricing.currency);
+  const cooStatus = cooTask.data?.id ? "✅ Verified" : "⏳ Queued";
+  const cfoStatus = cfoTask.data?.id ? "✅ Priced" : "⏳ Queued";
+  const dirStatus = approval.data?.id ? "⏳ Pending your approval" : "⏳ Queued";
+
   const rows = [
-    "*GOPU OS Slack lead received*",
-    `Buyer/company: ${lead.company_name}`,
-    `Product: ${lead.quantity} ${lead.unit} ${lead.product}`,
-    `Destination: ${lead.destination_country}`,
-    `Incoterm: ${pricing.incoterm}`,
-    `CFO pricing estimate: ${amount} total, ${formatMoney(pricing.recommendedPricePerUnit, pricing.currency)} per ${lead.unit}`,
-    `Margin: ${pricing.achievedMarginPercent}% | Lead time: ${pricing.seaLeadTime}`,
-    "",
-    "*AI Agent Routing*",
-    `AI COO Agent: ${cooTask.data?.id ? `completed (${cooTask.data.id})` : "not created"}`,
-    `AI CFO Agent: ${cfoTask.data?.id ? `completed (${cfoTask.data.id})` : "not created"}`,
-    `Director approval: ${approval.data?.id ? `pending (${approval.data.id})` : "not created"}`,
-    "",
-    "No quote, posting, or final invoice will proceed until Director approval is completed.",
+    `✅ *New Lead Received — GOPU OS*`,
+    ``,
+    `*Buyer:* ${lead.company_name}`,
+    `*Product:* ${lead.quantity} ${lead.unit.toUpperCase()} ${lead.product}`,
+    `*Destination:* ${lead.destination_country}`,
+    `*Incoterm:* ${pricing.incoterm || lead.incoterm}`,
+    ``,
+    `💰 *CFO Pricing Estimate*`,
+    `• Total: *${amount}*`,
+    `• Per ${lead.unit.toUpperCase()}: *${pricePerUnit}*`,
+    `• Margin: ${pricing.achievedMarginPercent}%`,
+    `• Delivery: ${pricing.seaLeadTime}`,
+    ``,
+    `🤖 *Agent Pipeline*`,
+    `• COO Operations: ${cooStatus}`,
+    `• CFO Pricing: ${cfoStatus}`,
+    `• Director Approval: ${dirStatus}`,
+    ``,
+    `⚠️ This is an internal estimate only. No quote or invoice will be sent to the buyer until you approve in GOPU OS Director panel.`,
   ];
-  if (issues.length) rows.push("", "*Blockers*", ...issues.map((issue: string) => `- ${issue}`));
+  if (issues.length) rows.push("", `⚠️ *Note:* ${issues.slice(0, 2).join(" | ")}`);
   return rows.join("\n");
 }
 
