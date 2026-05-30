@@ -2,6 +2,7 @@
 import crypto from "node:crypto";
 import { createClient } from "@supabase/supabase-js";
 import { runPricingEngine } from "../../src/services/pricingEngineService.js";
+import { createExportOrder } from "../export/stages.js";
 
 const demoTenantId = "11111111-1111-1111-1111-111111111111";
 
@@ -529,6 +530,9 @@ export async function processLead(event: Record<string, any>, text: string, opti
   const leadId = leadResult.data?.id || lead.id;
   const leadRecord = { ...lead, ...(existingLead || {}), id: leadId, status: "Completed" };
 
+  // Create export order at Stage 1 — kicks off COO ↔ CFO ↔ Director pipeline
+  const exportOrderId = await createExportOrder(client, leadRecord, pricing).catch(() => null);
+
   const leadAgent = await runAgent(client, "AI Lead Intake Agent", leadRecord, pricing, {
     status: lead.product === "Requested product" ? "Needs Review" : "Completed",
     department: "Lead Intake",
@@ -684,12 +688,13 @@ export async function processLead(event: Record<string, any>, text: string, opti
     salesTask,
     directorTask,
     approval,
+    exportOrderId,
     agentRuns: [leadAgent, cooTask, cfoTask, logisticsTask, complianceTask, salesTask, directorTask],
   };
 }
 
 export function buildReply(result: any) {
-  const { lead, pricing, amount, issues, cooTask, cfoTask, approval } = result;
+  const { lead, pricing, amount, issues, cooTask, cfoTask, approval, exportOrderId } = result;
   const pricePerUnit = formatMoney(pricing.recommendedPricePerUnit, pricing.currency);
   const cooStatus = cooTask.data?.id ? "✅ Verified" : "⏳ Queued";
   const cfoStatus = cfoTask.data?.id ? "✅ Priced" : "⏳ Queued";
@@ -709,13 +714,18 @@ export function buildReply(result: any) {
     `• Margin: ${pricing.achievedMarginPercent}%`,
     `• Delivery: ${pricing.seaLeadTime}`,
     ``,
-    `🤖 *Agent Pipeline*`,
-    `• COO Operations: ${cooStatus}`,
-    `• CFO Pricing: ${cfoStatus}`,
+    `📋 *Export Pipeline — Stage 1 of 7: Proforma Invoice*`,
+    `• COO: ${cooStatus}`,
+    `• CFO: ${cfoStatus}`,
     `• Director Approval: ${dirStatus}`,
+    exportOrderId ? `• Order Ref: ${exportOrderId.slice(0, 8).toUpperCase()}` : "",
     ``,
-    `⚠️ This is an internal estimate only. No quote or invoice will be sent to the buyer until you approve in GOPU OS Director panel.`,
-  ];
+    `*Next steps in GOPU OS:*`,
+    `1️⃣ Director approves Proforma → 2️⃣ Send PI to buyer → 3️⃣ Buyer confirms order`,
+    `4️⃣ Lab testing + pre-shipment docs → 5️⃣ Customs → 6️⃣ Shipping → 7️⃣ Payment`,
+    ``,
+    `⚠️ No quote or invoice sent to buyer until Director approval in GOPU OS.`,
+  ].filter(line => line !== "");
   if (issues.length) rows.push("", `⚠️ *Note:* ${issues.slice(0, 2).join(" | ")}`);
   return rows.join("\n");
 }
