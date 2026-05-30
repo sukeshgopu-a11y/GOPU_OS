@@ -10411,31 +10411,38 @@ const pricingCostRowsSeed = [
   ['commission_cost', 'Commission'],
   ['misc_cost', 'Misc / Contingency']
 ];
+// Reference-only fallbacks — CFO must set live prices in Market Prices tab
 const pricingMarketFallbacks = {
-  pepper: 708,
-  cardamom: 2419.4,
-  cinnamon: 320,
-  clove: 810,
-  coriander: 85,
-  cumin: 230,
+  pepper:    680,
+  cardamom:  2200,
+  cinnamon:  320,
+  clove:     820,
+  coriander: 90,
+  cumin:     250,
   fenugreek: 75,
-  chilli: 180,
-  mustard: 65,
-  turmeric: 132.22
+  chilli:    120,
+  mustard:   65,
+  turmeric:  148,
+  rice:      68,
+  onion:     20,
+  garlic:    32,
 };
 
+// baseInrPerKg here is the FALLBACK reference only — live price from CFO Market Prices tab overrides this
 const pricingCommercialPresets = {
-  pepper: { baseInrPerKg: 708, packagingInrPerKg: 10.5, processingInrPerKg: 15, laborInrPerKg: 4.8, overheadInrPerKg: 6.5, complexity: 'Medium', packing: '25 KG moisture-protected export bags', category: 'Spice Board product' },
-  turmeric: { baseInrPerKg: 132.22, packagingInrPerKg: 8.5, processingInrPerKg: 12, laborInrPerKg: 3.8, overheadInrPerKg: 5.5, complexity: 'Medium', packing: '25 KG PP bags or retail master cartons', category: 'Spice Board / APEDA product' },
-  chilli: { baseInrPerKg: 180, packagingInrPerKg: 9.5, processingInrPerKg: 13.5, laborInrPerKg: 4.2, overheadInrPerKg: 6, complexity: 'High', packing: '10 KG cartons or 25 KG PP bags', category: 'Spice Board product' },
-  coriander: { baseInrPerKg: 85, packagingInrPerKg: 7.5, processingInrPerKg: 9.5, laborInrPerKg: 3.2, overheadInrPerKg: 4.8, complexity: 'Medium', packing: '25 KG PP bags / 50 KG bulk bags after cleaning', category: 'Spice Board seed spice' },
-  cumin: { baseInrPerKg: 230, packagingInrPerKg: 10, processingInrPerKg: 16, laborInrPerKg: 5.5, overheadInrPerKg: 8.4, complexity: 'Medium', packing: '25 KG PP bags / kraft bags with moisture protection', category: 'Spice Board seed spice' },
-  cardamom: { baseInrPerKg: 2419.4, packagingInrPerKg: 14, processingInrPerKg: 22, laborInrPerKg: 6.5, overheadInrPerKg: 10, complexity: 'High', packing: 'Vacuum / premium cartons after buyer approval', category: 'Spice Board product' },
-  fenugreek: { baseInrPerKg: 75, packagingInrPerKg: 7.5, processingInrPerKg: 9, laborInrPerKg: 3.1, overheadInrPerKg: 4.5, complexity: 'Medium', packing: '25 KG PP bags / 50 KG bulk bags after cleaning', category: 'Spice Board seed spice' },
-  mustard: { baseInrPerKg: 65, packagingInrPerKg: 7, processingInrPerKg: 8.5, laborInrPerKg: 3, overheadInrPerKg: 4.2, complexity: 'Medium', packing: '25 KG PP bags / 50 KG bulk bags', category: 'Seed spice / oilseed product' },
-  rice: { baseInrPerKg: 68, packagingInrPerKg: 6, processingInrPerKg: 7, laborInrPerKg: 2.5, overheadInrPerKg: 4, complexity: 'Medium', packing: '25 KG / 50 KG woven export bags', category: 'APEDA product' },
-  'seed-spice': { baseInrPerKg: 115, packagingInrPerKg: 8, processingInrPerKg: 9.5, laborInrPerKg: 3.2, overheadInrPerKg: 4.8, complexity: 'Medium', packing: '25 KG / 50 KG seed-spice export bags', category: 'Spice Board seed spice' },
-  default: { baseInrPerKg: 115, packagingInrPerKg: 8, processingInrPerKg: 9, laborInrPerKg: 3, overheadInrPerKg: 4.5, complexity: 'Medium', packing: 'Buyer-specific export packing', category: 'Export product' }
+  pepper:      { baseInrPerKg: 680,  packagingInrPerKg: 10.5, processingInrPerKg: 15,   laborInrPerKg: 4.8, overheadInrPerKg: 6.5,  complexity: 'Medium', packing: '25 KG moisture-protected export bags',           category: 'Spice Board product' },
+  turmeric:    { baseInrPerKg: 148,  packagingInrPerKg: 8.5,  processingInrPerKg: 12,   laborInrPerKg: 3.8, overheadInrPerKg: 5.5,  complexity: 'Medium', packing: '25 KG PP bags or retail master cartons',          category: 'Spice Board / APEDA product' },
+  chilli:      { baseInrPerKg: 120,  packagingInrPerKg: 9.5,  processingInrPerKg: 13.5, laborInrPerKg: 4.2, overheadInrPerKg: 6,    complexity: 'High',   packing: '10 KG cartons or 25 KG PP bags',                   category: 'Spice Board product' },
+  coriander:   { baseInrPerKg: 90,   packagingInrPerKg: 7.5,  processingInrPerKg: 9.5,  laborInrPerKg: 3.2, overheadInrPerKg: 4.8,  complexity: 'Medium', packing: '25 KG PP bags / 50 KG bulk bags after cleaning',   category: 'Spice Board seed spice' },
+  cumin:       { baseInrPerKg: 250,  packagingInrPerKg: 10,   processingInrPerKg: 16,   laborInrPerKg: 5.5, overheadInrPerKg: 8.4,  complexity: 'Medium', packing: '25 KG PP bags / kraft bags with moisture protection', category: 'Spice Board seed spice' },
+  cardamom:    { baseInrPerKg: 2200, packagingInrPerKg: 14,   processingInrPerKg: 22,   laborInrPerKg: 6.5, overheadInrPerKg: 10,   complexity: 'High',   packing: 'Vacuum / premium cartons after buyer approval',       category: 'Spice Board product' },
+  fenugreek:   { baseInrPerKg: 75,   packagingInrPerKg: 7.5,  processingInrPerKg: 9,    laborInrPerKg: 3.1, overheadInrPerKg: 4.5,  complexity: 'Medium', packing: '25 KG PP bags / 50 KG bulk bags after cleaning',   category: 'Spice Board seed spice' },
+  mustard:     { baseInrPerKg: 65,   packagingInrPerKg: 7,    processingInrPerKg: 8.5,  laborInrPerKg: 3,   overheadInrPerKg: 4.2,  complexity: 'Medium', packing: '25 KG PP bags / 50 KG bulk bags',                  category: 'Seed spice / oilseed product' },
+  rice:        { baseInrPerKg: 68,   packagingInrPerKg: 6,    processingInrPerKg: 7,    laborInrPerKg: 2.5, overheadInrPerKg: 4,    complexity: 'Medium', packing: '25 KG / 50 KG woven export bags',                  category: 'APEDA product' },
+  onion:       { baseInrPerKg: 20,   packagingInrPerKg: 4,    processingInrPerKg: 5,    laborInrPerKg: 2,   overheadInrPerKg: 3,    complexity: 'Low',    packing: '25/50 KG mesh bags',                               category: 'APEDA product' },
+  garlic:      { baseInrPerKg: 32,   packagingInrPerKg: 4.5,  processingInrPerKg: 5.5,  laborInrPerKg: 2.2, overheadInrPerKg: 3.5,  complexity: 'Low',    packing: '10/25 KG mesh bags',                               category: 'APEDA product' },
+  'seed-spice':{ baseInrPerKg: 115,  packagingInrPerKg: 8,    processingInrPerKg: 9.5,  laborInrPerKg: 3.2, overheadInrPerKg: 4.8,  complexity: 'Medium', packing: '25 KG / 50 KG seed-spice export bags',             category: 'Spice Board seed spice' },
+  default:     { baseInrPerKg: 115,  packagingInrPerKg: 8,    processingInrPerKg: 9,    laborInrPerKg: 3,   overheadInrPerKg: 4.5,  complexity: 'Medium', packing: 'Buyer-specific export packing',                      category: 'Export product' },
 };
 
 const pricingCountryFreightProfiles = {
@@ -11672,7 +11679,9 @@ function PricingEnginePage({ onBack, onOpenApprovalWall, onOpenTasks }) {
   const [costRows, setCostRows] = useState(() => buildAiAssistedCostRows(defaultPricingInputs));
   const [errors, setErrors] = useState({});
   const [audit, setAudit] = useState(pricingAuditEvents);
-  const [message, setMessage] = useState('Pricing logic is running in Connect Supabase to activate. Old GOPU OS source file verification is still required before commercial sign-off.');
+  const [message, setMessage] = useState('CFO Pricing Engine ready.');
+  const [liveMarketPrices, setLiveMarketPrices] = useState({});
+  const [priceLoadStatus, setPriceLoadStatus] = useState('loading'); // loading | live | stale | reference
   const [cfoData, setCfoData] = useState(() => ({
     dashboard: null,
     weeklyPnl: null,
@@ -11694,6 +11703,37 @@ function PricingEnginePage({ onBack, onOpenApprovalWall, onOpenTasks }) {
   const productIntel = useMemo(() => getProductIntelligence(getDisplayProduct(inputs)), [inputs.product_name, inputs.custom_product_name]);
   const approvalReasons = useMemo(() => getCfoApprovalReasons(inputs, calc, risk, costRows, productIntel), [inputs, calc, risk, costRows, productIntel]);
   const founderReviewStatus = approvalReasons.length ? 'Director Review Required' : 'CFO Review Ready';
+
+  // Fetch live market prices from CFO Market Prices table
+  useEffect(() => {
+    fetch('/api/prices/market')
+      .then(r => r.json())
+      .then(d => {
+        if (!d.ok) return;
+        setLiveMarketPrices(d.prices || {});
+        const hasLive = Object.values(d.prices || {}).some(p => !p.is_fallback && !p.stale);
+        const hasStale = Object.values(d.prices || {}).some(p => !p.is_fallback && p.stale);
+        setPriceLoadStatus(hasLive ? 'live' : hasStale ? 'stale' : 'reference');
+      })
+      .catch(() => setPriceLoadStatus('reference'));
+  }, []);
+
+  // When product changes, auto-fill raw material cost from live market price
+  useEffect(() => {
+    const pKey = marketProductKey(getDisplayProduct(inputs));
+    const lp = liveMarketPrices[pKey];
+    if (lp?.price_inr_per_kg) {
+      const newPrice = String(lp.price_inr_per_kg);
+      if (inputs.market_reference_price !== newPrice) {
+        setInputs(prev => ({ ...prev, market_reference_price: newPrice }));
+        setCostRows(prev => prev.map(r =>
+          r.key === 'raw_material_cost'
+            ? { ...r, amount: lp.price_inr_per_kg, notes: `Live: ${lp.source || 'CFO Market Prices'}${lp.stale ? ' (stale — update in Market Prices tab)' : ''}` }
+            : r
+        ));
+      }
+    }
+  }, [inputs.product_name, inputs.custom_product_name, liveMarketPrices]);
 
   useEffect(() => {
     let active = true;
@@ -12037,20 +12077,40 @@ function PricingEnginePage({ onBack, onOpenApprovalWall, onOpenTasks }) {
         </section>
       )}
       {activeTab === 'Quotations' ? (
-        <QuotationSopPricingPage
-          inputs={inputs}
-          errors={errors}
-          costRows={costRows}
-          calc={calc}
-          rates={rates}
-          risk={risk}
-          approvalReasons={approvalReasons}
-          updateInput={updateInput}
-          updateCostRow={updateCostRow}
-          onRun={validateAndRun}
-          onRouteDirectorReview={routePricingApproval}
-          onChannelApplied={recordChannelPricingIntake}
-        />
+        <>
+          {priceLoadStatus === 'reference' && (
+            <div style={{ margin: '0 0 4px 0', padding: '8px 16px', background: '#7f1d1d', color: '#fca5a5', fontSize: 12, display: 'flex', alignItems: 'center', gap: 8 }}>
+              <span>⚠️</span>
+              <span><strong>Using reference prices only</strong> — raw material costs are estimates. Go to <strong>Market Prices</strong> tab and enter today's actual purchase price for accurate quotes.</span>
+            </div>
+          )}
+          {priceLoadStatus === 'stale' && (
+            <div style={{ margin: '0 0 4px 0', padding: '8px 16px', background: '#78350f', color: '#fcd34d', fontSize: 12, display: 'flex', alignItems: 'center', gap: 8 }}>
+              <span>⚠️</span>
+              <span><strong>Market prices are stale (&gt;7 days)</strong> — update in the <strong>Market Prices</strong> tab before quoting.</span>
+            </div>
+          )}
+          {priceLoadStatus === 'live' && (
+            <div style={{ margin: '0 0 4px 0', padding: '8px 16px', background: '#14532d', color: '#86efac', fontSize: 12, display: 'flex', alignItems: 'center', gap: 8 }}>
+              <span>✅</span>
+              <span><strong>Live market prices loaded</strong> — raw material cost is using your CFO-entered price.</span>
+            </div>
+          )}
+          <QuotationSopPricingPage
+            inputs={inputs}
+            errors={errors}
+            costRows={costRows}
+            calc={calc}
+            rates={rates}
+            risk={risk}
+            approvalReasons={approvalReasons}
+            updateInput={updateInput}
+            updateCostRow={updateCostRow}
+            onRun={validateAndRun}
+            onRouteDirectorReview={routePricingApproval}
+            onChannelApplied={recordChannelPricingIntake}
+          />
+        </>
       ) : (
         <section className="cfo-command-workspace">
           <main>
