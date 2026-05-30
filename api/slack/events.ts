@@ -738,20 +738,26 @@ export default async function handler(req: any, res: any) {
   }
 
   let rawBody = "";
-  try {
-    rawBody = await readRawBody(req);
-  } catch {
-    return res.status(400).json({ ok: false, status: "invalid_payload", message: "Invalid Slack event payload." });
+  let payload: Record<string, any> = {};
+
+  // Handle both pre-parsed body (req.body) and raw stream
+  if (req.body && typeof req.body === "object") {
+    payload = req.body;
+    rawBody = JSON.stringify(req.body);
+  } else {
+    try {
+      rawBody = await readRawBody(req);
+    } catch {
+      return res.status(400).json({ ok: false, status: "invalid_payload", message: "Invalid Slack event payload." });
+    }
+    try {
+      payload = rawBody ? JSON.parse(rawBody) : {};
+    } catch {
+      return res.status(400).json({ ok: false, status: "invalid_payload", message: "Invalid Slack event JSON." });
+    }
   }
 
   // Handle URL verification BEFORE signature check — Slack sends this without a valid signature
-  let payload: Record<string, any>;
-  try {
-    payload = rawBody ? JSON.parse(rawBody) : {};
-  } catch {
-    return res.status(400).json({ ok: false, status: "invalid_payload", message: "Invalid Slack event JSON." });
-  }
-
   if (payload.type === "url_verification") return res.status(200).json({ challenge: payload.challenge });
 
   const verification = verifySlackSignature(req, rawBody);
