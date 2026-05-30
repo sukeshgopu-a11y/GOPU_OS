@@ -144,3 +144,54 @@ Expected result:
 - COO Command shows 1 active workflow
 - Director Command shows 1 pending decision
 - No duplicate replies
+
+---
+
+## Full Flow — How It Works (Confirmed)
+
+```
+Phone → Slack: "New lead: 10 MT Red Chilli, buyer Ahmed from Dubai"
+         ↓
+   GOPU OS receives it
+         ↓
+   COO Command → Lead saved to lead_intake → Task created → shows in Leads list
+         ↓
+   CFO Pricing Engine → Calculates total price, per unit, margin, delivery time
+         ↓
+   Director Panel → Approval request queued (pending your tap to approve)
+         ↓
+   Slack Reply (example):
+   ✅ New Lead Received — GOPU OS
+   Buyer: Ahmed Trading
+   Product: 10 MT Red Chilli
+   Destination: Dubai
+   💰 Total: USD 19,914 | Per MT: USD 1,991
+   Margin: 20% | Delivery: 10–35 days
+   ⏳ Director Approval: Pending your approval
+   ⚠️ No quote sent to buyer until you approve in Director panel
+```
+
+### What shows where after SQL is run
+
+| Panel | What appears |
+|---|---|
+| COO Command → Leads | Every Slack lead as a new entry |
+| COO Command → Workflows/Tasks | AI COO Agent task for each lead |
+| CFO Command | Lead listed with Pending COO Verification status |
+| Director Command | Approval request with full pricing for your decision |
+| Slack | Clean reply with price, delivery time, approval status |
+
+### Lead message format that works best from phone
+
+Structured (best results):
+```
+New lead: 20 MT Turmeric
+Buyer: Spice World LLC
+Country: UAE
+Incoterm: CIF
+```
+
+Short format (also works):
+```
+New lead: 10 MT Red Chilli buyer Ahmed Dubai FOB quote
+```
