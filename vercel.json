@@ -1,7 +1,8 @@
 {
   "crons": [
     { "path": "/api/cron/daily-social-trigger", "schedule": "0 0 * * *" },
-    { "path": "/api/slack/sync-leads", "schedule": "*/5 * * * *" }
+    { "path": "/api/slack/sync-leads", "schedule": "*/5 * * * *" },
+    { "path": "/api/cron/morning-price-fetch", "schedule": "30 3 * * *" }
   ],
   "functions": {
     "api/**/*.ts": { "includeFiles": "lib/**" },
