@@ -37,7 +37,9 @@ export default async function handler(req: any, res: any) {
       .eq("tenant_id", TENANT_ID)
       .order("created_at", { ascending: false });
 
-    if (status) query = query.eq("status", status);
+    if (status) {
+      query = query.or(`status.eq.${status},approval_status.eq.${status}`);
+    }
 
     const { data: approvals, error } = await query.catch(() => ({
       data: [],
@@ -49,10 +51,13 @@ export default async function handler(req: any, res: any) {
     }
 
     const list = approvals ?? [];
+    const isPending = (a: any) => ["Pending", "Pending Approval"].includes(a.status) || ["Pending", "Pending Approval"].includes(a.approval_status);
+    const isApproved = (a: any) => ["Approved"].includes(a.status) || ["Approved"].includes(a.approval_status);
+    const isRejected = (a: any) => ["Rejected"].includes(a.status) || ["Rejected"].includes(a.approval_status);
     const summary = {
-      pending: list.filter((a: any) => a.status === "Pending").length,
-      approved: list.filter((a: any) => a.status === "Approved").length,
-      rejected: list.filter((a: any) => a.status === "Rejected").length,
+      pending: list.filter(isPending).length,
+      approved: list.filter(isApproved).length,
+      rejected: list.filter(isRejected).length,
     };
 
     return res.status(200).json({ ok: true, approvals: list, summary });
