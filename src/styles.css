@@ -33383,3 +33383,130 @@ a,
 
 /* ── Home Briefing timestamp ── */
 .briefing-timestamp { font-size: 0.68rem; color: var(--text-muted, #8a8a9a); margin-top: 4px; }
+
+/* ── Settings — integration cards & session badges (override) ── */
+.integration-status-card {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+}
+.integration-status-card.connected { border-color: var(--success, #22c55e); }
+.integration-status-card.disconnected { border-color: var(--border); }
+.integration-status-dot {
+  width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; margin-top: 4px;
+}
+.integration-status-card.connected .integration-status-dot { background: var(--success, #22c55e); }
+.integration-status-card.disconnected .integration-status-dot { background: var(--dim); }
+.integration-status-card strong { display: block; font-size: var(--text-sm); color: var(--fg); margin-bottom: 2px; }
+.integration-status-desc { font-size: var(--text-xs); color: var(--dim); }
+.active-session { border-color: var(--accent, #2ef2ff); }
+.session-badge.current {
+  font-size: var(--text-2xs, 10px); font-weight: 700; text-transform: uppercase;
+  letter-spacing: 0.07em; padding: 2px 8px; border-radius: 99px;
+  background: color-mix(in srgb, var(--accent, #2ef2ff) 15%, transparent);
+  color: var(--accent, #2ef2ff); border: 1px solid var(--accent, #2ef2ff); white-space: nowrap;
+}
+.session-revoke { color: var(--danger, #ff4d6d) !important; }
+.settings-section-body > .btn { align-self: flex-start; }
+
+/* ── Global alignment fixes ── */
+
+/* Notification toggles — add checkmark when on */
+.notif-toggle.on::after { content: '✓'; }
+
+/* Settings content wraps with proper gap */
+.settings-content > div { display: flex; flex-direction: column; gap: var(--space-5); }
+
+/* Fix settings select min-width on small screens */
+@media (max-width: 600px) {
+  .settings-layout { grid-template-columns: 1fr; }
+  .settings-tabs { flex-direction: row; overflow-x: auto; position: static; }
+  .settings-select { min-width: 140px; }
+  .settings-select-row { flex-wrap: wrap; }
+}
+
+/* Ensure btn-primary and btn-ghost have consistent heights */
+.btn-primary, .btn-ghost {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+}
+.btn-sm { min-height: 32px; padding: 0 12px; font-size: var(--text-xs); font-weight: 600; border-radius: var(--radius-md); }
+.btn-primary { background: var(--accent, #2ef2ff); color: #000; border: none; cursor: pointer; transition: opacity 0.15s; }
+.btn-primary:hover { opacity: 0.88; }
+.btn-ghost { background: transparent; border: 1px solid var(--border); color: var(--fg); cursor: pointer; transition: border-color 0.15s, background 0.15s; }
+.btn-ghost:hover { border-color: var(--accent, #2ef2ff); background: rgba(46,242,255,0.06); }
+
+/* Home agent cards — role label alignment */
+.home-agent-role {
+  color: var(--agent-color);
+  font-family: var(--font-display);
+  font-size: clamp(1.8rem, 3vw, 2.65rem);
+  font-weight: 900;
+  line-height: 0.92;
+}
+.home-agent-info { display: flex; flex-direction: column; gap: 4px; }
+.home-agent-info strong { color: var(--text); font-size: 0.9rem; line-height: 1.25; }
+.home-agent-info span { color: var(--muted); font-size: 0.82rem; line-height: 1.45; }
+
+/* Metric grid panels — value + label vertical alignment */
+.metric-panel { display: flex; flex-direction: column; justify-content: space-between; }
+.metric-panel span:first-child { font-size: var(--text-xs); font-weight: 700; text-transform: uppercase; letter-spacing: 0.09em; color: var(--muted); }
+.metric-panel strong { margin-top: auto; }
+
+/* COO/CFO panel headers consistent spacing */
+.coo-section-header, .approval-section-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-3);
+  margin-bottom: var(--space-4);
+}
+.coo-section-header > div, .approval-section-header > div { display: flex; flex-direction: column; gap: 2px; }
+.coo-section-header span, .approval-section-header span { font-size: var(--text-xs); font-weight: 700; text-transform: uppercase; letter-spacing: 0.09em; color: var(--dim); }
+.coo-section-header h2, .approval-section-header h2 { margin: 0; font-size: var(--text-lg); font-weight: 800; line-height: 1.2; }
+
+/* Tactical and ghost buttons — uniform height */
+.tactical-button, .ghost-button {
+  min-height: 38px;
+  padding: 0 16px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: var(--text-sm);
+  font-weight: 700;
+  white-space: nowrap;
+  border-radius: var(--radius-md, 6px);
+}
+.tactical-button { background: var(--accent, #2ef2ff); color: #000 !important; border: none; }
+.tactical-button:hover { opacity: 0.88; }
+
+/* Director / approval panel — action buttons row */
+.approval-detail-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin-top: var(--space-4);
+}
+.approval-detail-actions button { min-height: 36px; }
+
+/* Invoice doc wrap in dark context */
+.invoice-doc-wrap { color: #111827 !important; background: #fff !important; }
+.invoice-doc-wrap * { color: inherit; }
+
+/* CTO health grid alignment */
+.cto-health-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: var(--space-3); }
+
+/* Mobile bottom nav consistent icons */
+.mobile-bottom-nav button { display: flex; flex-direction: column; align-items: center; gap: 3px; padding: 8px; }
+.mobile-bottom-nav button span { font-size: 10px; font-weight: 600; text-align: center; }
+
+/* Fix overflow in table cells */
+td, th { max-width: 0; }
+.invoice-items-table td, .invoice-items-table th { max-width: none; }
+.notif-table td, .notif-table th { max-width: none; }
+

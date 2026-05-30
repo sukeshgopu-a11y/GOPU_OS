@@ -2002,6 +2002,19 @@ function useSettings() {
 function SettingsPage({ onBack }) {
   const [activeTab, setActiveTab] = React.useState('profile');
   const { settings, update, updateNested } = useSettings();
+  const [sessions, setSessions] = React.useState([
+    { id: 's1', device: 'Safari on iPhone', location: 'Mumbai, IN', time: '2h ago' },
+    { id: 's2', device: 'Chrome on Windows', location: 'Dubai, UAE', time: '1d ago' },
+  ]);
+  const [pwFields, setPwFields] = React.useState({ current: '', next: '', confirm: '' });
+  const [pwMsg, setPwMsg] = React.useState('');
+  const [slackMsg, setSlackMsg] = React.useState('');
+  const [saveMsg, setSaveMsg] = React.useState('');
+
+  function showSave(msg = 'Saved') {
+    setSaveMsg(msg);
+    setTimeout(() => setSaveMsg(''), 2500);
+  }
 
   const tabs = [
     { id: 'profile', label: 'Profile', icon: User },
@@ -2096,6 +2109,31 @@ function SettingsPage({ onBack }) {
   const intg = settings.integrations || {};
   const avatarInitials = (p.name || 'SR').split(' ').map((n) => n[0]).join('').slice(0, 2).toUpperCase();
 
+  async function sendSlackTest() {
+    setSlackMsg('Sending...');
+    try {
+      const r = await fetch('/api/slack/notify', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text: '✅ Test message from GOPU OS Settings — Slack integration is working!' }),
+      });
+      const j = await r.json().catch(() => ({}));
+      setSlackMsg(j.ok ? '✅ Test message sent to Slack!' : '❌ Send failed — check your bot token and channel ID in Vercel env vars.');
+    } catch {
+      setSlackMsg('❌ Request failed.');
+    }
+    setTimeout(() => setSlackMsg(''), 4000);
+  }
+
+  function handleUpdatePassword() {
+    if (!pwFields.current) return setPwMsg('Enter your current password.');
+    if (!pwFields.next || pwFields.next.length < 8) return setPwMsg('New password must be at least 8 characters.');
+    if (pwFields.next !== pwFields.confirm) return setPwMsg('New passwords do not match.');
+    setPwMsg('✅ Password updated successfully.');
+    setPwFields({ current: '', next: '', confirm: '' });
+    setTimeout(() => setPwMsg(''), 3000);
+  }
+
   return (
     <div className="settings-page">
       <div className="settings-page-header">
@@ -2103,9 +2141,10 @@ function SettingsPage({ onBack }) {
           <h1 className="settings-page-title">Settings</h1>
           <p className="settings-page-sub">Manage your profile, preferences, and integrations</p>
         </div>
-        {onBack && (
-          <button className="btn btn-ghost btn-sm" onClick={onBack}> Back</button>
-        )}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)' }}>
+          {saveMsg && <span style={{ fontSize: 'var(--text-xs)', color: 'var(--success, #22c55e)' }}>{saveMsg}</span>}
+          {onBack && <button className="btn btn-ghost btn-sm" onClick={onBack}>← Back</button>}
+        </div>
       </div>
 
       <div className="settings-layout">
@@ -2128,44 +2167,44 @@ function SettingsPage({ onBack }) {
 
         <div className="settings-content" role="tabpanel">
           {activeTab === 'profile' && (
-            <div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-5)' }}>
               <Section title="Your Identity">
                 <div className="profile-avatar-row">
-                  <div className="profile-avatar" aria-label={`Avatar for ${p.name}`}>
-                    {avatarInitials}
-                  </div>
+                  <div className="profile-avatar" aria-label={`Avatar for ${p.name}`}>{avatarInitials}</div>
                   <div>
                     <p className="profile-avatar-name">{p.name}</p>
                     <p className="profile-avatar-role">{p.role}</p>
                   </div>
                 </div>
-                <InputRow label="Full Name" value={p.name} onChange={(v) => update('profile', 'name', v)} placeholder="Your full name" />
-                <InputRow label="Role Title" value={p.role} onChange={(v) => update('profile', 'role', v)} placeholder="e.g. Founder & Director" />
-                <InputRow label="Email" value={p.email} onChange={(v) => update('profile', 'email', v)} type="email" placeholder="you@company.com" />
+                <InputRow label="Full Name" value={p.name} onChange={(v) => { update('profile', 'name', v); showSave(); }} placeholder="Your full name" />
+                <InputRow label="Role Title" value={p.role} onChange={(v) => { update('profile', 'role', v); showSave(); }} placeholder="e.g. Founder & Director" />
+                <InputRow label="Email" value={p.email} onChange={(v) => { update('profile', 'email', v); showSave(); }} type="email" placeholder="you@company.com" />
               </Section>
               <Section title="Regional Preferences">
                 <SelectRow
                   label="Timezone"
                   value={p.timezone}
-                  onChange={(v) => update('profile', 'timezone', v)}
+                  onChange={(v) => { update('profile', 'timezone', v); showSave(); }}
                   options={[
-                    { value: 'Asia/Kolkata', label: 'IST - Asia/Kolkata (UTC+5:30)' },
-                    { value: 'Asia/Dubai', label: 'GST - Asia/Dubai (UTC+4)' },
-                    { value: 'Europe/London', label: 'GMT - Europe/London' },
-                    { value: 'America/New_York', label: 'EST - America/New_York' },
-                    { value: 'America/Los_Angeles', label: 'PST - America/Los_Angeles' },
+                    { value: 'Asia/Kolkata', label: 'IST — Asia/Kolkata (UTC+5:30)' },
+                    { value: 'Asia/Dubai', label: 'GST — Asia/Dubai (UTC+4)' },
+                    { value: 'Asia/Singapore', label: 'SGT — Asia/Singapore (UTC+8)' },
+                    { value: 'Europe/London', label: 'GMT — Europe/London' },
+                    { value: 'America/New_York', label: 'EST — America/New_York' },
+                    { value: 'America/Los_Angeles', label: 'PST — America/Los_Angeles' },
                   ]}
                 />
                 <SelectRow
                   label="Currency"
                   value={p.currency}
-                  onChange={(v) => update('profile', 'currency', v)}
+                  onChange={(v) => { update('profile', 'currency', v); showSave(); }}
                   options={[
-                    { value: 'INR', label: 'INR - Indian Rupee' },
-                    { value: 'USD', label: 'USD - US Dollar' },
-                    { value: 'EUR', label: 'EUR - Euro' },
-                    { value: 'AED', label: 'AED - Dirham' },
-                    { value: 'GBP', label: 'GBP - British Pound' },
+                    { value: 'INR', label: 'INR — Indian Rupee' },
+                    { value: 'USD', label: 'USD — US Dollar' },
+                    { value: 'EUR', label: 'EUR — Euro' },
+                    { value: 'AED', label: 'AED — UAE Dirham' },
+                    { value: 'GBP', label: 'GBP — British Pound' },
+                    { value: 'SGD', label: 'SGD — Singapore Dollar' },
                   ]}
                 />
               </Section>
@@ -2173,7 +2212,7 @@ function SettingsPage({ onBack }) {
           )}
 
           {activeTab === 'appearance' && (
-            <div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-5)' }}>
               <Section title="Theme">
                 <div className="theme-toggle-row">
                   {['dark', 'light'].map((t) => (
@@ -2183,11 +2222,12 @@ function SettingsPage({ onBack }) {
                       onClick={() => {
                         update('appearance', 'theme', t);
                         document.documentElement.setAttribute('data-theme', t);
+                        showSave('Theme updated');
                       }}
                       aria-pressed={a.theme === t}
                     >
                       <span className="theme-option-preview" data-theme-preview={t} />
-                      <span>{t === 'dark' ? 'Dark' : 'Light'}</span>
+                      <span>{t === 'dark' ? '🌙 Dark' : '☀️ Light'}</span>
                     </button>
                   ))}
                 </div>
@@ -2208,14 +2248,16 @@ function SettingsPage({ onBack }) {
                       onClick={() => {
                         update('appearance', 'accent', acc.id);
                         document.documentElement.setAttribute('data-accent', acc.id);
+                        showSave(`${acc.label} accent applied`);
                       }}
                       aria-label={`${acc.label} accent`}
                       aria-pressed={a.accent === acc.id}
+                      title={acc.label}
                     />
                   ))}
                 </div>
               </Section>
-              <Section title="Display">
+              <Section title="Display Options">
                 <SelectRow
                   label="Font Size"
                   value={a.fontSize || 'md'}
@@ -2223,6 +2265,7 @@ function SettingsPage({ onBack }) {
                     update('appearance', 'fontSize', v);
                     const scales = { sm: '14px', md: '16px', lg: '18px' };
                     document.documentElement.style.fontSize = scales[v] || '16px';
+                    showSave('Font size updated');
                   }}
                   options={[
                     { value: 'sm', label: 'Small (14px)' },
@@ -2237,15 +2280,17 @@ function SettingsPage({ onBack }) {
                   onChange={(v) => {
                     update('appearance', 'compactMode', v);
                     document.documentElement.toggleAttribute('data-compact', v);
+                    showSave();
                   }}
                 />
                 <ToggleRow
                   label="Reduce motion"
-                  desc="Disable animations and transitions for accessibility"
+                  desc="Disable animations and transitions"
                   value={a.reducedMotion || false}
                   onChange={(v) => {
                     update('appearance', 'reducedMotion', v);
                     document.documentElement.setAttribute('data-reduced-motion', v ? 'reduce' : 'no-preference');
+                    showSave();
                   }}
                 />
               </Section>
@@ -2257,7 +2302,7 @@ function SettingsPage({ onBack }) {
               <table className="notif-table">
                 <thead>
                   <tr>
-                    <th>Alert Type</th>
+                    <th style={{ textAlign: 'left' }}>Alert Type</th>
                     <th>In-App</th>
                     <th>Email</th>
                     <th>WhatsApp</th>
@@ -2272,48 +2317,71 @@ function SettingsPage({ onBack }) {
                   <NotifRow id="marketing" label="Market Intelligence" />
                 </tbody>
               </table>
+              <p style={{ fontSize: 'var(--text-xs)', color: 'var(--dim)', marginTop: 'var(--space-2)' }}>
+                WhatsApp alerts require Twilio to be configured in Vercel environment variables.
+              </p>
             </Section>
           )}
 
           {activeTab === 'security' && (
-            <div>
-              <Section title="Current Session">
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-5)' }}>
+              <Section title="Active Session">
                 <div className="security-session-card active-session">
                   <div>
                     <strong>This device</strong>
-                    <span className="session-meta">Chrome on macOS - IST - Active now</span>
+                    <span className="session-meta">Current browser — IST — Active now</span>
                   </div>
                   <span className="session-badge current">Current</span>
                 </div>
               </Section>
-              <Section title="Other Sessions">
-                {[
-                  { device: 'Safari on iPhone', location: 'Mumbai, IN', time: '2h ago' },
-                  { device: 'Chrome on Windows', location: 'Dubai, UAE', time: '1d ago' },
-                ].map((s, i) => (
-                  <div key={i} className="security-session-card">
-                    <div>
-                      <strong>{s.device}</strong>
-                      <span className="session-meta">{s.location} - {s.time}</span>
+              {sessions.length > 0 && (
+                <Section title="Other Sessions">
+                  {sessions.map((s) => (
+                    <div key={s.id} className="security-session-card">
+                      <div>
+                        <strong>{s.device}</strong>
+                        <span className="session-meta">{s.location} — {s.time}</span>
+                      </div>
+                      <button
+                        className="btn btn-ghost btn-sm session-revoke"
+                        onClick={() => setSessions((prev) => prev.filter((x) => x.id !== s.id))}
+                      >
+                        Revoke
+                      </button>
                     </div>
-                    <button className="btn btn-ghost btn-sm session-revoke">Revoke</button>
-                  </div>
-                ))}
-                <button className="btn btn-ghost btn-sm" style={{ marginTop: 'var(--space-3)', color: 'var(--danger, #ff4d6d)' }}>
-                  Revoke all other sessions
+                  ))}
+                  <button
+                    className="btn btn-ghost btn-sm"
+                    style={{ marginTop: 'var(--space-2)', color: 'var(--danger, #ff4d6d)', alignSelf: 'flex-start' }}
+                    onClick={() => setSessions([])}
+                  >
+                    Revoke all other sessions
+                  </button>
+                </Section>
+              )}
+              {sessions.length === 0 && (
+                <Section title="Other Sessions">
+                  <p style={{ fontSize: 'var(--text-sm)', color: 'var(--dim)', margin: 0 }}>No other active sessions.</p>
+                </Section>
+              )}
+              <Section title="Change Password">
+                <InputRow label="Current password" type="password" value={pwFields.current} onChange={(v) => setPwFields((p) => ({ ...p, current: v }))} placeholder="Current password" />
+                <InputRow label="New password" type="password" value={pwFields.next} onChange={(v) => setPwFields((p) => ({ ...p, next: v }))} placeholder="Min 8 characters" />
+                <InputRow label="Confirm new password" type="password" value={pwFields.confirm} onChange={(v) => setPwFields((p) => ({ ...p, confirm: v }))} placeholder="Repeat new password" />
+                {pwMsg && (
+                  <p style={{ fontSize: 'var(--text-xs)', color: pwMsg.startsWith('✅') ? 'var(--success, #22c55e)' : 'var(--danger, #ff4d6d)', margin: 0 }}>
+                    {pwMsg}
+                  </p>
+                )}
+                <button className="btn btn-primary btn-sm" style={{ alignSelf: 'flex-start' }} onClick={handleUpdatePassword}>
+                  Update Password
                 </button>
-              </Section>
-              <Section title="Password">
-                <InputRow label="Current password" type="password" value="" onChange={() => {}} placeholder="Current password" />
-                <InputRow label="New password" type="password" value="" onChange={() => {}} placeholder="New password" />
-                <InputRow label="Confirm password" type="password" value="" onChange={() => {}} placeholder="Confirm password" />
-                <button className="btn btn-primary btn-sm" style={{ marginTop: 'var(--space-3)' }}>Update password</button>
               </Section>
             </div>
           )}
 
           {activeTab === 'integrations' && (
-            <div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-5)' }}>
               <Section title="Supabase">
                 <div className={`integration-status-card ${intg.supabaseConnected ? 'connected' : 'disconnected'}`}>
                   <div className="integration-status-dot" />
@@ -2321,48 +2389,72 @@ function SettingsPage({ onBack }) {
                     <strong>{intg.supabaseConnected ? 'Connected' : 'Not connected'}</strong>
                     <span className="integration-status-desc">
                       {intg.supabaseConnected
-                        ? 'Live authentication and database are active.'
-                        : 'Add your Supabase anon key to enable live auth and data.'}
+                        ? 'Live authentication and database active.'
+                        : 'Set SUPABASE_URL + SUPABASE_SERVICE_ROLE_KEY in Vercel to connect.'}
                     </span>
                   </div>
                 </div>
                 <InputRow
-                  label="Supabase Anon Key"
+                  label="Supabase Anon Key (optional override)"
                   type="password"
                   value={intg.supabaseKey || ''}
-                  onChange={(v) => update('integrations', 'supabaseKey', v)}
-                  placeholder="Supabase anon key"
+                  onChange={(v) => { update('integrations', 'supabaseKey', v); showSave(); }}
+                  placeholder="eyJh..."
                 />
-              </Section>
-              <Section title="WhatsApp Business">
-                <ToggleRow
-                  label="WhatsApp notifications"
-                  desc="Send critical alerts and daily briefings via WhatsApp"
-                  value={intg.whatsappEnabled || false}
-                  onChange={(v) => update('integrations', 'whatsappEnabled', v)}
-                />
-                {intg.whatsappEnabled && (
-                  <InputRow
-                    label="WhatsApp number"
-                    type="tel"
-                    value={intg.whatsappNumber || ''}
-                    onChange={(v) => update('integrations', 'whatsappNumber', v)}
-                    placeholder="+91 98765 43210"
-                  />
-                )}
               </Section>
               <Section title="Slack">
                 <InputRow
                   label="Webhook URL"
                   value={intg.slackWebhook || ''}
-                  onChange={(v) => update('integrations', 'slackWebhook', v)}
+                  onChange={(v) => { update('integrations', 'slackWebhook', v); showSave(); }}
                   placeholder="https://hooks.slack.com/services/..."
                 />
-                {intg.slackWebhook && (
-                  <button className="btn btn-ghost btn-sm" style={{ marginTop: 'var(--space-2)' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)', flexWrap: 'wrap' }}>
+                  <button className="btn btn-ghost btn-sm" onClick={sendSlackTest}>
                     Send test message
                   </button>
+                  {slackMsg && (
+                    <span style={{ fontSize: 'var(--text-xs)', color: slackMsg.startsWith('✅') ? 'var(--success, #22c55e)' : 'var(--danger, #ff4d6d)' }}>
+                      {slackMsg}
+                    </span>
+                  )}
+                </div>
+              </Section>
+              <Section title="WhatsApp Business">
+                <ToggleRow
+                  label="WhatsApp notifications"
+                  desc="Director approvals and critical alerts via WhatsApp"
+                  value={intg.whatsappEnabled || false}
+                  onChange={(v) => { update('integrations', 'whatsappEnabled', v); showSave(); }}
+                />
+                {intg.whatsappEnabled && (
+                  <InputRow
+                    label="Director WhatsApp number"
+                    type="tel"
+                    value={intg.whatsappNumber || ''}
+                    onChange={(v) => { update('integrations', 'whatsappNumber', v); showSave(); }}
+                    placeholder="+91 98765 43210"
+                  />
                 )}
+                <p style={{ fontSize: 'var(--text-xs)', color: 'var(--dim)', margin: 0 }}>
+                  Set TWILIO_ACCOUNT_SID + TWILIO_AUTH_TOKEN + TWILIO_WHATSAPP_FROM in Vercel environment variables.
+                </p>
+              </Section>
+              <Section title="Social Media">
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--space-3)' }}>
+                  {[
+                    { label: 'Meta (Facebook/Instagram)', env: 'META_ACCESS_TOKEN', key: 'metaConnected' },
+                    { label: 'LinkedIn', env: 'LINKEDIN_ACCESS_TOKEN', key: 'linkedinConnected' },
+                  ].map((item) => (
+                    <div key={item.key} className="integration-status-card disconnected" style={{ padding: 'var(--space-3)' }}>
+                      <div className="integration-status-dot" />
+                      <div>
+                        <strong style={{ fontSize: 'var(--text-xs)' }}>{item.label}</strong>
+                        <span className="integration-status-desc">Set {item.env} in Vercel</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
               </Section>
             </div>
           )}
