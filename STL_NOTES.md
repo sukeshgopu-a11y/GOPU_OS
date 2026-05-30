@@ -1,198 +1,452 @@
-# STL NOTES — Complete Pending List
-# Read this Monday morning. Work through it in order.
+# GOPU OS — MASTER INTELLIGENCE PLATFORM PLAN
+# The Vision: 6 AI Agents running 24/7, zero manual work except Director approvals
+# Written Saturday night. Read Monday morning. Execute in order.
 
 ---
 
-## SECTION A — SQL TO RUN TOMORROW (Cannot code around these)
-## Do these FIRST before anything else. Takes ~2 hours.
+## THE VISION (In Simple Terms)
+
+```
+                    ┌─────────────────────────────┐
+                    │     DIRECTOR COMMAND        │
+                    │  Final approvals only.      │
+                    │  Quotations, Invoices,      │
+                    │  Major financial decisions  │
+                    └──────────┬──────────────────┘
+                               │ Approves
+              ┌────────────────┼────────────────┐
+              ▼                ▼                ▼
+        ┌──────────┐    ┌──────────┐    ┌──────────┐
+        │   COO    │◄──►│   CFO    │◄──►│   CMO    │
+        │Operations│    │ Finances │    │Marketing │
+        │ Invoices │    │  Prices  │    │  Emails  │
+        │ Shipments│    │   P&L    │    │Campaigns │
+        └────┬─────┘    └────┬─────┘    └────┬─────┘
+             │               │               │
+             ▼               ▼               ▼
+        ┌──────────┐    ┌──────────┐    ┌──────────┐
+        │   CTO    │    │   CTO    │    │   CIO    │
+        │  Server  │───►│ Credits  │    │  Leads   │
+        │  Health  │    │ → CFO    │    │  Intel   │
+        └──────────┘    └──────────┘    └──────────┘
+```
+
+**Every agent talks to every other agent. Director only sees approvals.**
+**3 Slack briefings daily: 9 AM, 2 PM, 9 PM.**
+**When Director approves → invoice/quotation goes to client automatically.**
+
+---
+
+## WHAT ALREADY EXISTS (Do NOT rebuild these)
+
+### ✅ FULLY BUILT
+- `autonomousLeadPipeline.js` — Full 6-agent pipeline (CIO→CFO→COO→CMO→CTO→Director)
+- `agentMemoryService.js` — Agent-to-agent messaging + memory
+- `agentWorkflowService.js` — Agent communication protocol
+- `pricingEngineService.js` — CFO pricing with live market prices
+- `api/slack/events.ts` — Lead detection, parsing, Slack reply
+- `api/export/stages.ts` — 7-stage export pipeline logic
+- `api/cron/morning-price-fetch.ts` — 9 AM price fetch + Slack report
+- `cioService.js` — Lead scoring (A/B/C tiers), buyer intel queries
+- `briefingService.js` — Briefing data structure (tables ready)
+- `importerIntelligenceService.js` — Importer database queries
+
+### ⚠️ PARTIALLY BUILT (needs completion)
+- CFO → Live market prices (service done, table missing)
+- Director approval → invoice send (approval works, email send missing)
+- CMO → Social posting (UI done, API calls missing)
+- CTO → Credit monitoring (service exists, auto-alert to CFO missing)
+
+### ❌ COMPLETELY MISSING (need to build)
+- 2 PM and 9 PM daily Slack briefings (only morning price exists)
+- 9 AM intelligent briefing (has price fetch, but no business intel)
+- CTO credit expiry → auto-alert CFO → CFO pays → updates CTO
+- Cold email automation (CMO sends to buyers CIO finds)
+- Follow-up email sequences (3-day, 7-day, 14-day follow-ups)
+- One-click Director approval → invoice emails to client
+- CIO worldwide buyer intelligence scraping / enrichment
+- Paid campaign budget tracking + ROI (CMO)
+- Agent self-decision loop (agents act on their own, not just on triggers)
+
+---
+
+## SECTION A — SQL TO RUN MONDAY (Do First — 2 Hours)
 
 URL: https://supabase.com/dashboard/project/ogrmmhlaxfxrtpdzzwti/sql/new
+Copy each step from PENDING_SQL.md and run in order.
 
-- [ ] **SQL-1** · `commodity_prices` table → unlocks CFO live pricing + 9AM cron
-- [ ] **SQL-2** · `lead_intake` table → unlocks COO leads from Slack
-- [ ] **SQL-3** · `pricing_requests` table → unlocks CFO quotation saves
-- [ ] **SQL-4** · `tasks` table → unlocks COO workflows + task board
-- [ ] **SQL-5** · `ai_agent_runs` table → unlocks Director agent tracking
-- [ ] **SQL-6** · `integration_services` table → unlocks CTO live status
-- [ ] **SQL-7** · `slack_event_dedup` table → stops duplicate Slack replies
-- [ ] **SQL-8** · `founder_approvals` — add 12 missing columns → unlocks Director saves
-- [ ] **SQL-9** · service_role permission grants → unlocks ALL API writes
-- [ ] **SQL-10** · `export_orders` table → unlocks 7-stage export pipeline
-- [ ] **SQL-11** · `export_documents` table → unlocks document checklist
-- [ ] **SQL-12** · `export_stage_logs` table → unlocks pipeline history
-- [ ] **SQL-13** · `export_agent_comms` table → unlocks COO↔CFO↔Director comms
+- [ ] **SQL-1** · `commodity_prices` → CFO live pricing, 9 AM cron
+- [ ] **SQL-2** · `lead_intake` → COO leads from Slack + CIO pipeline
+- [ ] **SQL-3** · `pricing_requests` → CFO quote saves
+- [ ] **SQL-4** · `tasks` → COO workflows
+- [ ] **SQL-5** · `ai_agent_runs` → tracks every agent action
+- [ ] **SQL-6** · `integration_services` → CTO live status
+- [ ] **SQL-7** · `slack_event_dedup` → no duplicate Slack replies
+- [ ] **SQL-8** · `founder_approvals` missing columns
+- [ ] **SQL-9** · service_role permission grants
+- [ ] **SQL-10** · `export_orders` → 7-stage pipeline
+- [ ] **SQL-11** · `export_documents` → document checklist
+- [ ] **SQL-12** · `export_stage_logs` → pipeline history
+- [ ] **SQL-13** · `export_agent_comms` → COO↔CFO↔Director comms
 
-All SQL is written in PENDING_SQL.md — just copy-paste each step.
+**New tables needed for full agent system:**
+- [ ] **SQL-14** · `agent_briefings` — stores 9AM/2PM/9PM briefing content
+- [ ] **SQL-15** · `cold_email_sequences` — buyer outreach tracking
+- [ ] **SQL-16** · `cio_buyer_intelligence` — worldwide buyer database
+- [ ] **SQL-17** · `cto_credit_alerts` — platform credit expiry tracking
+- [ ] **SQL-18** · `agent_decisions` — log every autonomous decision each agent makes
+
+SQL for new tables (run after PENDING_SQL.md Steps 0-4):
+
+```sql
+-- Agent briefings (3x daily Slack briefings)
+create table if not exists public.agent_briefings (
+  id uuid primary key default gen_random_uuid(),
+  tenant_id uuid not null,
+  briefing_type text not null, -- 'morning_9am' | 'afternoon_2pm' | 'evening_9pm'
+  scheduled_at timestamptz,
+  sent_at timestamptz,
+  slack_ts text,
+  content jsonb default '{}'::jsonb,
+  summary text,
+  leads_count integer default 0,
+  pending_approvals integer default 0,
+  revenue_pending numeric default 0,
+  created_at timestamptz default now()
+);
+
+-- Cold email sequences (CMO buyer outreach)
+create table if not exists public.cold_email_sequences (
+  id uuid primary key default gen_random_uuid(),
+  tenant_id uuid not null,
+  lead_id uuid,
+  buyer_name text,
+  buyer_email text,
+  company_name text,
+  country text,
+  product text,
+  sequence_stage integer default 1, -- 1=intro, 2=3day followup, 3=7day followup, 4=14day
+  status text default 'Pending', -- Pending | Sent | Opened | Replied | Unsubscribed | Won
+  sent_at timestamptz,
+  opened_at timestamptz,
+  replied_at timestamptz,
+  next_followup_at timestamptz,
+  email_subject text,
+  email_body text,
+  created_at timestamptz default now(),
+  updated_at timestamptz default now()
+);
+
+-- CIO worldwide buyer intelligence
+create table if not exists public.cio_buyer_intelligence (
+  id uuid primary key default gen_random_uuid(),
+  tenant_id uuid not null,
+  buyer_name text,
+  company_name text,
+  country text,
+  city text,
+  email text,
+  phone text,
+  website text,
+  products_interested text[],
+  annual_import_volume text,
+  tier text default 'C', -- A | B | C
+  lead_score integer default 5,
+  source text, -- 'slack' | 'email' | 'cio_research' | 'manual'
+  status text default 'New', -- New | Contacted | Qualified | Won | Lost
+  notes text,
+  last_contacted_at timestamptz,
+  metadata jsonb default '{}'::jsonb,
+  created_at timestamptz default now(),
+  updated_at timestamptz default now()
+);
+
+-- CTO credit/subscription alerts
+create table if not exists public.cto_credit_alerts (
+  id uuid primary key default gen_random_uuid(),
+  tenant_id uuid not null,
+  platform text not null, -- 'openai' | 'vercel' | 'supabase' | 'resend' | 'twilio'
+  alert_type text, -- 'credit_low' | 'credit_critical' | 'subscription_expiring' | 'paid'
+  current_balance text,
+  threshold_amount text,
+  due_date date,
+  estimated_days_left integer,
+  cfo_notified_at timestamptz,
+  paid_at timestamptz,
+  paid_amount numeric,
+  status text default 'Open', -- Open | CFO_Notified | Paid | Dismissed
+  metadata jsonb default '{}'::jsonb,
+  created_at timestamptz default now()
+);
+
+-- Agent autonomous decisions log
+create table if not exists public.agent_decisions (
+  id uuid primary key default gen_random_uuid(),
+  tenant_id uuid not null,
+  agent text not null, -- 'COO' | 'CFO' | 'CMO' | 'CTO' | 'CIO'
+  decision_type text, -- 'pricing' | 'email_send' | 'campaign_budget' | 'lead_score' | 'credit_alert'
+  decision_summary text,
+  confidence numeric default 0.8,
+  requires_director boolean default false,
+  director_notified_at timestamptz,
+  approved_at timestamptz,
+  rejected_at timestamptz,
+  input_data jsonb default '{}'::jsonb,
+  output_data jsonb default '{}'::jsonb,
+  created_at timestamptz default now()
+);
+
+-- Grants for all new tables
+grant select, insert, update on public.agent_briefings to authenticated, service_role;
+grant select, insert, update on public.cold_email_sequences to authenticated, service_role;
+grant select, insert, update on public.cio_buyer_intelligence to authenticated, service_role;
+grant select, insert, update on public.cto_credit_alerts to authenticated, service_role;
+grant select, insert, update on public.agent_decisions to authenticated, service_role;
+
+notify pgrst, 'reload schema';
+```
 
 ---
 
-## SECTION B — ENV VARS TO ADD IN VERCEL TOMORROW
-## After SQL, do these. Takes ~30 mins.
+## SECTION B — ENV VARS (Monday, 30 mins after SQL)
 
-URL: https://vercel.com → GOPU OS → Settings → Environment Variables
-
-- [ ] **ENV-1** · `SUPABASE_URL` = https://ogrmmhlaxfxrtpdzzwti.supabase.co
-- [ ] **ENV-2** · `SUPABASE_SERVICE_ROLE_KEY` = (Supabase → Settings → API)
-- [ ] **ENV-3** · `SLACK_BOT_TOKEN` = (Slack API app → OAuth & Permissions)
-- [ ] **ENV-4** · `SLACK_CHANNEL_ID` = (right-click channel → Copy Link → last part)
-- [ ] **ENV-5** · `SLACK_SIGNING_SECRET` = (Slack API → Basic Information)
-- [ ] **ENV-6** · `DATA_GOV_API_KEY` = (register at data.gov.in → free API key)
-- [ ] **ENV-7** · `CRON_SECRET` = (run: openssl rand -hex 32)
-- [ ] **ENV-8** · `META_ACCESS_TOKEN` = (developers.facebook.com → Graph API Explorer)
-- [ ] **ENV-9** · `INSTAGRAM_BUSINESS_ACCOUNT_ID` = (Meta Business → Instagram)
-- [ ] **ENV-10** · `FACEBOOK_PAGE_ID` = (Facebook Page → About → Page ID)
-- [ ] **ENV-11** · `LINKEDIN_ACCESS_TOKEN` = (LinkedIn Developer Portal → OAuth 2.0)
-- [ ] **ENV-12** · `LINKEDIN_ORGANIZATION_ID` = (LinkedIn company URL → last number)
+- [ ] `SUPABASE_URL` = https://ogrmmhlaxfxrtpdzzwti.supabase.co
+- [ ] `SUPABASE_SERVICE_ROLE_KEY` = (Supabase → Settings → API → service_role)
+- [ ] `SLACK_BOT_TOKEN` = (Slack API → OAuth & Permissions)
+- [ ] `SLACK_CHANNEL_ID` = (your #exports-command-center channel ID)
+- [ ] `SLACK_SIGNING_SECRET` = (Slack API → Basic Information)
+- [ ] `DATA_GOV_API_KEY` = (data.gov.in → register free → API key)
+- [ ] `CRON_SECRET` = (run: openssl rand -hex 32)
+- [ ] `OPENAI_API_KEY` = (platform.openai.com → API keys) ← for agent intelligence
+- [ ] `RESEND_API_KEY` = (resend.com → free tier → API key) ← for cold emails
+- [ ] `META_ACCESS_TOKEN` = (developers.facebook.com → Graph API Explorer)
+- [ ] `INSTAGRAM_BUSINESS_ACCOUNT_ID` = (Meta Business → Instagram)
+- [ ] `FACEBOOK_PAGE_ID` = (Facebook Page → About → Page ID)
+- [ ] `LINKEDIN_ACCESS_TOKEN` = (LinkedIn Developer Portal → OAuth 2.0)
+- [ ] `LINKEDIN_ORGANIZATION_ID` = (LinkedIn company URL → last number)
 
 ---
 
-## SECTION C — CODE WE CAN FINISH NOW (No SQL needed)
-## These are pure code tasks. Do these while waiting for SQL/env vars.
+## SECTION C — CODE TO BUILD (Priority Order)
 
-### C1 · CTO Command — Wire live integration status
-**Problem:** CTO shows empty panels. `ctoService.js` has `staticRows()` returning [] for
-subscriptionWatch, deploymentStatus, architectureMap, technicalAudit, mediaStack etc.
-**Fix:** Replace static fallback with real data pulled from `integration_services` Supabase table.
-Also build the `/api/cto/health` endpoint returning actual system status.
-**Effort:** 3 hrs
+### PRIORITY 1 — THREE DAILY BRIEFINGS (Slack 9AM / 2PM / 9PM)
+**What:** Every day at 9 AM, 2 PM, and 9 PM IST, all 5 agents compile a briefing
+and send one Slack message to Director covering:
+- How many leads came in (and from where)
+- How many quotations are pending Director approval
+- How much money is pending (receivables)
+- Which invoices need to go out
+- Leads lost and why
+- Agent actions taken since last briefing
+- What needs Director attention
 
-### C2 · Dashboard — Replace hardcoded chart data with real DB queries
-**Problem:** Revenue charts use `[65, 70, 68, 74, 71, 78]` etc. KPI cards show fixed numbers.
-**Fix:** Wire dashboard to Supabase — pull real lead_intake count, pricing_requests totals,
-founder_approvals count as KPI numbers.
-**Effort:** 4 hrs
+**Files to create:**
+- `api/cron/briefing-9am.ts` — morning intel briefing
+- `api/cron/briefing-2pm.ts` — afternoon update
+- `api/cron/briefing-9pm.ts` — evening summary
+- Add to vercel.json: schedules `30 3 * * *`, `30 8 * * *`, `30 15 * * *`
 
-### C3 · Export Pipeline — Build COO Stage Tracking UI
-**Problem:** 7-stage export flow logic exists in `api/export/stages.ts` but there is
-zero UI in COO Command showing order stages, document checklist, or stage progress.
-**Fix:** Add "Export Orders" tab in COO Command with:
-  - List of active export orders + current stage
-  - Stage progress bar (Stage 1 of 7)
-  - Document checklist per stage
-  - Advance stage button
-**Effort:** 8 hrs
-
-### C4 · Auth — Replace demo login with real Supabase auth
-**Problem:** Login is `LOCAL_AUTH_EMAIL` hardcoded check. No real session, no password reset.
-**Fix:** Wire login form to `supabase.auth.signInWithPassword()`. Add session check on load.
-Add "Forgot password" flow via Supabase magic link.
+**Status:** briefingService.js tables ready, cron logic NOT built
 **Effort:** 6 hrs
 
-### C5 · Settings — Add real persistence
-**Problem:** Settings page has full UI (company profile, registrations, LUT, doc defaults)
-but saves only to local state — refreshing loses everything.
-**Fix:** Wire all settings save buttons to `companyService.js` which already has
-`saveCompanyProfile()`, `saveCompanyRegistration()` etc. — they just need Supabase tables.
-**Effort:** 3 hrs (after SQL)
+---
 
-### C6 · Analytics/Reports — Wire real data into charts
-**Problem:** All SVG charts use hardcoded point arrays.
-**Fix:** Pull from `lead_intake`, `pricing_requests`, `founder_approvals` for real counts.
-Show: leads per week, quote conversion rate, top products, top buyers.
-**Effort:** 5 hrs
+### PRIORITY 2 — DIRECTOR ONE-CLICK APPROVAL → EMAIL TO CLIENT
+**What:** Director sees approval card in Slack or panel. Clicks Approve.
+System automatically: generates invoice PDF → emails to buyer → updates COO pipeline → notifies CFO.
+No manual steps after Director clicks.
 
-### C7 · CMO — Build real social posting endpoints
-**Problem:** CMO UI has full post approval flow but `/api/cmo/publishing/` endpoints
-don't actually call Meta Graph API or LinkedIn API.
-**Fix:** Wire `api/cron/daily-social-trigger.ts` (already exists) to:
-  - POST to Facebook Page via Graph API
-  - POST to Instagram via Content Publishing API
-  - POST to LinkedIn via Share API
-**Effort:** 5 hrs (needs ENV-8 to ENV-12)
+**Files to update:**
+- `api/slack/approval.ts` — add invoice generation + email send after approval
+- `api/lead-email/notify.ts` — already exists, wire to approval trigger
+- Add: quotation email template in Resend format
 
-### C8 · CFO Market Prices — Enter real prices via UI
-**Problem:** CFO → Market Prices tab exists and works, but no prices entered yet.
-**Fix:** After SQL-1, open CFO → Market Prices tab and enter today's actual purchase prices
-for all 13 commodities. Every quote immediately uses real prices.
-**Effort:** 15 mins (after SQL)
+**Status:** Approval exists. Email endpoint exists. Wire them together.
+**Effort:** 4 hrs
 
-### C9 · Notifications — Add real-time push
-**Problem:** Notification center shows data from DB but no push/badge when new items arrive.
-**Fix:** Add Supabase real-time subscription in notification center component.
-Badge count updates live without refresh.
-**Effort:** 2 hrs
+---
 
-### C10 · Invoice — Add PDF download
-**Problem:** Invoice builder creates the invoice UI perfectly but no PDF export.
-**Fix:** Add `window.print()` with print-specific CSS already in styles.css (`.invoice-document`).
-Or add jsPDF/html2pdf for proper PDF download button.
-**Effort:** 2 hrs
+### PRIORITY 3 — CMO COLD EMAIL + FOLLOW-UP SEQUENCES
+**What:** When CIO finds or scores a buyer:
+1. CMO auto-drafts intro email (product intro, company, pricing range)
+2. Sends via Resend API
+3. If no reply in 3 days → follow-up 1
+4. If no reply in 7 days → follow-up 2 (different angle)
+5. If no reply in 14 days → final follow-up or mark lost
 
-### C11 · WhatsApp integration
-**Problem:** `whatsappApprovalService.js` and `whatsappCommandService.js` exist but
-there is no `/api/whatsapp/` endpoint and no Twilio/WhatsApp Cloud API connection.
-**Fix:** Build `/api/whatsapp/approval` endpoint using Twilio or WhatsApp Business Cloud API.
-Wire Director approvals to also notify via WhatsApp message.
+**Files to create:**
+- `api/cmo/email/send-sequence.ts` — trigger sequence for a buyer
+- `api/cmo/email/followup-check.ts` — cron: check who needs follow-up
+- Add to vercel.json: `0 6 * * *` (daily check for due follow-ups)
+
+**Status:** cold_email_sequences table (add via SQL-15). Resend API key needed.
 **Effort:** 8 hrs
 
-### C12 · COO Export Pipeline — Document status updates
-**Problem:** Document checklist in export pipeline has no way to mark docs as Ready/Submitted.
-**Fix:** Add status toggle buttons on each document row in export_documents checklist.
-Write to `export_documents` table on click.
-**Effort:** 2 hrs (after SQL)
+---
+
+### PRIORITY 4 — CTO CREDIT MONITORING → CFO AUTO-ALERT
+**What:** CTO checks platform credits/subscriptions daily.
+When any platform (OpenAI, Vercel, Supabase, Resend) is below threshold:
+1. CTO creates alert in `cto_credit_alerts`
+2. Sends Slack message to CFO channel: "OpenAI credits at $5.40 — need recharge"
+3. CFO sees it in CFO Command → Payment Requirements tab
+4. CFO logs payment → CTO confirms status updated
+
+**Files to create:**
+- `api/cron/cto-credit-check.ts` — daily check of platform balances
+- Add to vercel.json: `0 7 * * *` (7 AM daily check)
+
+**Status:** ctoService.js has subscriptionWatch but returns empty. Need real API checks.
+**Effort:** 5 hrs
 
 ---
 
-## SECTION D — WHAT'S ALREADY 100% DONE (No work needed)
+### PRIORITY 5 — CIO BUYER INTELLIGENCE
+**What:** CIO builds a database of worldwide importers/buyers.
+Sources: trade directories, existing leads, manual import.
+Scores each buyer A/B/C. Sends top A-tier buyers to CMO for cold email.
+Updates Director briefing with pipeline quality score.
 
-- ✅ Premium design system (glass, gradients, 12 animations)
-- ✅ Slack lead detection + parsing + pricing engine reply
-- ✅ COO task management service + UI
-- ✅ CFO pricing engine (reference prices working)
-- ✅ Director approval queue UI + approve/reject/escalate actions
-- ✅ Morning price cron (9 AM IST) — code complete
-- ✅ 7-stage export logic (api/export/stages.ts)
-- ✅ Invoice builder template UI
-- ✅ Notification center UI
-- ✅ Learning centre UI + run/stop/findings
-- ✅ All 30 API endpoints deployed on Vercel
-- ✅ CMO content calendar + approval queue UI
-- ✅ Command palette (Ctrl+K)
-- ✅ Mobile bottom nav
-- ✅ Shipment tracker UI
+**Files to create:**
+- `api/cio/buyers.ts` — CRUD for cio_buyer_intelligence table
+- `api/cio/score.ts` — re-score all buyers on demand
+- `api/cio/enrich.ts` — enrich buyer with web research (optional, needs OpenAI)
+
+**Status:** cioService.js has scoring logic, no API endpoints, no database
+**Effort:** 6 hrs
 
 ---
 
-## PRIORITY ORDER FOR TODAY/TOMORROW
+### PRIORITY 6 — EXPORT PIPELINE UI IN COO (Stage Tracking)
+**What:** COO Command shows each export order as a visual pipeline card:
+Stage 1 → 2 → 3 → ... → 7. Which documents are ready, which are pending.
+COO clicks "Advance Stage" → system notifies CFO (invoice), Director (approval).
 
-### TODAY (can start now — no SQL needed):
-1. C3 — Export Pipeline COO UI (8 hrs) ← biggest value
-2. C4 — Real Supabase auth (6 hrs) ← security
-3. C7 — CMO real posting endpoints (5 hrs) ← revenue
-4. C6 — Analytics real data (5 hrs) ← visibility
-5. C10 — Invoice PDF download (2 hrs) ← quick win
-6. C9 — Notifications real-time (2 hrs) ← quick win
-
-### TOMORROW MORNING (after SQL + env vars):
-7. C8 — Enter real CFO market prices (15 mins)
-8. C5 — Settings persistence (3 hrs)
-9. C1 — CTO live status (3 hrs)
-10. C2 — Dashboard real data (4 hrs)
-11. C11 — WhatsApp integration (8 hrs)
-12. C12 — Document status updates (2 hrs)
+**Files to update:** `src/main.jsx` — add "Export Orders" tab in COO Command
+**Status:** Backend `api/export/stages.ts` done. UI is missing.
+**Effort:** 8 hrs
 
 ---
 
-## COMPLETION FORECAST
+### PRIORITY 7 — REAL AUTH (Replace Demo Login)
+**What:** Real Supabase email/password login. Session persists.
+Founder logs in once, stays logged in. Password reset via email.
 
-| After | % Complete |
-|---|---|
-| Now (design done) | 62% |
-| + SQL steps run | 72% |
-| + Env vars added | 76% |
-| + C3 Export UI | 80% |
-| + C4 Auth | 83% |
-| + C7 CMO posting | 86% |
-| + C6 Analytics | 88% |
-| + C1 CTO live | 90% |
-| + C2 Dashboard | 92% |
-| + C10 PDF + C9 Notifs | 94% |
-| + C11 WhatsApp | 97% |
-| + Testing + QA | 100% |
-
-**Total remaining: ~55 hrs of code + 2.5 hrs of SQL/env setup**
-**At full pace: 2 days to 90%, 1 more week to 100%**
+**Files to update:** `src/main.jsx` login section
+**Effort:** 6 hrs
 
 ---
 
-*Updated: Saturday night. Start Section A first thing Monday.*
+### PRIORITY 8 — ANALYTICS WITH REAL DATA
+**What:** Dashboard KPI cards show real numbers from DB:
+- Total leads this month (from lead_intake)
+- Total revenue pending (from pricing_requests)  
+- Quotes sent vs won (conversion rate)
+- Top product, top buyer country
+
+**Files to update:** `src/main.jsx` MetricGrid + chart components
+**Effort:** 5 hrs
+
+---
+
+### PRIORITY 9 — INVOICE PDF + EMAIL SEND
+**What:** Invoice builder generates PDF. "Send to Client" button emails via Resend.
+**Files to update:** `src/main.jsx` invoice builder, wire to `api/lead-email/notify.ts`
+**Effort:** 3 hrs
+
+---
+
+### PRIORITY 10 — CMO REAL SOCIAL POSTING
+**What:** CMO scheduled posts actually go to Instagram, Facebook, LinkedIn.
+**Files to update:** `api/cron/daily-social-trigger.ts` — already exists, add real API calls
+**Effort:** 5 hrs (needs ENV-8 to ENV-12)
+
+---
+
+## SECTION D — FULL 24/7 AGENT LOOP (The End Game)
+
+This is what makes the platform fully autonomous. After all above is done:
+
+```
+Every 5 minutes — Slack sync (already running)
+Every morning 9 AM IST:
+  1. morning-price-fetch → gets live commodity prices → updates CFO pricing
+  2. briefing-9am → all agents compile overnight summary → Slack to Director
+  3. cto-credit-check → checks all platform balances → alerts CFO if low
+  4. followup-check → checks cold email sequences → sends due follow-ups
+  5. cio-score → re-scores all buyers in CIO database
+
+Every afternoon 2 PM IST:
+  1. briefing-2pm → mid-day update → leads in, quotes out, money status
+
+Every evening 9 PM IST:
+  1. briefing-9pm → full day summary → lost leads + why, won + amount
+  2. daily-social-trigger → CMO posts on Instagram/Facebook/LinkedIn
+
+On every Slack lead message (real-time):
+  1. CIO scores lead (A/B/C tier)
+  2. CFO prices it (live market prices)
+  3. COO checks operational readiness
+  4. CMO drafts intro email (ready to send on approval)
+  5. CTO verifies all systems healthy
+  6. Director gets Slack approval card (one tap = done)
+
+On Director approval:
+  1. Invoice/quotation generated
+  2. Email sent to buyer via Resend
+  3. COO pipeline updated (Stage 2: Order Confirmed)
+  4. CFO records expected receivable
+  5. CMO starts follow-up sequence
+  6. All agents notified
+
+On no reply from buyer (3/7/14 days):
+  1. CMO sends follow-up automatically
+  2. Director briefing notes it
+  3. After 14 days → mark as cold → CIO re-scores
+
+On CTO credit low:
+  1. CTO sends Slack alert to CFO
+  2. CFO sees in Payment Requirements tab
+  3. CFO logs payment → CTO marks resolved
+```
+
+---
+
+## COMPLETION FORECAST AFTER ALL ITEMS
+
+| After | % | What works |
+|---|---|---|
+| Right now | 62% | All UI, Slack lead detection, pricing |
+| SQL done | 72% | Real data saves, all agents can write |
+| Env vars done | 76% | Slack live, morning cron live |
+| Priority 1 (briefings) | 80% | 3x daily briefings to Slack |
+| Priority 2 (one-click approval) | 83% | Director approves → client gets invoice |
+| Priority 3 (cold email) | 86% | CMO running buyer outreach 24/7 |
+| Priority 4 (CTO credits) | 88% | Platform self-monitors, CFO auto-alerted |
+| Priority 5 (CIO buyers) | 90% | Worldwide buyer database live |
+| Priority 6 (export UI) | 92% | COO stage tracking visible |
+| Priority 7 (auth) | 93% | Real login |
+| Priority 8-10 | 96% | Analytics, PDF, Social |
+| Testing + QA | 100% | Production ready |
+
+**Total remaining work: ~56 hrs of code + 2.5 hrs SQL/env setup**
+**Realistic timeline: 5–7 working days to 100%**
+
+---
+
+## WHAT TO BUILD TODAY (Right Now, No SQL Needed)
+
+**Start with these — no dependencies:**
+
+1. `api/cron/briefing-9am.ts` — morning intel briefing (build the template)
+2. `api/cron/briefing-2pm.ts` — afternoon update
+3. `api/cron/briefing-9pm.ts` — evening summary
+4. `api/cio/buyers.ts` — CIO buyer CRUD API
+5. Wire Director approval → email send in `api/slack/approval.ts`
+6. Export Pipeline UI tab in COO Command
+
+Say "start with [number]" and we build it right now.
+
+---
+
+*Master plan locked Saturday night. This is the intelligence platform. Execute Monday.*
