@@ -8754,8 +8754,6 @@ function DirectorCommandCenter({ navigate, onBack, onOpenTasks }) {
 
       <div className="director-main-grid director-main-grid--agent-only">
         <aside className="director-agent-feed" style={{ gridColumn: '1 / -1' }}>
-
-        <aside className="director-agent-feed">
           <div className="director-queue-header">
             <h2>Agent Activity</h2>
             <span className="dir-live-dot" aria-label="Live" />
