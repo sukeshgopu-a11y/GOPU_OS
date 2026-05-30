@@ -29606,8 +29606,16 @@ select {
   position: relative;
 }
 
+.dir-table-row {
+  cursor: pointer;
+}
+
 .dir-table-row:hover {
-  background: rgba(46,242,255,0.03);
+  background: rgba(46,242,255,0.04);
+}
+
+.dir-table-row--selected {
+  background: rgba(46,242,255,0.07) !important;
 }
 
 .dir-table-row td {
@@ -29615,9 +29623,10 @@ select {
   vertical-align: middle;
 }
 
-/* Left accent bar via box-shadow on first cell */
+/* Left accent bar on first cell */
 .dir-table-row td:first-child {
   position: relative;
+  padding-left: 20px;
 }
 
 .dir-table-row td:first-child::before {
@@ -29631,13 +29640,62 @@ select {
   border-radius: 0 2px 2px 0;
 }
 
-.dir-td-sno {
+/* S.No + Priority combined cell */
+.dir-td-priority {
+  white-space: nowrap;
+  min-width: 120px;
+}
+
+.dir-row-num {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  margin-right: 8px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.06);
   color: var(--dim);
   font-family: var(--font-mono);
-  font-size: 0.75rem;
+  font-size: 0.72rem;
   font-weight: 800;
-  padding-left: 18px !important;
-  width: 48px;
+  vertical-align: middle;
+}
+
+/* Expanded detail row */
+.dir-detail-row td {
+  padding: 0;
+  border-bottom: 2px solid rgba(46,242,255,0.3);
+}
+
+.dir-detail-panel {
+  padding: 18px 20px;
+  background: rgba(46,242,255,0.04);
+  border-top: 1px solid rgba(46,242,255,0.15);
+  animation: dirDetailSlide 180ms var(--ease) both;
+}
+
+@keyframes dirDetailSlide {
+  from { opacity: 0; transform: translateY(-6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.dir-detail-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 14px;
+  margin-bottom: 16px;
+}
+
+.dir-detail-grid > div { display: grid; gap: 4px; }
+.dir-detail-grid span { color: var(--dim); font-size: 0.67rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.07em; }
+.dir-detail-grid p { margin: 0; color: var(--text); font-size: 0.84rem; line-height: 1.45; }
+
+.dir-detail-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
 }
 
 .dir-table-title {
@@ -29801,6 +29859,343 @@ select {
 }
 
 /* ─── End COO Recent Leads Panel ──────────────────────────────────────────── */
+
+/* ─── Director Decision Detail Page ──────────────────────────────────────── */
+
+.dir-detail-page {
+  width: min(1300px, calc(100% - 32px));
+  margin: 0 auto;
+  padding: clamp(20px, 3vw, 36px) 0;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.dir-detail-loading {
+  padding: 60px;
+  text-align: center;
+  color: var(--muted);
+  font-size: 1rem;
+}
+
+.dir-detail-topbar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.dir-detail-status {
+  display: inline-flex;
+  align-items: center;
+  height: 24px;
+  padding: 0 10px;
+  border-radius: 4px;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  border: 1px solid rgba(46,242,255,0.3);
+  color: #2ef2ff;
+}
+.dir-detail-status[data-status="Approved"] { border-color: rgba(34,197,94,0.4); color: #22c55e; }
+.dir-detail-status[data-status="Rejected"] { border-color: rgba(255,90,90,0.4); color: #ff5a5a; }
+.dir-detail-status[data-status="Escalated"] { border-color: rgba(245,158,11,0.4); color: #f59e0b; }
+
+.dir-detail-hero {
+  position: relative;
+  overflow: hidden;
+  padding: 28px 32px;
+  border: 1px solid rgba(46,242,255,0.18);
+  border-radius: 12px;
+  background: linear-gradient(135deg, rgba(46,242,255,0.05) 0%, rgba(4,8,14,0.96) 60%);
+}
+
+.dir-detail-hero h1 {
+  margin: 0 0 12px;
+  font-family: var(--font-display);
+  font-size: clamp(1.6rem, 3vw, 2.6rem);
+  font-weight: 900;
+  line-height: 1.1;
+  background: linear-gradient(90deg, #fff 40%, #2ef2ff 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.dir-detail-hero-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+}
+
+.dir-detail-hero-meta span {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+
+.dir-detail-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 320px;
+  gap: 20px;
+  align-items: start;
+}
+
+.dir-detail-main {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* Timeline */
+.dir-timeline-section h2,
+.dir-pricing-breakdown h2,
+.dir-buyer-reply h2 {
+  margin: 0 0 16px;
+  padding: 14px 18px;
+  border-bottom: 1px solid var(--border);
+  color: var(--text);
+  font-size: 0.95rem;
+  font-weight: 800;
+}
+
+.dir-buyer-reply h2 span {
+  color: var(--dim);
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+
+.dir-timeline-section,
+.dir-pricing-breakdown,
+.dir-buyer-reply {
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--panel-1);
+  overflow: hidden;
+}
+
+.dir-timeline {
+  padding: 8px 18px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.dir-timeline-step {
+  display: flex;
+  gap: 16px;
+}
+
+.dir-timeline-connector {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex: 0 0 32px;
+}
+
+.dir-timeline-dot {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  color: #000;
+  flex: 0 0 32px;
+  margin-top: 14px;
+}
+
+.dir-timeline-line {
+  width: 2px;
+  flex: 1;
+  min-height: 20px;
+  background: rgba(255,255,255,0.08);
+  margin: 4px 0;
+}
+
+.dir-timeline-body {
+  padding: 14px 0 20px;
+  flex: 1;
+  min-width: 0;
+}
+
+.dir-timeline-header {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 8px;
+}
+
+.dir-timeline-header strong {
+  font-size: 0.92rem;
+  font-weight: 800;
+}
+
+.dir-timeline-header time {
+  color: var(--dim);
+  font-size: 0.72rem;
+  font-family: var(--font-mono);
+}
+
+.dir-timeline-detail {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.dir-timeline-detail li {
+  color: var(--muted);
+  font-size: 0.8rem;
+  line-height: 1.5;
+  padding-left: 12px;
+  position: relative;
+}
+
+.dir-timeline-detail li::before {
+  content: '–';
+  position: absolute;
+  left: 0;
+  color: var(--dim);
+}
+
+/* Pricing table */
+.dir-pricing-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.82rem;
+}
+
+.dir-pricing-table th,
+.dir-pricing-table td { padding: 10px 18px; text-align: left; border-bottom: 1px solid rgba(255,255,255,0.05); }
+.dir-pricing-table th { color: var(--dim); font-size: 0.68rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.07em; }
+.dir-pricing-table td { color: var(--muted); }
+.dir-pricing-total { color: var(--text) !important; font-weight: 700; font-family: var(--font-mono); }
+.dir-pricing-grand { color: #2ef2ff !important; font-weight: 800; font-family: var(--font-mono); font-size: 0.95rem; }
+.dir-pricing-ok { color: #22c55e !important; font-weight: 800; }
+.dir-pricing-risk { color: #ff5a5a !important; font-weight: 800; }
+.dir-pricing-table tfoot tr:last-child td { border-bottom: none; }
+
+/* Buyer reply */
+.dir-reply-text {
+  margin: 0;
+  padding: 16px 18px;
+  color: var(--muted);
+  font-size: 0.8rem;
+  line-height: 1.7;
+  white-space: pre-wrap;
+  font-family: var(--font-mono);
+}
+
+/* Sidebar */
+.dir-detail-sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  position: sticky;
+  top: 24px;
+}
+
+.dir-sidebar-card,
+.dir-action-card {
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--panel-1);
+  padding: 18px;
+}
+
+.dir-sidebar-card h3,
+.dir-action-card h3 {
+  margin: 0 0 14px;
+  color: var(--text);
+  font-size: 0.92rem;
+  font-weight: 800;
+}
+
+.dir-sidebar-card dl {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 8px 14px;
+  margin: 0;
+}
+
+.dir-sidebar-card dt {
+  color: var(--dim);
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  align-self: start;
+  padding-top: 1px;
+}
+
+.dir-sidebar-card dd {
+  margin: 0;
+  color: var(--text);
+  font-size: 0.82rem;
+}
+
+.dir-sidebar-amount {
+  color: #2ef2ff !important;
+  font-family: var(--font-mono);
+  font-weight: 800;
+  font-size: 0.92rem !important;
+}
+
+.dir-action-card p {
+  margin: 0 0 12px;
+  color: var(--muted);
+  font-size: 0.8rem;
+  line-height: 1.5;
+}
+
+.dir-note-input {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 10px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: rgba(255,255,255,0.03);
+  color: var(--text);
+  font-size: 0.8rem;
+  resize: vertical;
+  margin-bottom: 12px;
+}
+
+.dir-action-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.dir-btn-lg {
+  min-height: 42px !important;
+  font-size: 0.85rem !important;
+  border-radius: 8px !important;
+}
+
+.dir-action-card--done {
+  border-color: rgba(34,197,94,0.3);
+  background: rgba(34,197,94,0.04);
+}
+
+.dir-action-card--done h3 { color: #22c55e; }
+
+@media (max-width: 900px) {
+  .dir-detail-layout {
+    grid-template-columns: 1fr;
+  }
+  .dir-detail-sidebar {
+    position: static;
+  }
+}
+
+/* ─── End Director Decision Detail Page ───────────────────────────────────── */
 
 /* ─── End Director Command Cinematic Redesign ─────────────────────────────── */
 
