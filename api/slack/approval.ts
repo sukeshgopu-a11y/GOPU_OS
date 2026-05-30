@@ -237,8 +237,7 @@ export default async function handler(req: any, res: any) {
       await client
         .from("founder_approvals")
         .update({ approval_status: decision === "approved" ? "Approved" : "Rejected", updated_at: new Date().toISOString() })
-        .eq("id", approvalId)
-        .catch(() => null);
+        .eq("id", approvalId);
 
       // 2. Fetch approval record for buyer email details
       const { data: approval } = await client
@@ -246,7 +245,7 @@ export default async function handler(req: any, res: any) {
         .select("buyer_name, amount, related_record_id, metadata")
         .eq("id", approvalId)
         .maybeSingle()
-        .catch(() => ({ data: null }));
+        .then(r => r, () => ({ data: null }));
 
       if (decision === "approved" && approval) {
         const meta: any = approval.metadata || {};
@@ -285,17 +284,16 @@ export default async function handler(req: any, res: any) {
               subject,
               html,
             }),
-          }).then(r => r.json()).catch(() => ({ error: "fetch_failed" }));
+          }).then(r => r.json()).catch(() => ({ error: "fetch_failed" } as any));
 
-          postApprovalResult = { ok: !emailRes.error, email_sent_to: buyerEmail, resend_id: emailRes.id };
+          postApprovalResult = { ok: !(emailRes as any).error, email_sent_to: buyerEmail, resend_id: (emailRes as any).id };
 
           // 4. Update lead_intake status to "Quotation Sent"
           if (meta.lead_id) {
             await client
               .from("lead_intake")
               .update({ status: "Quotation Sent", updated_at: new Date().toISOString() })
-              .eq("id", meta.lead_id)
-              .catch(() => null);
+              .eq("id", meta.lead_id);
           }
 
           // 5. Notify COO — advance export order to Stage 2 if exists
@@ -303,8 +301,7 @@ export default async function handler(req: any, res: any) {
             await client
               .from("export_orders")
               .update({ current_stage: 2, current_stage_name: "Order Confirmed", updated_at: new Date().toISOString() })
-              .eq("id", meta.export_order_id)
-              .catch(() => null);
+              .eq("id", meta.export_order_id);
           }
 
           // 6. Post Slack confirmation to channel
