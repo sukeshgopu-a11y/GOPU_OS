@@ -226,12 +226,140 @@ export default async function handler(req: any, res: any) {
     approval_id: String((value as any).approval_id || "")
   });
 
+  // ── Post-approval: update DB + send email to buyer ────────────────────────
+  const approvalId = String((value as any).approval_id || "");
+  let postApprovalResult: any = { ok: false, skipped: true };
+
+  if (approvalId && auditResult.status !== "duplicate") {
+    const client = getSupabaseClient();
+    if (client) {
+      // 1. Update founder_approvals status
+      await client
+        .from("founder_approvals")
+        .update({ approval_status: decision === "approved" ? "Approved" : "Rejected", updated_at: new Date().toISOString() })
+        .eq("id", approvalId)
+        .catch(() => null);
+
+      // 2. Fetch approval record for buyer email details
+      const { data: approval } = await client
+        .from("founder_approvals")
+        .select("buyer_name, amount, related_record_id, metadata")
+        .eq("id", approvalId)
+        .maybeSingle()
+        .catch(() => ({ data: null }));
+
+      if (decision === "approved" && approval) {
+        const meta: any = approval.metadata || {};
+        const buyerEmail = meta.buyer_email || meta.email || "";
+        const resendKey = env("RESEND_API_KEY");
+
+        // 3. Send quotation email to buyer if email is known
+        if (resendKey && buyerEmail && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(buyerEmail)) {
+          const subject = `Quotation from GOPU Exports — ${meta.product || "Spices"}`;
+          const html = `
+            <div style="font-family:sans-serif;max-width:600px;margin:0 auto;padding:32px;background:#f9f9f9">
+              <h2 style="color:#1a1a2e">Dear ${approval.buyer_name || "Valued Buyer"},</h2>
+              <p>Thank you for your interest in GOPU Exports. Please find your quotation below.</p>
+              <table style="width:100%;border-collapse:collapse;margin:24px 0">
+                <tr style="background:#1a1a2e;color:#fff">
+                  <th style="padding:12px;text-align:left">Item</th>
+                  <th style="padding:12px;text-align:right">Details</th>
+                </tr>
+                <tr style="background:#fff"><td style="padding:10px;border-bottom:1px solid #eee">Product</td><td style="padding:10px;text-align:right;border-bottom:1px solid #eee">${meta.product || "As discussed"}</td></tr>
+                <tr style="background:#f5f5f5"><td style="padding:10px;border-bottom:1px solid #eee">Quantity</td><td style="padding:10px;text-align:right;border-bottom:1px solid #eee">${meta.quantity || "As discussed"} ${meta.unit || "MT"}</td></tr>
+                <tr style="background:#fff"><td style="padding:10px;border-bottom:1px solid #eee">Incoterm</td><td style="padding:10px;text-align:right;border-bottom:1px solid #eee">${meta.incoterm || "FOB"}</td></tr>
+                <tr style="background:#f5f5f5"><td style="padding:10px;border-bottom:1px solid #eee">Destination</td><td style="padding:10px;text-align:right;border-bottom:1px solid #eee">${meta.destination || "As discussed"}</td></tr>
+                <tr style="background:#fff;font-weight:bold"><td style="padding:12px">Total Amount</td><td style="padding:12px;text-align:right;color:#2563eb">${approval.amount || "USD TBD"}</td></tr>
+              </table>
+              <p style="color:#666;font-size:14px">Validity: 7 days from date of this quotation.<br>Payment terms: ${meta.payment_terms || "As per discussion"}.</p>
+              <p>To proceed, please reply to this email or contact us. We will send a Proforma Invoice immediately on your confirmation.</p>
+              <p style="margin-top:32px">Warm regards,<br><strong>GOPU Exports</strong><br>Export Division</p>
+            </div>`;
+
+          const emailRes = await fetch("https://api.resend.com/emails", {
+            method: "POST",
+            headers: { Authorization: `Bearer ${resendKey}`, "Content-Type": "application/json" },
+            body: JSON.stringify({
+              from: env("FROM_EMAIL") || "exports@gopuexports.com",
+              to: [buyerEmail],
+              subject,
+              html,
+            }),
+          }).then(r => r.json()).catch(() => ({ error: "fetch_failed" }));
+
+          postApprovalResult = { ok: !emailRes.error, email_sent_to: buyerEmail, resend_id: emailRes.id };
+
+          // 4. Update lead_intake status to "Quotation Sent"
+          if (meta.lead_id) {
+            await client
+              .from("lead_intake")
+              .update({ status: "Quotation Sent", updated_at: new Date().toISOString() })
+              .eq("id", meta.lead_id)
+              .catch(() => null);
+          }
+
+          // 5. Notify COO — advance export order to Stage 2 if exists
+          if (meta.export_order_id) {
+            await client
+              .from("export_orders")
+              .update({ current_stage: 2, current_stage_name: "Order Confirmed", updated_at: new Date().toISOString() })
+              .eq("id", meta.export_order_id)
+              .catch(() => null);
+          }
+
+          // 6. Post Slack confirmation to channel
+          const slackToken = env("SLACK_BOT_TOKEN");
+          const slackChannel = env("SLACK_CHANNEL_ID");
+          if (slackToken && slackChannel) {
+            const msg = `✅ *Director Approved — Quotation Sent*\nBuyer: *${approval.buyer_name || "Buyer"}*\nAmount: *${approval.amount || "USD TBD"}*\nProduct: ${meta.product || ""} ${meta.quantity || ""}\n📧 Quotation emailed to ${buyerEmail}\n⚙️ COO: Export order advanced to Stage 2 — Order Confirmation`;
+            await fetch("https://slack.com/api/chat.postMessage", {
+              method: "POST",
+              headers: { Authorization: `Bearer ${slackToken}`, "Content-Type": "application/json" },
+              body: JSON.stringify({ channel: slackChannel, text: msg }),
+            }).catch(() => null);
+          }
+        } else if (decision === "approved") {
+          postApprovalResult = { ok: false, reason: "no_buyer_email", note: "Approval recorded. Add buyer email in lead to auto-send quotation." };
+          // Still notify Slack
+          const slackToken = env("SLACK_BOT_TOKEN");
+          const slackChannel = env("SLACK_CHANNEL_ID");
+          if (slackToken && slackChannel) {
+            const msg = `✅ *Director Approved — ${approval?.buyer_name || "Buyer"}*\n⚠️ No buyer email on file — please send quotation manually\nAmount: ${approval?.amount || "TBD"}`;
+            await fetch("https://slack.com/api/chat.postMessage", {
+              method: "POST",
+              headers: { Authorization: `Bearer ${slackToken}`, "Content-Type": "application/json" },
+              body: JSON.stringify({ channel: slackChannel, text: msg }),
+            }).catch(() => null);
+          }
+        }
+      }
+
+      // 7. If rejected — notify Slack with reason
+      if (decision === "rejected") {
+        const slackToken = env("SLACK_BOT_TOKEN");
+        const slackChannel = env("SLACK_CHANNEL_ID");
+        if (slackToken && slackChannel) {
+          const msg = `❌ *Director Rejected — ${approval?.buyer_name || "Buyer"}*\nAmount: ${approval?.amount || "TBD"}\nCOO notified to hold the order.`;
+          await fetch("https://slack.com/api/chat.postMessage", {
+            method: "POST",
+            headers: { Authorization: `Bearer ${slackToken}`, "Content-Type": "application/json" },
+            body: JSON.stringify({ channel: slackChannel, text: msg }),
+          }).catch(() => null);
+        }
+        postApprovalResult = { ok: true, rejected: true };
+      }
+    }
+  }
+
   res.status(200).json({
     ok: true,
     status: auditResult.status === "duplicate" ? "duplicate" : decision,
     decision,
     audit: auditResult,
     integration: integrationResult,
-    message: `Slack approval ${decision}.`
+    post_approval: postApprovalResult,
+    message: decision === "approved"
+      ? `Approved. Quotation sent to buyer.`
+      : `Rejected. COO notified.`,
   });
 }

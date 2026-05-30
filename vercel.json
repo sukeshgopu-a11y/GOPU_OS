@@ -1,8 +1,13 @@
 {
   "crons": [
-    { "path": "/api/cron/daily-social-trigger", "schedule": "0 0 * * *" },
-    { "path": "/api/slack/sync-leads", "schedule": "*/5 * * * *" },
-    { "path": "/api/cron/morning-price-fetch", "schedule": "30 3 * * *" }
+    { "path": "/api/cron/morning-price-fetch",  "schedule": "30 3 * * *"  },
+    { "path": "/api/cron/briefing-9am",          "schedule": "35 3 * * *"  },
+    { "path": "/api/cron/cto-credit-check",      "schedule": "0  4 * * *"  },
+    { "path": "/api/cmo/email/followup-check",   "schedule": "30 4 * * *"  },
+    { "path": "/api/cron/briefing-2pm",          "schedule": "30 8 * * *"  },
+    { "path": "/api/cron/briefing-9pm",          "schedule": "30 15 * * *" },
+    { "path": "/api/cron/daily-social-trigger",  "schedule": "30 15 * * *" },
+    { "path": "/api/slack/sync-leads",           "schedule": "*/5 * * * *" }
   ],
   "functions": {
     "api/**/*.ts": { "includeFiles": "lib/**" },
