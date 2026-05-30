@@ -1,0 +1,1068 @@
+/* ==========================================================================
+   GOPU OS — Premium SaaS Design System
+   Imported after styles.css to progressively enhance the base theme.
+   Design language: Linear × Vercel × Raycast — dark glass, glows, gradients.
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   1. DESIGN TOKENS — Override :root variables
+   -------------------------------------------------------------------------- */
+:root {
+  /* Core palette */
+  --color-bg-deep:         #010208;
+  --color-bg-navy:         #020510;
+  --color-bg-card:         rgba(255, 255, 255, 0.04);
+  --color-bg-card-hover:   rgba(255, 255, 255, 0.07);
+  --color-bg-glass:        rgba(2, 5, 16, 0.85);
+
+  /* Accents */
+  --accent-cyan:           #2ef2ff;
+  --accent-cyan-dim:       rgba(46, 242, 255, 0.15);
+  --accent-cyan-glow:      rgba(46, 242, 255, 0.08);
+  --accent-purple:         #8b5cf6;
+  --accent-purple-dim:     rgba(139, 92, 246, 0.12);
+  --accent-gold:           #f59e0b;
+  --accent-gold-dim:       rgba(245, 158, 11, 0.12);
+  --accent-emerald:        #10b981;
+  --accent-emerald-dim:    rgba(16, 185, 129, 0.1);
+  --accent-red:            #ef4444;
+  --accent-red-dim:        rgba(239, 68, 68, 0.12);
+
+  /* Borders */
+  --border-subtle:         rgba(255, 255, 255, 0.06);
+  --border-default:        rgba(255, 255, 255, 0.08);
+  --border-strong:         rgba(255, 255, 255, 0.12);
+  --border-cyan:           rgba(46, 242, 255, 0.3);
+  --border-cyan-faint:     rgba(46, 242, 255, 0.12);
+
+  /* Shadows */
+  --shadow-xs:             0 1px 3px rgba(0, 0, 0, 0.4);
+  --shadow-sm:             0 2px 8px rgba(0, 0, 0, 0.5);
+  --shadow-md:             0 4px 24px rgba(0, 0, 0, 0.5);
+  --shadow-lg:             0 8px 48px rgba(0, 0, 0, 0.6);
+  --shadow-glow-cyan:      0 0 40px rgba(46, 242, 255, 0.08);
+  --shadow-glow-cyan-md:   0 0 24px rgba(46, 242, 255, 0.18);
+  --shadow-glow-purple:    0 0 40px rgba(139, 92, 246, 0.1);
+  --shadow-card-hover:     0 8px 32px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(46, 242, 255, 0.08);
+
+  /* Radius */
+  --radius:                12px;
+  --radius-sm:             8px;
+  --radius-lg:             18px;
+  --radius-xl:             28px;
+  --radius-full:           9999px;
+
+  /* Typography */
+  --font-mono:             'JetBrains Mono', 'Fira Code', 'Cascadia Code', monospace;
+
+  /* Transitions */
+  --ease-spring:           cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-out:              cubic-bezier(0.22, 1, 0.36, 1);
+  --transition-fast:       0.15s cubic-bezier(0.16, 1, 0.3, 1);
+  --transition-base:       0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  --transition-slow:       0.35s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* --------------------------------------------------------------------------
+   2. GLOBAL BASE — Body & Root layering
+   -------------------------------------------------------------------------- */
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background-color: var(--color-bg-deep);
+  position: relative;
+  overflow-x: hidden;
+}
+
+/* Animated mesh gradient background */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(ellipse 80% 60% at 20% 10%, rgba(46, 242, 255, 0.06) 0%, transparent 60%),
+    radial-gradient(ellipse 60% 80% at 80% 90%, rgba(139, 92, 246, 0.05) 0%, transparent 60%),
+    radial-gradient(ellipse 50% 40% at 60% 40%, rgba(16, 185, 129, 0.03) 0%, transparent 50%);
+  animation: meshDrift 20s ease-in-out infinite alternate;
+}
+
+/* Subtle grid overlay */
+body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background-image:
+    linear-gradient(rgba(255, 255, 255, 0.025) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.025) 1px, transparent 1px);
+  background-size: 40px 40px;
+  mask-image: radial-gradient(ellipse 100% 100% at 50% 50%, black 40%, transparent 100%);
+  -webkit-mask-image: radial-gradient(ellipse 100% 100% at 50% 50%, black 40%, transparent 100%);
+}
+
+#root {
+  position: relative;
+  z-index: 1;
+}
+
+/* --------------------------------------------------------------------------
+   3. PREMIUM SCROLLBAR
+   -------------------------------------------------------------------------- */
+::-webkit-scrollbar {
+  width: 4px;
+  height: 4px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(46, 242, 255, 0.2);
+  border-radius: 2px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(46, 242, 255, 0.4);
+}
+
+/* --------------------------------------------------------------------------
+   4. KEYFRAME ANIMATIONS
+   -------------------------------------------------------------------------- */
+@keyframes meshDrift {
+  from { opacity: 0.8; transform: scale(1); }
+  to   { opacity: 1;   transform: scale(1.04); }
+}
+
+@keyframes fadeSlideUp {
+  from { opacity: 0; transform: translateY(16px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fadeSlideIn {
+  from { opacity: 0; transform: translateX(-12px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes glowPulse {
+  0%, 100% { box-shadow: 0 0 20px rgba(46, 242, 255, 0.15); }
+  50%       { box-shadow: 0 0 35px rgba(46, 242, 255, 0.32); }
+}
+
+@keyframes shimmerSweep {
+  from { left: -100%; }
+  to   { left: 200%; }
+}
+
+@keyframes gradientShift {
+  0%   { background-position: 0%   50%; }
+  50%  { background-position: 100% 50%; }
+  100% { background-position: 0%   50%; }
+}
+
+@keyframes borderRotate {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+
+@keyframes countUp {
+  from { opacity: 0; transform: translateY(8px) scale(0.95); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@keyframes orbitSpin {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+
+@keyframes skeletonPulse {
+  0%   { background-position: 200% center; }
+  100% { background-position: -200% center; }
+}
+
+@keyframes dotPulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50%       { opacity: 0.5; transform: scale(0.75); }
+}
+
+@keyframes borderGlow {
+  0%, 100% { opacity: 0.6; }
+  50%       { opacity: 1; }
+}
+
+@keyframes slideRight {
+  from { transform: translateX(-100%); opacity: 0; }
+  to   { transform: translateX(0);    opacity: 1; }
+}
+
+/* --------------------------------------------------------------------------
+   5. PREMIUM SIDEBAR
+   -------------------------------------------------------------------------- */
+.sidebar {
+  background: linear-gradient(180deg, rgba(2, 5, 16, 0.97) 0%, rgba(1, 2, 8, 0.99) 100%) !important;
+  backdrop-filter: blur(20px) !important;
+  -webkit-backdrop-filter: blur(20px) !important;
+  border-right: 1px solid transparent !important;
+  background-clip: padding-box !important;
+  box-shadow:
+    1px 0 0 0 rgba(46, 242, 255, 0.1),
+    4px 0 24px rgba(0, 0, 0, 0.4) !important;
+  position: relative;
+}
+
+/* Animated glow line on sidebar right edge */
+.sidebar::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 1px;
+  height: 100%;
+  background: linear-gradient(
+    180deg,
+    transparent 0%,
+    rgba(46, 242, 255, 0.3) 30%,
+    rgba(139, 92, 246, 0.2) 70%,
+    transparent 100%
+  );
+  animation: borderGlow 3s ease-in-out infinite;
+  pointer-events: none;
+}
+
+/* --------------------------------------------------------------------------
+   6. BRAND BLOCK
+   -------------------------------------------------------------------------- */
+.brand-block {
+  position: relative;
+  overflow: hidden;
+}
+
+.brand-block .brand-name,
+.brand-block [class*="wordmark"],
+.brand-block h1,
+.brand-block strong {
+  background: linear-gradient(135deg, #2ef2ff 0%, #5b8cff 50%, #8b5cf6 100%);
+  background-size: 200% 200%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: gradientShift 6s ease infinite;
+}
+
+/* --------------------------------------------------------------------------
+   7. NAV ITEMS
+   -------------------------------------------------------------------------- */
+.nav-item {
+  position: relative;
+  transition: all var(--transition-base) !important;
+  border-left: 2px solid transparent;
+  animation: fadeSlideIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) both;
+  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+  overflow: hidden;
+}
+
+.nav-item:hover {
+  background: rgba(46, 242, 255, 0.06) !important;
+  border-left-color: rgba(46, 242, 255, 0.5) !important;
+  transform: translateX(2px);
+  color: rgba(255, 255, 255, 0.95) !important;
+}
+
+.nav-item.active,
+.nav-item[data-active="true"],
+.nav-item[aria-current="page"] {
+  background: linear-gradient(90deg, rgba(46, 242, 255, 0.12) 0%, rgba(46, 242, 255, 0.04) 100%) !important;
+  border-left: 2px solid var(--accent-cyan) !important;
+  box-shadow: inset 2px 0 0 var(--accent-cyan), 0 0 20px rgba(46, 242, 255, 0.08) !important;
+  color: var(--accent-cyan) !important;
+}
+
+/* Stagger animation delays for nav items */
+.nav-item:nth-child(1)  { animation-delay: 0.05s; }
+.nav-item:nth-child(2)  { animation-delay: 0.10s; }
+.nav-item:nth-child(3)  { animation-delay: 0.15s; }
+.nav-item:nth-child(4)  { animation-delay: 0.20s; }
+.nav-item:nth-child(5)  { animation-delay: 0.25s; }
+.nav-item:nth-child(6)  { animation-delay: 0.30s; }
+.nav-item:nth-child(7)  { animation-delay: 0.35s; }
+.nav-item:nth-child(8)  { animation-delay: 0.40s; }
+.nav-item:nth-child(9)  { animation-delay: 0.45s; }
+.nav-item:nth-child(10) { animation-delay: 0.50s; }
+
+/* --------------------------------------------------------------------------
+   8. PREMIUM HEADER
+   -------------------------------------------------------------------------- */
+.system-header,
+.app-header,
+header.main-header {
+  background: rgba(2, 5, 16, 0.85) !important;
+  backdrop-filter: blur(24px) !important;
+  -webkit-backdrop-filter: blur(24px) !important;
+  border-bottom: 1px solid var(--border-subtle) !important;
+  box-shadow:
+    0 1px 0 rgba(46, 242, 255, 0.12),
+    0 4px 24px rgba(0, 0, 0, 0.4) !important;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+/* Search shell */
+.search-shell,
+.search-bar,
+.header-search {
+  background: rgba(255, 255, 255, 0.04) !important;
+  border: 1px solid var(--border-default) !important;
+  border-radius: var(--radius) !important;
+  transition: all var(--transition-base) !important;
+  backdrop-filter: blur(8px);
+}
+
+.search-shell:focus-within,
+.search-bar:focus-within,
+.header-search:focus-within {
+  border-color: rgba(46, 242, 255, 0.4) !important;
+  box-shadow: 0 0 0 3px rgba(46, 242, 255, 0.12) !important;
+  background: rgba(255, 255, 255, 0.06) !important;
+}
+
+/* --------------------------------------------------------------------------
+   9. PREMIUM GLASS CARDS & PANELS
+   -------------------------------------------------------------------------- */
+.panel {
+  background: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.05) 0%,
+    rgba(255, 255, 255, 0.02) 100%
+  ) !important;
+  backdrop-filter: blur(16px) !important;
+  -webkit-backdrop-filter: blur(16px) !important;
+  border: 1px solid var(--border-default) !important;
+  border-radius: var(--radius) !important;
+  position: relative;
+  overflow: hidden;
+  animation: fadeSlideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+/* Top gradient border accent */
+.panel::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(46, 242, 255, 0.3) 30%,
+    rgba(139, 92, 246, 0.2) 70%,
+    transparent 100%
+  );
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* Analytics chart card */
+.analytics-chart-card {
+  animation: fadeSlideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) both;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.02)) !important;
+  backdrop-filter: blur(16px) !important;
+  border: 1px solid var(--border-default) !important;
+  border-radius: var(--radius-lg) !important;
+  position: relative;
+  overflow: hidden;
+}
+
+.analytics-chart-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(46, 242, 255, 0.25), rgba(139, 92, 246, 0.15), transparent);
+  pointer-events: none;
+}
+
+/* --------------------------------------------------------------------------
+   10. PREMIUM KPI CARDS
+   -------------------------------------------------------------------------- */
+.analytics-kpi-item,
+.rich-kpi-card {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.02)) !important;
+  backdrop-filter: blur(16px) !important;
+  -webkit-backdrop-filter: blur(16px) !important;
+  border: 1px solid var(--border-default) !important;
+  border-radius: var(--radius) !important;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1) !important;
+  position: relative;
+  overflow: hidden;
+  animation: fadeSlideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.analytics-kpi-item:hover,
+.rich-kpi-card:hover {
+  transform: translateY(-3px) !important;
+  box-shadow: var(--shadow-card-hover) !important;
+  border-color: rgba(46, 242, 255, 0.15) !important;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.04)) !important;
+}
+
+/* KPI value gradient text */
+.rich-kpi-value strong,
+.analytics-kpi-value {
+  background: linear-gradient(135deg, #fff 0%, rgba(255, 255, 255, 0.75) 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: countUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) both;
+  display: inline-block;
+}
+
+/* Colored accents per variant */
+.rich-kpi-card[data-accent="cyan"] .rich-kpi-value strong {
+  background: linear-gradient(135deg, var(--accent-cyan), rgba(46, 242, 255, 0.7));
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+.rich-kpi-card[data-accent="purple"] .rich-kpi-value strong {
+  background: linear-gradient(135deg, var(--accent-purple), rgba(139, 92, 246, 0.7));
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+.rich-kpi-card[data-accent="gold"] .rich-kpi-value strong {
+  background: linear-gradient(135deg, var(--accent-gold), rgba(245, 158, 11, 0.7));
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+.rich-kpi-card[data-accent="emerald"] .rich-kpi-value strong {
+  background: linear-gradient(135deg, var(--accent-emerald), rgba(16, 185, 129, 0.7));
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* --------------------------------------------------------------------------
+   11. PREMIUM BUTTONS
+   -------------------------------------------------------------------------- */
+.tactical-button,
+.btn-primary,
+button[data-variant="primary"] {
+  background: linear-gradient(135deg, #2ef2ff 0%, #5b8cff 100%) !important;
+  color: #000 !important;
+  font-weight: 700 !important;
+  border: none !important;
+  border-radius: var(--radius-sm) !important;
+  position: relative;
+  overflow: hidden;
+  transition: all var(--transition-base) !important;
+  box-shadow: 0 2px 12px rgba(46, 242, 255, 0.25) !important;
+  letter-spacing: 0.01em;
+}
+
+.tactical-button::before,
+.btn-primary::before,
+button[data-variant="primary"]::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 40%;
+  height: 100%;
+  background: linear-gradient(
+    105deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.35) 50%,
+    transparent 100%
+  );
+  pointer-events: none;
+  transition: none;
+}
+
+.tactical-button:hover,
+.btn-primary:hover,
+button[data-variant="primary"]:hover {
+  background: linear-gradient(135deg, #5bffff 0%, #7da8ff 100%) !important;
+  transform: translateY(-1px) !important;
+  box-shadow: 0 4px 24px rgba(46, 242, 255, 0.4) !important;
+}
+
+.tactical-button:hover::before,
+.btn-primary:hover::before,
+button[data-variant="primary"]:hover::before {
+  animation: shimmerSweep 0.6s ease forwards;
+}
+
+.tactical-button:active,
+.btn-primary:active,
+button[data-variant="primary"]:active {
+  transform: scale(0.97) !important;
+  box-shadow: 0 1px 6px rgba(46, 242, 255, 0.2) !important;
+}
+
+/* Secondary / ghost buttons */
+.btn-secondary,
+button[data-variant="secondary"] {
+  background: rgba(255, 255, 255, 0.05) !important;
+  border: 1px solid var(--border-default) !important;
+  color: rgba(255, 255, 255, 0.8) !important;
+  border-radius: var(--radius-sm) !important;
+  transition: all var(--transition-base) !important;
+}
+
+.btn-secondary:hover,
+button[data-variant="secondary"]:hover {
+  background: rgba(255, 255, 255, 0.09) !important;
+  border-color: var(--border-strong) !important;
+  color: #fff !important;
+  transform: translateY(-1px) !important;
+}
+
+/* Icon buttons */
+.icon-button,
+button[data-variant="ghost"] {
+  transition: all var(--transition-base) !important;
+  border-radius: var(--radius-sm) !important;
+}
+
+.icon-button:hover,
+button[data-variant="ghost"]:hover {
+  background: rgba(46, 242, 255, 0.08) !important;
+  color: var(--accent-cyan) !important;
+}
+
+/* --------------------------------------------------------------------------
+   12. PREMIUM STATUS PILLS & BADGES
+   -------------------------------------------------------------------------- */
+.status-pill {
+  backdrop-filter: blur(8px) !important;
+  border-radius: var(--radius-full) !important;
+  font-size: 0.7rem !important;
+  font-weight: 600 !important;
+  letter-spacing: 0.04em !important;
+  transition: all var(--transition-base) !important;
+}
+
+.status-pill[data-status="active"],
+.status-pill.active {
+  background: rgba(16, 185, 129, 0.12) !important;
+  border: 1px solid rgba(16, 185, 129, 0.3) !important;
+  color: #10b981 !important;
+}
+
+.status-pill[data-status="pending"],
+.status-pill.pending {
+  background: rgba(245, 158, 11, 0.1) !important;
+  border: 1px solid rgba(245, 158, 11, 0.25) !important;
+  color: #f59e0b !important;
+}
+
+.status-pill[data-status="live"],
+.status-pill.live {
+  background: rgba(46, 242, 255, 0.08) !important;
+  border: 1px solid rgba(46, 242, 255, 0.25) !important;
+  color: var(--accent-cyan) !important;
+  animation: glowPulse 2s ease-in-out infinite;
+}
+
+.status-pill[data-status="error"],
+.status-pill.error {
+  background: rgba(239, 68, 68, 0.1) !important;
+  border: 1px solid rgba(239, 68, 68, 0.25) !important;
+  color: #ef4444 !important;
+}
+
+/* --------------------------------------------------------------------------
+   13. PREMIUM TABLES
+   -------------------------------------------------------------------------- */
+table {
+  border-collapse: separate;
+  border-spacing: 0;
+  width: 100%;
+}
+
+thead th,
+th {
+  color: rgba(255, 255, 255, 0.4) !important;
+  font-size: 0.7rem !important;
+  font-weight: 600 !important;
+  letter-spacing: 0.1em !important;
+  text-transform: uppercase !important;
+  border-bottom: 1px solid var(--border-subtle) !important;
+  padding: 10px 16px !important;
+  background: rgba(0, 0, 0, 0.2) !important;
+}
+
+tbody tr {
+  transition: all var(--transition-fast) !important;
+  border-left: 2px solid transparent;
+}
+
+tbody tr:hover {
+  background: rgba(255, 255, 255, 0.03) !important;
+  border-left-color: rgba(46, 242, 255, 0.3) !important;
+}
+
+tbody tr:nth-child(even) {
+  background: rgba(255, 255, 255, 0.01);
+}
+
+tbody td {
+  border-bottom: 1px solid var(--border-subtle) !important;
+  padding: 12px 16px !important;
+  font-size: 0.875rem !important;
+}
+
+/* --------------------------------------------------------------------------
+   14. PREMIUM FORM INPUTS
+   -------------------------------------------------------------------------- */
+input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="submit"]),
+select,
+textarea {
+  background: rgba(255, 255, 255, 0.04) !important;
+  border: 1px solid var(--border-default) !important;
+  border-radius: var(--radius-sm) !important;
+  color: rgba(255, 255, 255, 0.9) !important;
+  transition: all var(--transition-base) !important;
+  backdrop-filter: blur(8px);
+}
+
+input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="submit"]):focus,
+select:focus,
+textarea:focus {
+  outline: none !important;
+  border-color: rgba(46, 242, 255, 0.4) !important;
+  box-shadow:
+    0 0 0 3px rgba(46, 242, 255, 0.15),
+    0 0 0 1px rgba(46, 242, 255, 0.4) !important;
+  background: rgba(255, 255, 255, 0.06) !important;
+}
+
+input::placeholder,
+textarea::placeholder {
+  color: rgba(255, 255, 255, 0.25) !important;
+}
+
+/* --------------------------------------------------------------------------
+   15. PREMIUM SKELETON LOADING
+   -------------------------------------------------------------------------- */
+.skeleton,
+[data-skeleton] {
+  background: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0.04) 0%,
+    rgba(255, 255, 255, 0.09) 50%,
+    rgba(255, 255, 255, 0.04) 100%
+  ) !important;
+  background-size: 400% 100% !important;
+  animation: skeletonPulse 1.8s ease infinite !important;
+  border-radius: var(--radius-sm) !important;
+  border: none !important;
+}
+
+/* --------------------------------------------------------------------------
+   16. PREMIUM SECTION HEADERS — Approval, Priorities, etc.
+   -------------------------------------------------------------------------- */
+.approval-section-header,
+.priorities-header {
+  position: relative;
+  padding-left: 16px !important;
+}
+
+.approval-section-header::before,
+.priorities-header::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 10%;
+  height: 80%;
+  width: 3px;
+  background: linear-gradient(180deg, var(--accent-cyan) 0%, var(--accent-purple) 100%);
+  border-radius: 2px;
+}
+
+/* --------------------------------------------------------------------------
+   17. PREMIUM PAGE HERO
+   -------------------------------------------------------------------------- */
+.page-hero {
+  position: relative;
+  overflow: hidden;
+}
+
+.page-hero h1 {
+  background: linear-gradient(135deg, #fff 0%, rgba(46, 242, 255, 0.8) 50%, rgba(139, 92, 246, 0.7) 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-size: 200% 200%;
+  animation: gradientShift 8s ease infinite;
+}
+
+.page-hero h1::after {
+  content: '';
+  display: block;
+  height: 2px;
+  margin-top: 4px;
+  background: linear-gradient(90deg, var(--accent-cyan), var(--accent-purple), transparent);
+  border-radius: 2px;
+  animation: fadeIn 0.8s 0.4s both;
+}
+
+/* --------------------------------------------------------------------------
+   18. SECURE CORE BLOCK
+   -------------------------------------------------------------------------- */
+.secure-core {
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.06), rgba(16, 185, 129, 0.02)) !important;
+  border: 1px solid rgba(16, 185, 129, 0.15) !important;
+  border-radius: var(--radius-lg) !important;
+  backdrop-filter: blur(16px) !important;
+  position: relative;
+  overflow: hidden;
+}
+
+.secure-core::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse 60% 60% at 50% 0%, rgba(16, 185, 129, 0.06) 0%, transparent 70%);
+  pointer-events: none;
+}
+
+/* Orbit ring animation */
+.core-orbit {
+  animation: orbitSpin 8s linear infinite !important;
+  transform-origin: center center;
+}
+
+/* Shield icon pulse */
+.core-shield {
+  animation: glowPulse 2.5s ease-in-out infinite;
+  filter: drop-shadow(0 0 8px rgba(16, 185, 129, 0.5));
+}
+
+/* --------------------------------------------------------------------------
+   19. MOBILE BOTTOM NAV
+   -------------------------------------------------------------------------- */
+.mobile-bottom-nav {
+  background: rgba(2, 5, 16, 0.92) !important;
+  backdrop-filter: blur(24px) !important;
+  -webkit-backdrop-filter: blur(24px) !important;
+  border-top: 1px solid var(--border-subtle) !important;
+  box-shadow: 0 -4px 24px rgba(0, 0, 0, 0.4) !important;
+}
+
+.mobile-bottom-nav .nav-item.active {
+  position: relative;
+}
+
+.mobile-bottom-nav .nav-item.active::after {
+  content: '';
+  position: absolute;
+  bottom: 4px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 4px;
+  height: 4px;
+  background: var(--accent-cyan);
+  border-radius: var(--radius-full);
+  box-shadow: 0 0 8px rgba(46, 242, 255, 0.6);
+  animation: dotPulse 2s ease-in-out infinite;
+}
+
+/* --------------------------------------------------------------------------
+   20. PREMIUM TOOLTIPS
+   -------------------------------------------------------------------------- */
+.tooltip {
+  background: rgba(2, 5, 16, 0.95) !important;
+  border: 1px solid var(--border-default) !important;
+  backdrop-filter: blur(16px) !important;
+  border-radius: var(--radius-sm) !important;
+  font-size: 0.75rem !important;
+  color: rgba(255, 255, 255, 0.85) !important;
+  box-shadow: var(--shadow-md) !important;
+}
+
+/* --------------------------------------------------------------------------
+   21. PREMIUM MODALS / DIALOGS
+   -------------------------------------------------------------------------- */
+.modal,
+[role="dialog"] {
+  background: linear-gradient(
+    135deg,
+    rgba(2, 5, 16, 0.97) 0%,
+    rgba(1, 2, 8, 0.99) 100%
+  ) !important;
+  backdrop-filter: blur(24px) !important;
+  -webkit-backdrop-filter: blur(24px) !important;
+  border: 1px solid var(--border-default) !important;
+  border-radius: var(--radius-lg) !important;
+  box-shadow:
+    var(--shadow-lg),
+    0 0 0 1px rgba(46, 242, 255, 0.06),
+    var(--shadow-glow-cyan) !important;
+  animation: fadeSlideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.modal-overlay {
+  background: rgba(0, 0, 0, 0.7) !important;
+  backdrop-filter: blur(4px) !important;
+}
+
+/* --------------------------------------------------------------------------
+   22. PREMIUM DROPDOWN MENUS
+   -------------------------------------------------------------------------- */
+.dropdown,
+[role="menu"] {
+  background: rgba(2, 5, 16, 0.95) !important;
+  border: 1px solid var(--border-default) !important;
+  border-radius: var(--radius) !important;
+  backdrop-filter: blur(20px) !important;
+  box-shadow: var(--shadow-lg), var(--shadow-glow-cyan) !important;
+  animation: fadeSlideUp 0.2s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+[role="menuitem"]:hover,
+.dropdown-item:hover {
+  background: rgba(46, 242, 255, 0.06) !important;
+  color: var(--accent-cyan) !important;
+}
+
+/* --------------------------------------------------------------------------
+   23. PREMIUM TABS
+   -------------------------------------------------------------------------- */
+[role="tablist"] {
+  background: rgba(255, 255, 255, 0.03) !important;
+  border: 1px solid var(--border-subtle) !important;
+  border-radius: var(--radius) !important;
+  padding: 3px !important;
+}
+
+[role="tab"] {
+  border-radius: calc(var(--radius) - 3px) !important;
+  transition: all var(--transition-base) !important;
+  font-size: 0.8rem !important;
+  font-weight: 500 !important;
+}
+
+[role="tab"][aria-selected="true"] {
+  background: rgba(46, 242, 255, 0.1) !important;
+  color: var(--accent-cyan) !important;
+  box-shadow: 0 0 16px rgba(46, 242, 255, 0.1) !important;
+}
+
+/* --------------------------------------------------------------------------
+   24. PREMIUM PROGRESS BARS
+   -------------------------------------------------------------------------- */
+[role="progressbar"] {
+  background: rgba(255, 255, 255, 0.06) !important;
+  border-radius: var(--radius-full) !important;
+  overflow: hidden;
+}
+
+/* --------------------------------------------------------------------------
+   25. PREMIUM NOTIFICATION / TOAST
+   -------------------------------------------------------------------------- */
+.toast {
+  background: rgba(2, 5, 16, 0.95) !important;
+  border: 1px solid var(--border-default) !important;
+  border-radius: var(--radius) !important;
+  backdrop-filter: blur(20px) !important;
+  box-shadow: var(--shadow-lg) !important;
+  animation: fadeSlideIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.toast[data-type="success"] {
+  border-color: rgba(16, 185, 129, 0.3) !important;
+  box-shadow: var(--shadow-md), 0 0 20px rgba(16, 185, 129, 0.1) !important;
+}
+
+.toast[data-type="error"] {
+  border-color: rgba(239, 68, 68, 0.3) !important;
+  box-shadow: var(--shadow-md), 0 0 20px rgba(239, 68, 68, 0.1) !important;
+}
+
+/* --------------------------------------------------------------------------
+   26. PREMIUM DIVIDERS
+   -------------------------------------------------------------------------- */
+hr,
+.divider {
+  border: none !important;
+  height: 1px !important;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    var(--border-default) 20%,
+    var(--border-default) 80%,
+    transparent 100%
+  ) !important;
+  margin: 16px 0 !important;
+}
+
+/* --------------------------------------------------------------------------
+   27. PREMIUM CODE BLOCKS
+   -------------------------------------------------------------------------- */
+code,
+pre {
+  font-family: var(--font-mono) !important;
+  background: rgba(0, 0, 0, 0.4) !important;
+  border: 1px solid var(--border-subtle) !important;
+  border-radius: var(--radius-sm) !important;
+}
+
+pre {
+  padding: 16px !important;
+}
+
+code:not(pre code) {
+  padding: 2px 6px !important;
+  font-size: 0.8em !important;
+  color: var(--accent-cyan) !important;
+}
+
+/* --------------------------------------------------------------------------
+   28. PREMIUM STAT DELTA / TREND INDICATORS
+   -------------------------------------------------------------------------- */
+.delta-positive,
+.trend-up,
+.positive-delta {
+  color: var(--accent-emerald) !important;
+  background: rgba(16, 185, 129, 0.08) !important;
+  border-radius: var(--radius-full) !important;
+  padding: 2px 8px !important;
+  font-size: 0.72rem !important;
+  font-weight: 600 !important;
+}
+
+.delta-negative,
+.trend-down,
+.negative-delta {
+  color: var(--accent-red) !important;
+  background: rgba(239, 68, 68, 0.08) !important;
+  border-radius: var(--radius-full) !important;
+  padding: 2px 8px !important;
+  font-size: 0.72rem !important;
+  font-weight: 600 !important;
+}
+
+/* --------------------------------------------------------------------------
+   29. PREMIUM AVATAR / PROFILE
+   -------------------------------------------------------------------------- */
+.avatar {
+  border-radius: var(--radius-full) !important;
+  border: 2px solid var(--border-default) !important;
+  transition: all var(--transition-base) !important;
+}
+
+.avatar:hover {
+  border-color: rgba(46, 242, 255, 0.3) !important;
+  box-shadow: 0 0 16px rgba(46, 242, 255, 0.2) !important;
+}
+
+/* --------------------------------------------------------------------------
+   30. MAIN CONTENT AREA — Ensure above z-index layers
+   -------------------------------------------------------------------------- */
+.main-content,
+.content-area {
+  position: relative;
+  z-index: 1;
+  min-height: 100vh;
+}
+
+/* --------------------------------------------------------------------------
+   31. FOCUS VISIBLE — Accessibility
+   -------------------------------------------------------------------------- */
+:focus-visible {
+  outline: 2px solid rgba(46, 242, 255, 0.5) !important;
+  outline-offset: 3px !important;
+  border-radius: var(--radius-sm);
+}
+
+/* --------------------------------------------------------------------------
+   32. SELECTION HIGHLIGHT
+   -------------------------------------------------------------------------- */
+::selection {
+  background: rgba(46, 242, 255, 0.2);
+  color: #fff;
+}
+
+/* --------------------------------------------------------------------------
+   33. ANIMATION UTILITY CLASSES
+   -------------------------------------------------------------------------- */
+.animate-fade-up {
+  animation: fadeSlideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.animate-slide-in {
+  animation: fadeSlideIn 0.35s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.animate-glow-pulse {
+  animation: glowPulse 2s ease-in-out infinite;
+}
+
+.animate-gradient {
+  background-size: 200% 200%;
+  animation: gradientShift 4s ease infinite;
+}
+
+.stagger-1  { animation-delay: 0.05s; }
+.stagger-2  { animation-delay: 0.10s; }
+.stagger-3  { animation-delay: 0.15s; }
+.stagger-4  { animation-delay: 0.20s; }
+.stagger-5  { animation-delay: 0.25s; }
+.stagger-6  { animation-delay: 0.30s; }
+.stagger-7  { animation-delay: 0.35s; }
+.stagger-8  { animation-delay: 0.40s; }
+
+/* --------------------------------------------------------------------------
+   34. PREMIUM GLOW UTILITIES
+   -------------------------------------------------------------------------- */
+.glow-cyan {
+  box-shadow: var(--shadow-glow-cyan-md) !important;
+  border-color: var(--border-cyan-faint) !important;
+}
+
+.glow-purple {
+  box-shadow: var(--shadow-glow-purple) !important;
+  border-color: rgba(139, 92, 246, 0.2) !important;
+}
+
+.text-gradient-cyan {
+  background: linear-gradient(135deg, var(--accent-cyan), #5b8cff);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.text-gradient-gold {
+  background: linear-gradient(135deg, var(--accent-gold), #fbbf24);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.text-gradient-brand {
+  background: linear-gradient(135deg, #2ef2ff 0%, #5b8cff 50%, #8b5cf6 100%);
+  background-size: 200% 200%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: gradientShift 6s ease infinite;
+}
+
+/* --------------------------------------------------------------------------
+   END OF PREMIUM DESIGN SYSTEM
+   ========================================================================== */
