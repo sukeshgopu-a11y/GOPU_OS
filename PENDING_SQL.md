@@ -731,3 +731,31 @@ grant select, insert, update on public.integration_services to service_role;
 | `DIRECTOR_WHATSAPP_NUMBER` | e.g. `whatsapp:+919876543210` |
 | `SLACK_WEBHOOK_URL` | Slack Incoming Webhook (alternative to bot token) |
 
+
+---
+
+## STEP 6 — CFO Creative Wallet Tables
+
+```sql
+create table if not exists public.cfo_wallet (
+  id uuid primary key default gen_random_uuid(),
+  tenant_id uuid not null unique,
+  balance numeric default 0,
+  auto_topup_threshold numeric default 100,
+  updated_at timestamptz default now(),
+  created_at timestamptz default now()
+);
+alter table public.cfo_wallet enable row level security;
+grant select, insert, update on public.cfo_wallet to service_role;
+
+create table if not exists public.cfo_wallet_transactions (
+  id uuid primary key default gen_random_uuid(),
+  tenant_id uuid not null,
+  amount numeric not null,
+  type text default 'topup', -- topup, spend, refund
+  description text,
+  created_at timestamptz default now()
+);
+alter table public.cfo_wallet_transactions enable row level security;
+grant select, insert on public.cfo_wallet_transactions to service_role;
+```
