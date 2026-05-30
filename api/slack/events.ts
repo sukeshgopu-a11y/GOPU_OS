@@ -137,7 +137,8 @@ function parseSlackLead(text = "", event: Record<string, any> = {}) {
 }
 
 export function isLeadMessage(text = "") {
-  return /(?:^|\n)\s*(?:new\s+lead|lead\b|buyer\b|product\b|quote|enquiry|inquiry|pricing)/i.test(text);
+  return /(?:^|\n)\s*(?:new\s+lead|lead\b|buyer\b|product\b|quote|enquiry|inquiry|pricing|chilli|chili|turmeric|pepper|spice|cumin|coriander|cardamom|export|shipment|container|reddy|gopu)/i.test(text)
+    || /\d+(?:\.\d+)?\s*(?:mt|kg|kgs|ton|tons|tonne|tonnes|container|feet|bags|cartons)/i.test(text);
 }
 
 function isMarketingCommand(text = "") {
@@ -764,6 +765,19 @@ export default async function handler(req: any, res: any) {
   if (!verification.ok) {
     console.error("[slack/events] signature verification failed", verification);
     return res.status(401).json(verification);
+  }
+
+  // Deduplicate by Slack event_id to prevent double-processing on retries
+  const slackEventId = String(payload.event_id || "");
+  if (slackEventId) {
+    const client = getSupabaseClient();
+    if (client) {
+      const { error: dedupError } = await client.from("slack_event_dedup").insert({ event_id: slackEventId });
+      if (dedupError) {
+        // Unique constraint violation = already processed
+        return res.status(200).json({ ok: true, status: "duplicate_event_ignored", event_id: slackEventId });
+      }
+    }
   }
 
   const event = payload.event || {};
