@@ -1851,4 +1851,300 @@ function ApprovalConfirmationModal({ action, request, note, onCancel, onConfirm 
 
 export { FounderApprovalWall };
 export { ApprovalConfirmationModal };
+
+function DirectorDecisionDetailPage({ decisionId, navigate, onBack }) {
+  const [item, setItem] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [note, setNote] = useState('');
+  const [actionDone, setActionDone] = useState('');
+  const [acting, setActing] = useState(false);
+
+  useEffect(() => {
+    let mounted = true;
+    fetch('/api/director/approvals')
+      .then((r) => r.ok ? r.json() : null)
+      .then((json) => {
+        if (!mounted) return;
+        const all = json?.approvals || [];
+        const found = all.find((a) => a.id === decisionId);
+        setItem(found || null);
+        setLoading(false);
+      })
+      .catch(() => { if (mounted) setLoading(false); });
+    return () => { mounted = false; };
+  }, [decisionId]);
+
+  async function doAction(action) {
+    if (!item || acting) return;
+    setActing(true);
+    const client = supabase;
+    const error = !isSupabaseConfigured ? new Error('not configured') : null;
+    if (!error && client) {
+      const statusMap = { Approve: 'Approved', Reject: 'Rejected', Clarify: 'Needs Review', Escalate: 'Escalated' };
+      const newStatus = statusMap[action] || action;
+      await client.from('founder_approvals')
+        .update({ status: newStatus, approval_status: newStatus, decision_note: note, decided_by: 'Director', decided_at: new Date().toISOString(), updated_at: new Date().toISOString() })
+        .eq('id', item.id);
+      // If approved — advance export order to Stage 2
+      if (action === 'Approve') {
+        const meta = item.metadata || {};
+        if (meta.export_order_id) {
+          await client.from('export_orders')
+            .update({ current_stage: 2, current_stage_name: 'Order Confirmed', updated_at: new Date().toISOString() })
+            .eq('id', meta.export_order_id);
+        }
+        if (meta.lead?.id || meta.lead_id) {
+          await client.from('lead_intake')
+            .update({ status: 'Director Approved', updated_at: new Date().toISOString() })
+            .eq('id', meta.lead?.id || meta.lead_id);
+        }
+      }
+    }
+    setActionDone(action);
+    setActing(false);
+    setItem((prev) => prev ? { ...prev, status: action === 'Approve' ? 'Approved' : action === 'Reject' ? 'Rejected' : 'Needs Review' } : prev);
+  }
+
+  if (loading) return (
+    <div className="dir-detail-page">
+      <button className="director-back-link" onClick={onBack}><ArrowLeft size={15} /> Director Command</button>
+      <div className="dir-detail-loading">Loading decision details…</div>
+    </div>
+  );
+
+  if (!item) return (
+    <div className="dir-detail-page">
+      <button className="director-back-link" onClick={onBack}><ArrowLeft size={15} /> Director Command</button>
+      <div className="dir-detail-loading">Decision not found.</div>
+    </div>
+  );
+
+  const meta = item.metadata || {};
+  const lead = meta.lead || {};
+  const pricing = meta.pricing || {};
+  const logistics = meta.logistics || {};
+  const compliance = meta.compliance || {};
+  const buyerReply = meta.buyer_reply_draft || '';
+  const createdAt = item.created_at ? new Date(item.created_at) : null;
+  const fmtTime = (iso) => iso ? new Date(iso).toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' }) : '—';
+  const pricingLines = pricing.lines || [];
+  const isActioned = ['Approved', 'Rejected'].includes(item.status) || actionDone;
+
+  const timelineSteps = [
+    {
+      id: 'slack',
+      icon: <Zap size={16} />,
+      color: '#22c55e',
+      label: 'Lead received from Slack',
+      time: fmtTime(item.created_at),
+      detail: [
+        lead.buyer_name || item.buyer_name ? `Buyer: ${lead.buyer_name || item.buyer_name}` : null,
+        lead.company_name ? `Company: ${lead.company_name}` : null,
+        lead.product || item.product ? `Product: ${lead.product || item.product}` : null,
+        lead.quantity ? `Quantity: ${lead.quantity} ${lead.unit || ''}`.trim() : null,
+        lead.country || lead.destination_country ? `Destination: ${lead.country || lead.destination_country}` : null,
+        lead.incoterm ? `Incoterm: ${lead.incoterm}` : null,
+        lead.email ? `Email: ${lead.email}` : null,
+      ].filter(Boolean),
+    },
+    {
+      id: 'coo',
+      icon: <Activity size={16} />,
+      color: '#10b981',
+      label: 'COO Agent — Feasibility Check',
+      time: fmtTime(item.created_at),
+      detail: [
+        'Verified export feasibility for buyer destination.',
+        lead.destination_country && lead.destination_country !== 'Not provided' ? `✓ Destination: ${lead.destination_country}` : '⚠ Destination needs verification',
+        lead.product && lead.product !== 'Requested product' ? `✓ Product: ${lead.product}` : '⚠ Product needs verification',
+        lead.quantity ? `✓ Quantity captured: ${lead.quantity} ${lead.unit || ''}`.trim() : '⚠ Quantity not specified',
+        logistics.estimated_freight_days ? `Estimated freight: ${logistics.estimated_freight_days} days` : null,
+        logistics.port_of_loading ? `Port: ${logistics.port_of_loading}` : null,
+      ].filter(Boolean),
+    },
+    {
+      id: 'cfo',
+      icon: <CircleDollarSign size={16} />,
+      color: '#f59e0b',
+      label: 'CFO Agent — Pricing Calculation',
+      time: fmtTime(item.created_at),
+      detail: [
+        pricing.recommendedPricePerUnit ? `Price per unit: ${pricing.currency || 'USD'} ${pricing.recommendedPricePerUnit}` : null,
+        pricing.totalCost ? `Total cost: ${pricing.currency || 'USD'} ${pricing.totalCost}` : null,
+        item.amount ? `Quotation amount: ${item.amount}` : null,
+        pricing.achievedMarginPercent != null ? `Margin: ${pricing.achievedMarginPercent}%` : null,
+        pricing.targetMargin != null ? `Target margin: ${pricing.targetMargin}%` : null,
+        pricing.achievedMarginPercent < pricing.minMargin ? '⚠ Below minimum margin — risk flagged' : pricing.achievedMarginPercent ? '✓ Margin within acceptable range' : null,
+        ...pricingLines.slice(0, 5).map((l) => `${l.label || l.key}: ${l.lineTotal != null ? `${pricing.currency || 'USD'} ${l.lineTotal}` : l.value || ''}`),
+      ].filter(Boolean),
+    },
+    compliance.documents?.length ? {
+      id: 'compliance',
+      icon: <ShieldCheck size={16} />,
+      color: '#6366f1',
+      label: 'Compliance Agent — Document Check',
+      time: fmtTime(item.created_at),
+      detail: (compliance.documents || []).slice(0, 6).map((d) => `${d.required ? '✓' : '○'} ${d.name || d}`),
+    } : null,
+    {
+      id: 'director',
+      icon: <AlertTriangle size={16} />,
+      color: '#ff5a5a',
+      label: 'Routed to Director — Approval Required',
+      time: fmtTime(item.created_at),
+      detail: [
+        item.reason || 'Director approval required before quote, invoice, or buyer commitment.',
+        `Risk level: ${item.risk_level || 'Medium'}`,
+        `Request type: ${item.approval_type || item.request_type || 'Quote Approval'}`,
+      ].filter(Boolean),
+    },
+  ].filter(Boolean);
+
+  return (
+    <div className="dir-detail-page">
+      <div className="dir-detail-topbar">
+        <button className="director-back-link" onClick={onBack}><ArrowLeft size={15} /> Director Command</button>
+        <span className={`director-priority-badge director-priority-${String(item.priority || 'medium').toLowerCase()}`}>{item.priority || 'Medium'}</span>
+        <span className="dir-detail-status" data-status={item.status}>{item.status || 'Pending'}</span>
+      </div>
+
+      <div className="dir-detail-hero">
+        <div className="director-glow-orb" aria-hidden="true" />
+        <h1>{item.title || 'Director Decision'}</h1>
+        <div className="dir-detail-hero-meta">
+          {(item.buyer_name || lead.company_name) && <span><User size={13} /> {item.buyer_name || lead.company_name}</span>}
+          {item.amount && <span><CircleDollarSign size={13} /> {item.amount}</span>}
+          {(lead.product || item.product) && <span><Boxes size={13} /> {lead.product || item.product}</span>}
+          {item.source_executive && <span><Activity size={13} /> {item.source_executive}</span>}
+        </div>
+      </div>
+
+      <div className="dir-detail-layout">
+        <div className="dir-detail-main">
+          <section className="dir-timeline-section">
+            <h2>Pipeline Timeline</h2>
+            <div className="dir-timeline">
+              {timelineSteps.map((step, i) => (
+                <div key={step.id} className="dir-timeline-step">
+                  <div className="dir-timeline-connector">
+                    <span className="dir-timeline-dot" style={{ background: step.color, boxShadow: `0 0 8px ${step.color}` }}>{step.icon}</span>
+                    {i < timelineSteps.length - 1 && <span className="dir-timeline-line" />}
+                  </div>
+                  <div className="dir-timeline-body">
+                    <div className="dir-timeline-header">
+                      <strong style={{ color: step.color }}>{step.label}</strong>
+                      <time>{step.time}</time>
+                    </div>
+                    <ul className="dir-timeline-detail">
+                      {step.detail.map((d, j) => <li key={j}>{d}</li>)}
+                    </ul>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </section>
+
+          {pricingLines.length > 0 && (
+            <section className="dir-pricing-breakdown">
+              <h2>CFO Pricing Breakdown</h2>
+              <table className="dir-pricing-table">
+                <thead><tr><th>Line Item</th><th>Value</th><th>Total</th></tr></thead>
+                <tbody>
+                  {pricingLines.map((line, i) => (
+                    <tr key={i}>
+                      <td>{line.label || line.key}</td>
+                      <td>{line.value != null ? line.value : '—'}</td>
+                      <td className="dir-pricing-total">{line.lineTotal != null ? `${pricing.currency || 'USD'} ${Number(line.lineTotal).toLocaleString()}` : '—'}</td>
+                    </tr>
+                  ))}
+                </tbody>
+                <tfoot>
+                  <tr>
+                    <td colSpan={2}><strong>Total Quotation</strong></td>
+                    <td className="dir-pricing-grand">{item.amount || '—'}</td>
+                  </tr>
+                  {pricing.achievedMarginPercent != null && (
+                    <tr>
+                      <td colSpan={2}><strong>Margin</strong></td>
+                      <td className={pricing.achievedMarginPercent < pricing.minMargin ? 'dir-pricing-risk' : 'dir-pricing-ok'}>{pricing.achievedMarginPercent}%</td>
+                    </tr>
+                  )}
+                </tfoot>
+              </table>
+            </section>
+          )}
+
+          {buyerReply && (
+            <section className="dir-buyer-reply">
+              <h2>Draft Buyer Reply <span>(holds until Director approves)</span></h2>
+              <pre className="dir-reply-text">{buyerReply}</pre>
+            </section>
+          )}
+        </div>
+
+        <aside className="dir-detail-sidebar">
+          <div className="dir-sidebar-card">
+            <h3>Decision Details</h3>
+            <dl>
+              <dt>Buyer</dt><dd>{item.buyer_name || lead.company_name || '—'}</dd>
+              <dt>Product</dt><dd>{lead.product || item.product || '—'}</dd>
+              <dt>Quantity</dt><dd>{lead.quantity ? `${lead.quantity} ${lead.unit || ''}`.trim() : '—'}</dd>
+              <dt>Destination</dt><dd>{lead.country || lead.destination_country || '—'}</dd>
+              <dt>Incoterm</dt><dd>{lead.incoterm || '—'}</dd>
+              <dt>Amount</dt><dd className="dir-sidebar-amount">{item.amount || '—'}</dd>
+              <dt>Risk Level</dt><dd>{item.risk_level || 'Medium'}</dd>
+              <dt>Received</dt><dd>{fmtTime(item.created_at)}</dd>
+              <dt>Status</dt><dd>{item.status || 'Pending'}</dd>
+            </dl>
+          </div>
+
+          {!isActioned ? (
+            <div className="dir-action-card">
+              <h3>Director Decision</h3>
+              <p>Once you approve, the quotation is released and the export order advances to Stage 2 — Order Confirmed.</p>
+              <textarea
+                className="dir-note-input"
+                placeholder="Add a note (optional)…"
+                value={note}
+                onChange={(e) => setNote(e.target.value)}
+                rows={3}
+              />
+              <div className="dir-action-buttons">
+                <button className="dir-btn-approve dir-btn-lg" disabled={acting} onClick={() => doAction('Approve')}>
+                  {acting ? 'Processing…' : '✓ Approve'}
+                </button>
+                <button className="dir-btn-reject dir-btn-lg" disabled={acting} onClick={() => doAction('Reject')}>
+                  ✗ Reject
+                </button>
+                <button className="dir-btn-ghost" disabled={acting} onClick={() => doAction('Clarify')}>
+                  Clarify
+                </button>
+                <button className="dir-btn-ghost" disabled={acting} onClick={() => doAction('Escalate')}>
+                  Escalate
+                </button>
+              </div>
+            </div>
+          ) : (
+            <div className="dir-action-card dir-action-card--done">
+              <h3>{actionDone === 'Approve' || item.status === 'Approved' ? '✓ Approved' : item.status === 'Rejected' ? '✗ Rejected' : 'Decision Recorded'}</h3>
+              {(actionDone === 'Approve' || item.status === 'Approved') && (
+                <>
+                  <p style={{ color: '#22c55e' }}>Quotation released. Export order advanced to Stage 2.</p>
+                  <button className="tactical-button" onClick={() => navigate('/export-os/invoices/new')}>Create Invoice <ChevronRight size={14} /></button>
+                  <button className="ghost-button" style={{ marginTop: 8 }} onClick={() => navigate('/export-os/shipments')}>View Shipments <ChevronRight size={14} /></button>
+                </>
+              )}
+              {(actionDone === 'Reject' || item.status === 'Rejected') && (
+                <p style={{ color: '#ff5a5a' }}>Rejection recorded. Source executive notified.</p>
+              )}
+              <button className="ghost-button" style={{ marginTop: 12 }} onClick={onBack}>← Back to Queue</button>
+            </div>
+          )}
+        </aside>
+      </div>
+    </div>
+  );
+}
+
 export default DirectorCommandCenter;
+export { DirectorDecisionDetailPage };

@@ -449,6 +449,7 @@ import './premium.css';
 
 // ── Lazy-loaded route pages ────────────────────────────────────────────────
 const DirectorCommandCenter   = React.lazy(() => import('./pages/DirectorPage.jsx'));
+const DirectorDecisionDetailPage = React.lazy(() => import('./pages/DirectorPage.jsx').then(m => ({ default: m.DirectorDecisionDetailPage })));
 const FounderApprovalWall     = React.lazy(() => import('./pages/DirectorPage.jsx').then(m => ({ default: m.FounderApprovalWall })));
 const ApprovalConfirmationModal = React.lazy(() => import('./pages/DirectorPage.jsx').then(m => ({ default: m.ApprovalConfirmationModal })));
 const PricingEnginePage       = React.lazy(() => import('./pages/PricingPage.jsx'));
@@ -3024,6 +3025,11 @@ function App() {
   if (route === '/export-os/trust-center' || route === '/export-os/company-profile' || route === '/export-os/global-presence' || route === '/export-os/certifications' || route === '/export-os/capabilities') {
     const view = route === '/export-os/company-profile' ? 'profile' : route === '/export-os/global-presence' ? 'presence' : route === '/export-os/certifications' ? 'certifications' : route === '/export-os/capabilities' ? 'capabilities' : 'overview';
     return withSessionWarning(<TrustCenterDashboard navigate={navigate} onBack={() => navigate('/export-os')} view={view} />);
+  }
+
+  if (route.startsWith('/export-os/director/decision/')) {
+    const decisionId = route.replace('/export-os/director/decision/', '');
+    return withSessionWarning(<DirectorDecisionDetailPage decisionId={decisionId} navigate={navigate} onBack={() => navigate('/export-os/director')} />);
   }
 
   if (route === '/export-os/approval-wall') {
