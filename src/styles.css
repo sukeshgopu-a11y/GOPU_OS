@@ -29478,6 +29478,252 @@ select {
   }
 }
 
+/* ─── Director Decision Table ─────────────────────────────────────────────── */
+
+.dir-table-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+  padding: 14px 18px;
+  border-bottom: 1px solid var(--border);
+}
+
+.dir-toolbar-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.dir-toolbar-left h2 {
+  margin: 0;
+  color: var(--text);
+  font-size: 1rem;
+  font-weight: 800;
+}
+
+.dir-count-badge {
+  display: inline-flex;
+  align-items: center;
+  height: 22px;
+  padding: 0 8px;
+  border-radius: 99px;
+  background: rgba(46,242,255,0.1);
+  border: 1px solid rgba(46,242,255,0.25);
+  color: #2ef2ff;
+  font-size: 0.7rem;
+  font-weight: 700;
+}
+
+.dir-toolbar-right {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.dir-toolbar-label {
+  color: var(--dim);
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+}
+
+.dir-filter-group,
+.dir-sort-group {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.dir-filter-pill {
+  min-height: 28px;
+  padding: 0 12px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--muted);
+  font-size: 0.72rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 140ms;
+}
+
+.dir-filter-pill.active,
+.dir-filter-pill:hover {
+  border-color: var(--cyan);
+  color: var(--cyan);
+}
+
+.dir-filter-pill.active {
+  background: rgba(46,242,255,0.1);
+}
+
+.dir-sort-select {
+  height: 28px;
+  padding: 0 10px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: rgba(4,8,14,0.9);
+  color: var(--text);
+  font-size: 0.75rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.dir-table-wrap {
+  overflow-x: auto;
+  width: 100%;
+}
+
+.dir-decision-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.82rem;
+}
+
+.dir-decision-table thead tr {
+  border-bottom: 1px solid var(--border);
+  background: rgba(255,255,255,0.02);
+}
+
+.dir-decision-table th {
+  padding: 10px 14px;
+  color: var(--dim);
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  text-align: left;
+  white-space: nowrap;
+}
+
+.dir-decision-table tbody tr {
+  border-bottom: 1px solid rgba(255,255,255,0.05);
+  transition: background 140ms;
+  position: relative;
+}
+
+.dir-table-row:hover {
+  background: rgba(46,242,255,0.03);
+}
+
+.dir-table-row td {
+  padding: 13px 14px;
+  vertical-align: middle;
+}
+
+/* Left accent bar via box-shadow on first cell */
+.dir-table-row td:first-child {
+  position: relative;
+}
+
+.dir-table-row td:first-child::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 3px;
+  background: var(--card-accent, #2ef2ff);
+  border-radius: 0 2px 2px 0;
+}
+
+.dir-td-sno {
+  color: var(--dim);
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  font-weight: 800;
+  padding-left: 18px !important;
+  width: 48px;
+}
+
+.dir-table-title {
+  display: block;
+  color: var(--text);
+  font-size: 0.86rem;
+  font-weight: 800;
+  margin-bottom: 3px;
+}
+
+.dir-table-buyer {
+  display: block;
+  color: var(--muted);
+  font-size: 0.75rem;
+}
+
+.dir-td-agent {
+  white-space: nowrap;
+}
+
+.dir-agent-chip {
+  display: inline-flex;
+  align-items: center;
+  height: 22px;
+  padding: 0 8px;
+  border: 1px solid;
+  border-radius: 4px;
+  font-size: 0.66rem;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+}
+
+.dir-td-date {
+  color: var(--muted);
+  white-space: nowrap;
+  font-size: 0.78rem;
+}
+
+.dir-table-amount {
+  color: #2ef2ff;
+  font-family: var(--font-mono);
+  font-size: 0.84rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.dir-table-na {
+  color: var(--dim);
+}
+
+.dir-wait-overdue {
+  color: #ff5a5a;
+  font-weight: 800;
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+}
+
+.dir-wait-ok {
+  color: var(--muted);
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+}
+
+.dir-table-actions {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+
+.director-main-grid--agent-only {
+  grid-template-columns: 1fr;
+}
+
+@media (max-width: 900px) {
+  .dir-table-toolbar {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .dir-th-date, .dir-td-date,
+  .dir-th-wait, .dir-td-wait {
+    display: none;
+  }
+}
+
+/* ─── End Director Decision Table ─────────────────────────────────────────── */
+
 /* ─── End Director Command Cinematic Redesign ─────────────────────────────── */
 
 .progress-bar-wrap { display: grid; gap: var(--space-2, 8px); width: 100%; }

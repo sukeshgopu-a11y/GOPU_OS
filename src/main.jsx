@@ -8653,67 +8653,106 @@ function DirectorCommandCenter({ navigate, onBack, onOpenTasks }) {
         ))}
       </div>
 
-      <div className="director-filter-bar">
-        {['All', 'Critical', 'High', 'Pending'].map((filter) => (
-          <button
-            key={filter}
-            className={decisionFilter === filter ? 'active' : ''}
-            onClick={() => setDecisionFilter(filter)}
-          >
-            {filter}
-          </button>
-        ))}
-      </div>
-
-      <div className="director-main-grid">
-        <section className="director-queue-panel">
-          <div className="director-queue-header">
+      <section className="director-queue-panel">
+        <div className="dir-table-toolbar">
+          <div className="dir-toolbar-left">
             <h2>Decision Queue</h2>
-            <span>{visibleDecisions.length} shown</span>
+            <span className="dir-count-badge">{visibleDecisions.length} decisions</span>
           </div>
-          {visibleDecisions.length === 0 ? (
-            <div className="director-empty-state">
-              <CheckCircle2 size={34} />
-              <p>No pending decisions. All agents are running autonomously.</p>
+          <div className="dir-toolbar-right">
+            <div className="dir-filter-group">
+              <span className="dir-toolbar-label">Filter</span>
+              {['All', 'Critical', 'High', 'Pending'].map((filter) => (
+                <button
+                  key={filter}
+                  className={`dir-filter-pill${decisionFilter === filter ? ' active' : ''}`}
+                  onClick={() => setDecisionFilter(filter)}
+                >{filter}</button>
+              ))}
             </div>
-          ) : (
-            <div>
-              {visibleDecisions.map((item) => {
-                const prio = String(item.priority || 'Medium');
-                const accent = priorityAccent[prio] || '#2ef2ff';
-                return (
-                  <div key={item.id} className="director-decision-card" style={{ '--card-accent': accent }}>
-                    <span className="dir-card-accent-bar" aria-hidden="true" />
-                    <div className="director-decision-body">
-                      <div className="director-decision-title-row">
-                        <span className={`director-priority-badge director-priority-${prio.toLowerCase()}`}>{prio}</span>
-                        <strong>{item.title}</strong>
-                        {item.source_executive && <em className="dir-source-badge">{item.source_executive}</em>}
-                      </div>
-                      {(item.buyer_name || item.quotation_amount) && (
-                        <div className="dir-card-buyer-row">
-                          {item.buyer_name && <span className="dir-buyer-name">{item.buyer_name}</span>}
-                          {item.quotation_amount && <span className="dir-amount">₹{Number(item.quotation_amount).toLocaleString('en-IN')}</span>}
+            <div className="dir-sort-group">
+              <span className="dir-toolbar-label">Sort</span>
+              <select
+                className="dir-sort-select"
+                value={decisionSort}
+                onChange={(e) => setDecisionSort(e.target.value)}
+              >
+                <option value="Urgency">Urgency</option>
+                <option value="Date">Date (Newest)</option>
+                <option value="Amount">Amount (High→Low)</option>
+                <option value="Priority">Priority</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        {visibleDecisions.length === 0 ? (
+          <div className="director-empty-state">
+            <CheckCircle2 size={34} />
+            <p>No pending decisions. All agents are running autonomously.</p>
+          </div>
+        ) : (
+          <div className="dir-table-wrap">
+            <table className="dir-decision-table">
+              <thead>
+                <tr>
+                  <th className="dir-th-sno">S.No</th>
+                  <th className="dir-th-priority">Priority</th>
+                  <th className="dir-th-title">Decision / Buyer</th>
+                  <th className="dir-th-agent">Agent</th>
+                  <th className="dir-th-date">Date</th>
+                  <th className="dir-th-amount">Amount</th>
+                  <th className="dir-th-wait">Waiting</th>
+                  <th className="dir-th-action">Action</th>
+                </tr>
+              </thead>
+              <tbody>
+                {visibleDecisions.map((item, index) => {
+                  const prio = String(item.priority || 'Medium');
+                  const accent = priorityAccent[prio] || '#2ef2ff';
+                  const role = Object.keys(agentColours).find((k) => (item.source_executive || '').toUpperCase().includes(k)) || 'COO';
+                  return (
+                    <tr key={item.id} className="dir-table-row" style={{ '--card-accent': accent }}>
+                      <td className="dir-td-sno">{index + 1}</td>
+                      <td className="dir-td-priority">
+                        <span className={`director-priority-badge director-priority-${prio.toLowerCase()}`} style={{ borderLeftColor: accent, borderLeftWidth: 3 }}>{prio}</span>
+                      </td>
+                      <td className="dir-td-title">
+                        <strong className="dir-table-title">{item.title}</strong>
+                        {item.buyer_name && <span className="dir-table-buyer">{item.buyer_name}</span>}
+                      </td>
+                      <td className="dir-td-agent">
+                        <span className="dir-agent-chip" style={{ color: agentColours[role], borderColor: agentColours[role] + '44' }}>{role}</span>
+                      </td>
+                      <td className="dir-td-date">{item.date_added || '—'}</td>
+                      <td className="dir-td-amount">
+                        {item.quotation_amount
+                          ? <span className="dir-table-amount">₹{Number(item.quotation_amount).toLocaleString('en-IN')}</span>
+                          : <span className="dir-table-na">—</span>}
+                      </td>
+                      <td className="dir-td-wait">
+                        <span className={item.waiting_hours >= 24 ? 'dir-wait-overdue' : 'dir-wait-ok'}>
+                          {item.waiting_hours != null ? `${item.waiting_hours}h` : '—'}
+                        </span>
+                      </td>
+                      <td className="dir-td-action">
+                        <div className="dir-table-actions">
+                          <button className="dir-btn-approve" onClick={() => runDirectorAction(item, 'Approve')}>Approve</button>
+                          <button className="dir-btn-reject" onClick={() => runDirectorAction(item, 'Reject')}>Reject</button>
+                          <button className="dir-btn-ghost" onClick={() => runDirectorAction(item, 'Need Clarification')}>Clarify</button>
                         </div>
-                      )}
-                      <p className="dir-card-summary">{item.summary || item.description || item.impact || 'Decision context is waiting for executive sync.'}</p>
-                      <div className="director-decision-meta">
-                        <span>{item.waiting_hours != null ? `${item.waiting_hours}h waiting` : 'Pending'}</span>
-                        <span>Risk: {item.risk_level || 'Monitoring'}</span>
-                      </div>
-                    </div>
-                    <div className="dir-card-actions">
-                      <button className="dir-btn-approve" onClick={() => runDirectorAction(item, 'Approve')}>Approve</button>
-                      <button className="dir-btn-reject" onClick={() => runDirectorAction(item, 'Reject')}>Reject</button>
-                      <button className="dir-btn-ghost" onClick={() => runDirectorAction(item, 'Need Clarification')}>Clarify</button>
-                      <button className="dir-btn-ghost" onClick={() => runDirectorAction(item, 'Escalate')}>Escalate</button>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          )}
-        </section>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </section>
+
+      <div className="director-main-grid director-main-grid--agent-only">
+        <aside className="director-agent-feed" style={{ gridColumn: '1 / -1' }}>
 
         <aside className="director-agent-feed">
           <div className="director-queue-header">
