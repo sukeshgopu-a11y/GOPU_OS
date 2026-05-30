@@ -20,6 +20,7 @@ import {
   CheckCircle2,
   ChevronRight,
   CircleDollarSign,
+  Clock,
   ClipboardCheck,
   ClipboardList,
   Command,
@@ -8622,99 +8623,147 @@ function DirectorCommandCenter({ navigate, onBack, onOpenTasks }) {
   const isLive = message.toLowerCase().includes('live') || message.toLowerCase().includes('synced');
   const actionOptions = ['Approve', 'Reject', 'Clarify', 'Escalate', 'Assign CIO', 'Assign CFO', 'Assign COO', 'Assign CMO', 'Assign CTO'];
 
+  const priorityAccent = { Critical: '#ff5a5a', High: '#f59e0b', Medium: '#2ef2ff', Low: '#2ef2ff' };
+  const statTiles = [
+    { label: 'Pending Decisions', value: items.length, icon: <Activity size={20} />, accent: '#2ef2ff' },
+    { label: 'Critical', value: items.filter((item) => item.priority === 'Critical').length, icon: <AlertTriangle size={20} />, accent: '#ff5a5a' },
+    { label: 'Waiting >24h', value: items.filter((item) => item.waiting_hours >= 24).length, icon: <Clock size={20} />, accent: '#f59e0b' },
+    { label: 'Agent Messages', value: directorData.agentActivityFeed?.length || 0, icon: <Zap size={20} />, accent: '#818cf8' },
+    { label: 'System Health', value: backendStatus.mode === 'Connected' ? 'Live' : 'Offline', icon: <ShieldCheck size={20} />, accent: backendStatus.mode === 'Connected' ? '#22c55e' : '#ff5a5a', live: backendStatus.mode === 'Connected' },
+  ];
+
   return (
     <div className="director-command-page">
-      <header className="director-page-header">
+      <header className="director-glow-header">
+        <div className="director-glow-orb" aria-hidden="true" />
         <button className="director-back-link" onClick={onBack}><ArrowLeft size={15} /> Back</button>
-        <div>
+        <div className="director-glow-title">
           <h1>Director Command</h1>
           <p>All agents report here. You make the final call.</p>
         </div>
         <button className="tactical-button" onClick={onOpenTasks}>Open Tasks</button>
       </header>
 
-      <div className="director-status-bar">
-        {[
-          { label: 'Pending Decisions', value: items.length },
-          { label: 'Critical', value: items.filter((item) => item.priority === 'Critical').length },
-          { label: 'Waiting >24h', value: items.filter((item) => item.waiting_hours >= 24).length },
-          { label: 'Agent Messages', value: directorData.agentActivityFeed?.length || 0 },
-          { label: 'System Health', value: backendStatus.mode === 'Connected' ? 'Live' : 'Offline', highlight: backendStatus.mode === 'Connected' }
-        ].map((chip) => (
-          <div key={chip.label} className={`director-stat-chip${chip.highlight ? ' director-stat-chip--live' : ''}`}>
-            <strong>{chip.value}</strong>
-            <span>{chip.label}</span>
+      <div className="director-stat-tiles">
+        {statTiles.map((tile) => (
+          <div key={tile.label} className={`director-stat-tile${tile.live ? ' director-stat-tile--live' : ''}`} style={{ '--tile-accent': tile.accent }}>
+            <span className="director-stat-icon">{tile.icon}</span>
+            <strong className="director-stat-value">{tile.value}</strong>
+            <span className="director-stat-label">{tile.label}</span>
           </div>
         ))}
       </div>
 
-      <div className="director-filter-bar">
-        {['All', 'Critical', 'High', 'Pending'].map((filter) => (
-          <button
-            key={filter}
-            className={decisionFilter === filter ? 'active' : ''}
-            onClick={() => setDecisionFilter(filter)}
-          >
-            {filter}
-          </button>
-        ))}
-      </div>
-
-      <div className="director-main-grid">
-        <section className="director-queue-panel">
-          <div className="director-queue-header">
+      <section className="director-queue-panel">
+        <div className="dir-table-toolbar">
+          <div className="dir-toolbar-left">
             <h2>Decision Queue</h2>
-            <span>{visibleDecisions.length} shown</span>
+            <span className="dir-count-badge">{visibleDecisions.length} decisions</span>
           </div>
-          {visibleDecisions.length === 0 ? (
-            <div className="director-empty-state">
-              <CheckCircle2 size={34} />
-              <p>No pending decisions. All agents are running autonomously.</p>
-            </div>
-          ) : (
-            <div>
-              {visibleDecisions.map((item, index) => (
-                <div key={item.id} className="director-decision-card">
-                  <span className="director-row-number">{index + 1}</span>
-                  <div className="director-decision-body">
-                    <div className="director-decision-title-row">
-                      <span className={`director-priority-badge director-priority-${String(item.priority || 'Medium').toLowerCase()}`}>{item.priority || 'Medium'}</span>
-                      <strong>{item.title}</strong>
-                      {item.source_executive && <em>{item.source_executive}</em>}
-                    </div>
-                    <p>{item.summary || item.description || item.impact || 'Decision context is waiting for executive sync.'}</p>
-                    <div className="director-decision-meta">
-                      <span>{item.waiting_hours != null ? `${item.waiting_hours}h waiting` : 'Waiting time not recorded'}</span>
-                      <span>Risk: {item.risk_level || 'Monitoring'}</span>
-                    </div>
-                  </div>
-                  <div className="director-decision-action">
-                    <select
-                      aria-label={`Action for ${item.title}`}
-                      defaultValue=""
-                      onChange={(event) => {
-                        if (!event.target.value) return;
-                        const nextAction = event.target.value === 'Clarify' ? 'Need Clarification' : event.target.value;
-                        runDirectorAction(item, nextAction);
-                        event.target.value = '';
-                      }}
-                    >
-                      <option value="" disabled>Action</option>
-                      {['Approve', 'Reject', 'Clarify', 'Escalate', 'Assign COO', 'Assign CFO', 'Assign CTO', 'Assign CMO', 'Assign CIO'].map((option) => <option key={option} value={option}>{option}</option>)}
-                    </select>
-                  </div>
-                </div>
+          <div className="dir-toolbar-right">
+            <div className="dir-filter-group">
+              <span className="dir-toolbar-label">Filter</span>
+              {['All', 'Critical', 'High', 'Pending'].map((filter) => (
+                <button
+                  key={filter}
+                  className={`dir-filter-pill${decisionFilter === filter ? ' active' : ''}`}
+                  onClick={() => setDecisionFilter(filter)}
+                >{filter}</button>
               ))}
             </div>
-          )}
-        </section>
+            <div className="dir-sort-group">
+              <span className="dir-toolbar-label">Sort</span>
+              <select
+                className="dir-sort-select"
+                value={decisionSort}
+                onChange={(e) => setDecisionSort(e.target.value)}
+              >
+                <option value="Urgency">Urgency</option>
+                <option value="Date">Date (Newest)</option>
+                <option value="Amount">Amount (High→Low)</option>
+                <option value="Priority">Priority</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        {visibleDecisions.length === 0 ? (
+          <div className="director-empty-state">
+            <CheckCircle2 size={34} />
+            <p>No pending decisions. All agents are running autonomously.</p>
+          </div>
+        ) : (
+          <div className="dir-table-wrap">
+            <table className="dir-decision-table">
+              <thead>
+                <tr>
+                  <th className="dir-th-sno">S.No</th>
+                  <th className="dir-th-priority">Priority</th>
+                  <th className="dir-th-title">Decision / Buyer</th>
+                  <th className="dir-th-agent">Agent</th>
+                  <th className="dir-th-date">Date</th>
+                  <th className="dir-th-amount">Amount</th>
+                  <th className="dir-th-wait">Waiting</th>
+                  <th className="dir-th-action">Action</th>
+                </tr>
+              </thead>
+              <tbody>
+                {visibleDecisions.map((item, index) => {
+                  const prio = String(item.priority || 'Medium');
+                  const accent = priorityAccent[prio] || '#2ef2ff';
+                  const role = Object.keys(agentColours).find((k) => (item.source_executive || '').toUpperCase().includes(k)) || 'COO';
+                  return (
+                    <tr key={item.id} className="dir-table-row" style={{ '--card-accent': accent }}>
+                      <td className="dir-td-sno">{index + 1}</td>
+                      <td className="dir-td-priority">
+                        <span className={`director-priority-badge director-priority-${prio.toLowerCase()}`} style={{ borderLeftColor: accent, borderLeftWidth: 3 }}>{prio}</span>
+                      </td>
+                      <td className="dir-td-title">
+                        <strong className="dir-table-title">{item.title}</strong>
+                        {item.buyer_name && <span className="dir-table-buyer">{item.buyer_name}</span>}
+                      </td>
+                      <td className="dir-td-agent">
+                        <span className="dir-agent-chip" style={{ color: agentColours[role], borderColor: agentColours[role] + '44' }}>{role}</span>
+                      </td>
+                      <td className="dir-td-date">{item.date_added || '—'}</td>
+                      <td className="dir-td-amount">
+                        {item.quotation_amount
+                          ? <span className="dir-table-amount">₹{Number(item.quotation_amount).toLocaleString('en-IN')}</span>
+                          : <span className="dir-table-na">—</span>}
+                      </td>
+                      <td className="dir-td-wait">
+                        <span className={item.waiting_hours >= 24 ? 'dir-wait-overdue' : 'dir-wait-ok'}>
+                          {item.waiting_hours != null ? `${item.waiting_hours}h` : '—'}
+                        </span>
+                      </td>
+                      <td className="dir-td-action">
+                        <div className="dir-table-actions">
+                          <button className="dir-btn-approve" onClick={() => runDirectorAction(item, 'Approve')}>Approve</button>
+                          <button className="dir-btn-reject" onClick={() => runDirectorAction(item, 'Reject')}>Reject</button>
+                          <button className="dir-btn-ghost" onClick={() => runDirectorAction(item, 'Need Clarification')}>Clarify</button>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </section>
+
+      <div className="director-main-grid director-main-grid--agent-only">
+        <aside className="director-agent-feed" style={{ gridColumn: '1 / -1' }}>
 
         <aside className="director-agent-feed">
           <div className="director-queue-header">
             <h2>Agent Activity</h2>
+            <span className="dir-live-dot" aria-label="Live" />
           </div>
           {(directorData.agentActivityFeed || []).length === 0 ? (
-            <p className="director-feed-empty">Agents are active. Activity will appear here as decisions are made.</p>
+            <div className="director-feed-empty">
+              <p>Agents are active. Activity will appear here as decisions are routed.</p>
+            </div>
           ) : (
             <div>
               {(directorData.agentActivityFeed || []).map((entry, index) => {
@@ -8723,6 +8772,7 @@ function DirectorCommandCenter({ navigate, onBack, onOpenTasks }) {
                   <div key={entry.id || index} className="director-agent-entry">
                     <span className={`director-agent-dot agent-dot-${role.toLowerCase()}`} />
                     <div>
+                      <span className="dir-agent-role" style={{ color: agentColours[role] }}>{role}</span>
                       <strong>{entry.subject || entry.title || `${role} update`}</strong>
                       <span>{entry.message || entry.subject || ''}</span>
                       <time>{entry.time || entry.created_at || entry.timestamp || 'Now'}</time>
@@ -14530,7 +14580,46 @@ function MarginHealthDashboard({ metrics }) {
 }
 
 function PendingQuoteApprovals({ onOpenApprovalWall }) {
-  return <section className="pricing-panel"><div className="approval-section-header"><div><span>Pending Quote Approvals</span><h2>Founder review candidates</h2></div><FileCheck2 size={18} /></div><div className="saved-quote-grid">{savedQuoteDrafts.slice(0, 3).map((quote) => <article key={quote.id}><strong>{quote.id}</strong><span>{quote.buyer}</span><p>{quote.product} - {quote.margin}</p><small>{quote.approval}</small></article>)}</div><button className="tactical-button command-button" onClick={onOpenApprovalWall}>Open Founder Approval Requests <ChevronRight size={16} /></button></section>;
+  const [approvals, setApprovals] = useState([]);
+  const [loading, setLoading] = useState(true);
+  useEffect(() => {
+    let mounted = true;
+    fetch('/api/director/approvals?status=Pending')
+      .then((r) => r.ok ? r.json() : null)
+      .then((json) => {
+        if (!mounted) return;
+        const list = json?.approvals || [];
+        setApprovals(list.slice(0, 4));
+        setLoading(false);
+      })
+      .catch(() => { if (mounted) setLoading(false); });
+    return () => { mounted = false; };
+  }, []);
+  return (
+    <section className="pricing-panel">
+      <div className="approval-section-header">
+        <div><span>Pending Quote Approvals</span><h2>Director review queue {!loading && <span style={{ color: '#f59e0b', fontSize: '0.8rem' }}>({approvals.length})</span>}</h2></div>
+        <FileCheck2 size={18} />
+      </div>
+      {loading ? (
+        <div className="approval-memory-list"><span>Loading live approvals…</span></div>
+      ) : approvals.length === 0 ? (
+        <div className="approval-memory-list"><span style={{ color: '#22c55e' }}>No pending approvals. All quotes are cleared.</span></div>
+      ) : (
+        <div className="saved-quote-grid">
+          {approvals.map((approval) => (
+            <article key={approval.id}>
+              <strong>{approval.buyer_name || approval.title || 'Pending'}</strong>
+              <span>{approval.approval_type || approval.request_type || 'Quote Approval'}</span>
+              <p>{approval.product || ''}{approval.quantity ? ` · ${approval.quantity}` : ''}{approval.quotation_amount ? ` · ₹${Number(approval.quotation_amount).toLocaleString('en-IN')}` : ''}</p>
+              <small style={{ color: '#f59e0b' }}>{approval.status || approval.approval_status || 'Pending'}</small>
+            </article>
+          ))}
+        </div>
+      )}
+      <button className="tactical-button command-button" onClick={onOpenApprovalWall}>Open Director Approval Queue <ChevronRight size={16} /></button>
+    </section>
+  );
 }
 
 function PricingRiskAlerts({ alerts }) {
@@ -29865,6 +29954,36 @@ function normalizeOperationalItem(item = {}, type = 'Workflow') {
   };
 }
 
+function COORecentLeads({ leads, onNewLead, onOpenDirector }) {
+  if (!leads || leads.length === 0) return null;
+  return (
+    <section className="coo-panel coo-recent-leads-panel">
+      <div className="coo-section-header">
+        <div><span>Slack Lead Pipeline</span><h2>Recent leads from Slack — {leads.length} received</h2></div>
+        <Activity size={18} />
+      </div>
+      <div className="coo-leads-table">
+        <div className="coo-leads-thead">
+          <span>Buyer</span><span>Product</span><span>Qty</span><span>Country</span><span>Status</span>
+        </div>
+        {leads.map((lead, i) => (
+          <div key={lead.id || i} className="coo-leads-row">
+            <span className="coo-lead-buyer">{lead.buyer_name || lead.company_name || '—'}</span>
+            <span>{lead.product || '—'}</span>
+            <span>{lead.quantity ? `${lead.quantity} ${lead.unit || ''}`.trim() : '—'}</span>
+            <span>{lead.country || lead.destination_country || '—'}</span>
+            <span className={`coo-lead-status coo-lead-status--${String(lead.status || '').toLowerCase().replace(/\s+/g, '-')}`}>{lead.status || 'Pending'}</span>
+          </div>
+        ))}
+      </div>
+      <div className="coo-leads-footer">
+        <button className="ghost-button" onClick={onNewLead}>+ New Lead</button>
+        <button className="tactical-button" onClick={onOpenDirector}>View Director Queue <ChevronRight size={14} /></button>
+      </div>
+    </section>
+  );
+}
+
 function COOCommandPage({ navigate, onBack, onOpenApprovalWall, onOpenTasks }) {
   const [summary, setSummary] = useState(null);
   const [workflows, setWorkflows] = useState([]);
@@ -29873,6 +29992,7 @@ function COOCommandPage({ navigate, onBack, onOpenApprovalWall, onOpenTasks }) {
   const [approvals, setApprovals] = useState([]);
   const [readiness, setReadiness] = useState([]);
   const [followups, setFollowups] = useState([]);
+  const [recentLeads, setRecentLeads] = useState([]);
   const [sourceFilter, setSourceFilter] = useState('All');
   const [statusFilter, setStatusFilter] = useState('All');
   const [priorityFilter, setPriorityFilter] = useState('All');
@@ -29890,14 +30010,15 @@ function COOCommandPage({ navigate, onBack, onOpenApprovalWall, onOpenTasks }) {
   });
 
   async function refreshCOOData() {
-    const [summaryResult, boardResult, blockerResult, priorityResult, approvalResult, readinessResult, followupResult] = await Promise.all([
+    const [summaryResult, boardResult, blockerResult, priorityResult, approvalResult, readinessResult, followupResult, leadsRes] = await Promise.all([
       getCOOSummary(demoTenantId),
       getOperationsControlBoard(demoTenantId),
       getBlockedWorkflows(demoTenantId),
       getTodayPriorities(demoTenantId),
       getApprovalDependencies(demoTenantId),
       getInvoiceDocumentReadiness(demoTenantId),
-      getSupplierShipmentFollowups(demoTenantId)
+      getSupplierShipmentFollowups(demoTenantId),
+      fetch('/api/coo/summary').then((r) => r.ok ? r.json() : null).catch(() => null)
     ]);
     setSummary(summaryResult.data);
     setWorkflows(boardResult.data);
@@ -29906,6 +30027,7 @@ function COOCommandPage({ navigate, onBack, onOpenApprovalWall, onOpenTasks }) {
     setApprovals(approvalResult.data);
     setReadiness(readinessResult.data);
     setFollowups(followupResult.data);
+    if (leadsRes?.summary?.recent_leads) setRecentLeads(leadsRes.summary.recent_leads);
   }
 
   useEffect(() => {
@@ -30085,6 +30207,7 @@ function COOCommandPage({ navigate, onBack, onOpenApprovalWall, onOpenTasks }) {
       <COOSlackAlertsPanel lastNotification={lastCOOSlackNotification} notice={cooSlackNotice} onSendStatus={sendCOOStatusToSlack} />
       <COOTabBar activeTab={activeCOOTab} onSelect={setActiveCOOTab} />
       <COOOperationalSummary summary={summary} inspect={inspectOperationalItem} />
+      <COORecentLeads leads={recentLeads} onNewLead={() => navigate('/export-os/leads/new')} onOpenDirector={() => navigate('/export-os/director')} />
       {activeCOOTab === 'Overview' && (
         <>
           <section className="coo-executive-layout">
