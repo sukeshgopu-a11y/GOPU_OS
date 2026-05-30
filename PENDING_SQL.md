@@ -582,3 +582,152 @@ New lead: 10 MT Red Chilli, buyer Ahmed Trading from Dubai, need FOB quote
 ```
 Expected: Bot replies with price, COO shows lead, Director shows approval, 9 AM cron updates prices daily.
 
+
+---
+
+## STEP 5 — New Tables for Agent APIs (Added Tonight)
+
+### SQL-14: agent_briefings (for 3x daily Slack briefings)
+
+```sql
+create table if not exists public.agent_briefings (
+  id uuid primary key default gen_random_uuid(),
+  tenant_id uuid not null,
+  briefing_type text not null, -- '9am', '2pm', '9pm'
+  slack_message text,
+  summary_data jsonb,
+  sent_at timestamptz default now(),
+  created_at timestamptz default now()
+);
+alter table public.agent_briefings enable row level security;
+grant select, insert on public.agent_briefings to service_role;
+```
+
+### SQL-15: cold_email_sequences (CMO cold email tracking)
+
+```sql
+create table if not exists public.cold_email_sequences (
+  id uuid primary key default gen_random_uuid(),
+  tenant_id uuid not null,
+  lead_id uuid,
+  buyer_name text,
+  buyer_email text not null,
+  company_name text,
+  country text,
+  product text,
+  sequence_stage integer default 1,
+  status text default 'Pending', -- Pending, Sent, Opened, Replied, Cold, Exhausted
+  sent_at timestamptz,
+  next_followup_at timestamptz,
+  email_subject text,
+  created_at timestamptz default now(),
+  updated_at timestamptz default now()
+);
+create index if not exists cold_email_sequences_tenant_email_idx on public.cold_email_sequences(tenant_id, buyer_email);
+alter table public.cold_email_sequences enable row level security;
+grant select, insert, update on public.cold_email_sequences to service_role;
+```
+
+### SQL-16: cio_buyer_intelligence (CIO worldwide buyer database)
+
+```sql
+create table if not exists public.cio_buyer_intelligence (
+  id uuid primary key default gen_random_uuid(),
+  tenant_id uuid not null,
+  buyer_name text,
+  company_name text,
+  country text,
+  city text,
+  email text,
+  phone text,
+  website text,
+  products_interested text[] default '{}',
+  annual_import_volume text,
+  tier text default 'C', -- A, B, C
+  lead_score integer default 5,
+  source text default 'manual',
+  status text default 'New',
+  notes text,
+  created_at timestamptz default now(),
+  updated_at timestamptz default now()
+);
+create index if not exists cio_buyer_intelligence_tenant_idx on public.cio_buyer_intelligence(tenant_id);
+create index if not exists cio_buyer_intelligence_tier_idx on public.cio_buyer_intelligence(tenant_id, tier);
+alter table public.cio_buyer_intelligence enable row level security;
+grant select, insert, update on public.cio_buyer_intelligence to service_role;
+```
+
+### SQL-17: cto_credit_alerts (CTO platform credit monitoring)
+
+```sql
+create table if not exists public.cto_credit_alerts (
+  id uuid primary key default gen_random_uuid(),
+  tenant_id uuid not null,
+  platform text not null, -- openai, resend, slack, meta, linkedin, twilio, data_gov
+  alert_type text, -- credit_critical, config_missing
+  current_balance text,
+  estimated_days_left integer,
+  status text default 'Open', -- Open, CFO_Notified, Paid
+  cfo_notified_at timestamptz,
+  paid_at timestamptz,
+  payment_note text,
+  created_at timestamptz default now(),
+  updated_at timestamptz default now()
+);
+alter table public.cto_credit_alerts enable row level security;
+grant select, insert, update on public.cto_credit_alerts to service_role;
+```
+
+### SQL-18: agent_decisions (cross-agent decision audit log)
+
+```sql
+create table if not exists public.agent_decisions (
+  id uuid primary key default gen_random_uuid(),
+  tenant_id uuid not null,
+  agent text not null, -- COO, CFO, CMO, CTO, CIO, Director
+  decision_type text,
+  decision_summary text,
+  confidence numeric,
+  requires_director boolean default false,
+  output_data jsonb,
+  created_at timestamptz default now()
+);
+create index if not exists agent_decisions_tenant_agent_idx on public.agent_decisions(tenant_id, agent);
+alter table public.agent_decisions enable row level security;
+grant select, insert on public.agent_decisions to service_role;
+```
+
+### SQL-19: integration_services (CTO platform health tracking)
+
+```sql
+create table if not exists public.integration_services (
+  id uuid primary key default gen_random_uuid(),
+  tenant_id uuid not null,
+  platform_key text not null,
+  platform_name text,
+  status text default 'warning', -- live, error, warning
+  error_message text,
+  last_checked_at timestamptz,
+  created_at timestamptz default now(),
+  updated_at timestamptz default now(),
+  unique (tenant_id, platform_key)
+);
+alter table public.integration_services enable row level security;
+grant select, insert, update on public.integration_services to service_role;
+```
+
+---
+
+## UPDATED ENV VARS — Add These in Vercel Too
+
+| Variable | Purpose |
+|---|---|
+| `RESEND_API_KEY` | CMO cold emails via Resend |
+| `FROM_EMAIL` | Sender email e.g. `exports@gopuexports.com` |
+| `OPENAI_API_KEY` | CIO buyer research AI |
+| `TWILIO_ACCOUNT_SID` | WhatsApp Director approvals |
+| `TWILIO_AUTH_TOKEN` | WhatsApp Director approvals |
+| `TWILIO_WHATSAPP_FROM` | e.g. `whatsapp:+14155238886` |
+| `DIRECTOR_WHATSAPP_NUMBER` | e.g. `whatsapp:+919876543210` |
+| `SLACK_WEBHOOK_URL` | Slack Incoming Webhook (alternative to bot token) |
+

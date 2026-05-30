@@ -1,0 +1,40 @@
+{
+  "name": "GOPU OS — Export Command",
+  "short_name": "GOPU OS",
+  "description": "AI-powered export intelligence platform for GOPU Exports",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#05070A",
+  "theme_color": "#05070A",
+  "orientation": "portrait-primary",
+  "scope": "/",
+  "icons": [
+    {
+      "src": "/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["business", "productivity"],
+  "shortcuts": [
+    {
+      "name": "Director Approvals",
+      "short_name": "Approvals",
+      "url": "/?tab=director",
+      "description": "View pending Director approvals"
+    },
+    {
+      "name": "COO Command",
+      "short_name": "COO",
+      "url": "/?tab=coo",
+      "description": "COO operations centre"
+    }
+  ]
+}
