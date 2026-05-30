@@ -523,7 +523,7 @@ export async function processLead(event: Record<string, any>, text: string, opti
     shipping_mode: lead.shipping_mode,
     incoterm: lead.incoterm,
     notes: lead.notes,
-    status: "Completed",
+    status: "Pending COO Verification",
     assigned_to: lead.assigned_to,
   }, "id,status");
   if (!leadResult.ok) issues.push(`lead_intake: ${leadResult.message}`);
@@ -531,7 +531,10 @@ export async function processLead(event: Record<string, any>, text: string, opti
   const leadRecord = { ...lead, ...(existingLead || {}), id: leadId, status: "Completed" };
 
   // Create export order at Stage 1 — kicks off COO ↔ CFO ↔ Director pipeline
-  const exportOrderId = await createExportOrder(client, leadRecord, pricing).catch(() => null);
+  const exportOrderId = await createExportOrder(client, leadRecord, pricing).catch((err: any) => {
+    issues.push(`export_order: ${err?.message || "Stage 1 pipeline failed to initialize"}`);
+    return null;
+  });
 
   const leadAgent = await runAgent(client, "AI Lead Intake Agent", leadRecord, pricing, {
     status: lead.product === "Requested product" ? "Needs Review" : "Completed",

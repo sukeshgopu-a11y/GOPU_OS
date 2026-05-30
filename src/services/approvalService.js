@@ -584,6 +584,35 @@ async function updateApprovalStatus(tenantId, request, nextStatus, actionType, n
       product: request.details?.product
     });
   }
+  // Send Slack notification back to channel when Director approves or rejects
+  if (['Approved', 'Rejected'].includes(normalizedNextStatus)) {
+    const botToken = typeof process !== 'undefined' ? process.env?.SLACK_BOT_TOKEN : null;
+    const channelId = typeof process !== 'undefined' ? process.env?.SLACK_CHANNEL_ID : null;
+    if (botToken && channelId) {
+      const emoji = normalizedNextStatus === 'Approved' ? '✅' : '❌';
+      const meta = request.metadata || {};
+      const lead = meta.lead || {};
+      const pricing = meta.pricing || {};
+      const amount = request.amount || '';
+      const slackMsg = [
+        `${emoji} *Director ${normalizedNextStatus}: ${request.title || request.request_type}*`,
+        ``,
+        `*Buyer:* ${request.buyer_name || lead.company_name || 'N/A'}`,
+        `*Product:* ${lead.product || 'N/A'} — ${lead.quantity || ''} ${lead.unit || ''}`.trim(),
+        `*Amount:* ${amount}`,
+        normalizedNextStatus === 'Approved'
+          ? `\n*Next step:* COO to send Proforma Invoice to buyer. CFO to prepare Commercial Invoice.`
+          : `*Reason:* ${note || 'Rejected by Director'}`,
+        note && normalizedNextStatus === 'Approved' ? `*Note:* ${note}` : '',
+      ].filter(Boolean).join('\n');
+      fetch('https://slack.com/api/chat.postMessage', {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${botToken}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ channel: channelId, text: slackMsg }),
+      }).catch(() => null);
+    }
+  }
+
   return { ok: true, data: normalizeApproval(updated), error: null, backend: backendStatus };
 }
 
