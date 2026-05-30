@@ -20,7 +20,6 @@ import {
   CheckCircle2,
   ChevronRight,
   CircleDollarSign,
-  Clock,
   ClipboardCheck,
   ClipboardList,
   Command,
@@ -8458,8 +8457,8 @@ function DirectorDecisionDetailPage({ decisionId, navigate, onBack }) {
   async function doAction(action) {
     if (!item || acting) return;
     setActing(true);
-    const { requireSupabase } = await import('./lib/supabaseClient.js');
-    const { client, error } = requireSupabase();
+    const client = supabase;
+    const error = !isSupabaseConfigured ? new Error('not configured') : null;
     if (!error && client) {
       const statusMap = { Approve: 'Approved', Reject: 'Rejected', Clarify: 'Needs Review', Escalate: 'Escalated' };
       const newStatus = statusMap[action] || action;
@@ -8925,7 +8924,7 @@ function DirectorCommandCenter({ navigate, onBack, onOpenTasks }) {
   const statTiles = [
     { label: 'Pending Decisions', value: items.length, icon: <Activity size={20} />, accent: '#2ef2ff' },
     { label: 'Critical', value: items.filter((item) => item.priority === 'Critical').length, icon: <AlertTriangle size={20} />, accent: '#ff5a5a' },
-    { label: 'Waiting >24h', value: items.filter((item) => item.waiting_hours >= 24).length, icon: <Clock size={20} />, accent: '#f59e0b' },
+    { label: 'Waiting >24h', value: items.filter((item) => item.waiting_hours >= 24).length, icon: <CalendarClock size={20} />, accent: '#f59e0b' },
     { label: 'Agent Messages', value: directorData.agentActivityFeed?.length || 0, icon: <Zap size={20} />, accent: '#818cf8' },
     { label: 'System Health', value: backendStatus.mode === 'Connected' ? 'Live' : 'Offline', icon: <ShieldCheck size={20} />, accent: backendStatus.mode === 'Connected' ? '#22c55e' : '#ff5a5a', live: backendStatus.mode === 'Connected' },
   ];
