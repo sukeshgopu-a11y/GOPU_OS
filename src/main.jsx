@@ -14579,7 +14579,46 @@ function MarginHealthDashboard({ metrics }) {
 }
 
 function PendingQuoteApprovals({ onOpenApprovalWall }) {
-  return <section className="pricing-panel"><div className="approval-section-header"><div><span>Pending Quote Approvals</span><h2>Founder review candidates</h2></div><FileCheck2 size={18} /></div><div className="saved-quote-grid">{savedQuoteDrafts.slice(0, 3).map((quote) => <article key={quote.id}><strong>{quote.id}</strong><span>{quote.buyer}</span><p>{quote.product} - {quote.margin}</p><small>{quote.approval}</small></article>)}</div><button className="tactical-button command-button" onClick={onOpenApprovalWall}>Open Founder Approval Requests <ChevronRight size={16} /></button></section>;
+  const [approvals, setApprovals] = useState([]);
+  const [loading, setLoading] = useState(true);
+  useEffect(() => {
+    let mounted = true;
+    fetch('/api/director/approvals?status=Pending')
+      .then((r) => r.ok ? r.json() : null)
+      .then((json) => {
+        if (!mounted) return;
+        const list = json?.approvals || [];
+        setApprovals(list.slice(0, 4));
+        setLoading(false);
+      })
+      .catch(() => { if (mounted) setLoading(false); });
+    return () => { mounted = false; };
+  }, []);
+  return (
+    <section className="pricing-panel">
+      <div className="approval-section-header">
+        <div><span>Pending Quote Approvals</span><h2>Director review queue {!loading && <span style={{ color: '#f59e0b', fontSize: '0.8rem' }}>({approvals.length})</span>}</h2></div>
+        <FileCheck2 size={18} />
+      </div>
+      {loading ? (
+        <div className="approval-memory-list"><span>Loading live approvals…</span></div>
+      ) : approvals.length === 0 ? (
+        <div className="approval-memory-list"><span style={{ color: '#22c55e' }}>No pending approvals. All quotes are cleared.</span></div>
+      ) : (
+        <div className="saved-quote-grid">
+          {approvals.map((approval) => (
+            <article key={approval.id}>
+              <strong>{approval.buyer_name || approval.title || 'Pending'}</strong>
+              <span>{approval.approval_type || approval.request_type || 'Quote Approval'}</span>
+              <p>{approval.product || ''}{approval.quantity ? ` · ${approval.quantity}` : ''}{approval.quotation_amount ? ` · ₹${Number(approval.quotation_amount).toLocaleString('en-IN')}` : ''}</p>
+              <small style={{ color: '#f59e0b' }}>{approval.status || approval.approval_status || 'Pending'}</small>
+            </article>
+          ))}
+        </div>
+      )}
+      <button className="tactical-button command-button" onClick={onOpenApprovalWall}>Open Director Approval Queue <ChevronRight size={16} /></button>
+    </section>
+  );
 }
 
 function PricingRiskAlerts({ alerts }) {
@@ -29914,6 +29953,36 @@ function normalizeOperationalItem(item = {}, type = 'Workflow') {
   };
 }
 
+function COORecentLeads({ leads, onNewLead, onOpenDirector }) {
+  if (!leads || leads.length === 0) return null;
+  return (
+    <section className="coo-panel coo-recent-leads-panel">
+      <div className="coo-section-header">
+        <div><span>Slack Lead Pipeline</span><h2>Recent leads from Slack — {leads.length} received</h2></div>
+        <Activity size={18} />
+      </div>
+      <div className="coo-leads-table">
+        <div className="coo-leads-thead">
+          <span>Buyer</span><span>Product</span><span>Qty</span><span>Country</span><span>Status</span>
+        </div>
+        {leads.map((lead, i) => (
+          <div key={lead.id || i} className="coo-leads-row">
+            <span className="coo-lead-buyer">{lead.buyer_name || lead.company_name || '—'}</span>
+            <span>{lead.product || '—'}</span>
+            <span>{lead.quantity ? `${lead.quantity} ${lead.unit || ''}`.trim() : '—'}</span>
+            <span>{lead.country || lead.destination_country || '—'}</span>
+            <span className={`coo-lead-status coo-lead-status--${String(lead.status || '').toLowerCase().replace(/\s+/g, '-')}`}>{lead.status || 'Pending'}</span>
+          </div>
+        ))}
+      </div>
+      <div className="coo-leads-footer">
+        <button className="ghost-button" onClick={onNewLead}>+ New Lead</button>
+        <button className="tactical-button" onClick={onOpenDirector}>View Director Queue <ChevronRight size={14} /></button>
+      </div>
+    </section>
+  );
+}
+
 function COOCommandPage({ navigate, onBack, onOpenApprovalWall, onOpenTasks }) {
   const [summary, setSummary] = useState(null);
   const [workflows, setWorkflows] = useState([]);
@@ -29922,6 +29991,7 @@ function COOCommandPage({ navigate, onBack, onOpenApprovalWall, onOpenTasks }) {
   const [approvals, setApprovals] = useState([]);
   const [readiness, setReadiness] = useState([]);
   const [followups, setFollowups] = useState([]);
+  const [recentLeads, setRecentLeads] = useState([]);
   const [sourceFilter, setSourceFilter] = useState('All');
   const [statusFilter, setStatusFilter] = useState('All');
   const [priorityFilter, setPriorityFilter] = useState('All');
@@ -29939,14 +30009,15 @@ function COOCommandPage({ navigate, onBack, onOpenApprovalWall, onOpenTasks }) {
   });
 
   async function refreshCOOData() {
-    const [summaryResult, boardResult, blockerResult, priorityResult, approvalResult, readinessResult, followupResult] = await Promise.all([
+    const [summaryResult, boardResult, blockerResult, priorityResult, approvalResult, readinessResult, followupResult, leadsRes] = await Promise.all([
       getCOOSummary(demoTenantId),
       getOperationsControlBoard(demoTenantId),
       getBlockedWorkflows(demoTenantId),
       getTodayPriorities(demoTenantId),
       getApprovalDependencies(demoTenantId),
       getInvoiceDocumentReadiness(demoTenantId),
-      getSupplierShipmentFollowups(demoTenantId)
+      getSupplierShipmentFollowups(demoTenantId),
+      fetch('/api/coo/summary').then((r) => r.ok ? r.json() : null).catch(() => null)
     ]);
     setSummary(summaryResult.data);
     setWorkflows(boardResult.data);
@@ -29955,6 +30026,7 @@ function COOCommandPage({ navigate, onBack, onOpenApprovalWall, onOpenTasks }) {
     setApprovals(approvalResult.data);
     setReadiness(readinessResult.data);
     setFollowups(followupResult.data);
+    if (leadsRes?.summary?.recent_leads) setRecentLeads(leadsRes.summary.recent_leads);
   }
 
   useEffect(() => {
@@ -30134,6 +30206,7 @@ function COOCommandPage({ navigate, onBack, onOpenApprovalWall, onOpenTasks }) {
       <COOSlackAlertsPanel lastNotification={lastCOOSlackNotification} notice={cooSlackNotice} onSendStatus={sendCOOStatusToSlack} />
       <COOTabBar activeTab={activeCOOTab} onSelect={setActiveCOOTab} />
       <COOOperationalSummary summary={summary} inspect={inspectOperationalItem} />
+      <COORecentLeads leads={recentLeads} onNewLead={() => navigate('/export-os/leads/new')} onOpenDirector={() => navigate('/export-os/director')} />
       {activeCOOTab === 'Overview' && (
         <>
           <section className="coo-executive-layout">
