@@ -10396,20 +10396,20 @@ const paymentTermRiskProfiles = {
   'Mixed Terms - Manual Review': ['High', 'Custom terms need manual commercial review.', 'CFO must document exact payment sequence.']
 };
 const pricingCostRowsSeed = [
-  ['raw_material_cost', 'Raw material / product cost'],
-  ['packaging_cost', 'Packaging'],
-  ['processing_cost', 'Processing / cleaning'],
-  ['labor_cost', 'Labor / handling'],
+  ['raw_material_cost', 'Raw Material Cost'],
+  ['packaging_cost', 'Packaging Cost'],
+  ['processing_cost', 'Processing Cost'],
+  ['labor_cost', 'Labour Cost'],
   ['overhead_cost', 'Overhead'],
-  ['inland_logistics_cost', 'Inland logistics'],
-  ['export_clearance_cost', 'Export clearance'],
-  ['cha_charges_cost', 'CHA charges'],
-  ['documentation_charges_cost', 'Documentation charges'],
-  ['port_charges_cost', 'Port charges'],
+  ['inland_logistics_cost', 'Inland Logistics'],
+  ['export_clearance_cost', 'Export Clearance'],
+  ['cha_charges_cost', 'CHA Charges'],
+  ['documentation_charges_cost', 'Documentation'],
+  ['port_charges_cost', 'Port / Terminal Charges'],
   ['freight_cost', 'Freight'],
   ['insurance_cost', 'Insurance'],
   ['commission_cost', 'Commission'],
-  ['misc_cost', 'Miscellaneous buffer']
+  ['misc_cost', 'Misc / Contingency']
 ];
 const pricingMarketFallbacks = {
   pepper: 708,
