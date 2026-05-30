@@ -13282,6 +13282,89 @@ input[type="range"] {
   color: #ffd37a;
 }
 
+.cmo-platform-connection-panel {
+  display: grid;
+  gap: 10px;
+  padding: 12px;
+  border: 1px solid rgba(255,255,255,0.07);
+  background: rgba(255,255,255,0.02);
+}
+
+.cmo-platform-connection-panel > div:first-child {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.cmo-platform-connection-panel > div:first-child > span {
+  color: var(--muted);
+  font-size: 0.72rem;
+  font-weight: 900;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.cmo-platform-connection-panel button {
+  border: 1px solid rgba(46,242,255,0.18);
+  background: rgba(46,242,255,0.07);
+  color: var(--cyan);
+  padding: 7px 10px;
+  font-size: 0.68rem;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  cursor: pointer;
+}
+
+.cmo-platform-connection-panel > div:last-child {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.cmo-platform-connection-panel article {
+  min-width: 0;
+  display: grid;
+  gap: 5px;
+  padding: 10px;
+  border: 1px solid rgba(255,255,255,0.07);
+  background: rgba(0,0,0,0.18);
+}
+
+.cmo-platform-connection-panel strong {
+  color: var(--text);
+  font-size: 0.78rem;
+}
+
+.cmo-platform-connection-panel span {
+  color: var(--muted);
+  font-size: 0.7rem;
+  font-weight: 900;
+}
+
+.cmo-platform-connection-panel small {
+  color: var(--dim);
+  font-size: 0.66rem;
+  line-height: 1.35;
+}
+
+.cmo-platform-connection-panel .connected {
+  border-color: rgba(125,247,164,0.18);
+}
+
+.cmo-platform-connection-panel .connected span {
+  color: #7df7a4;
+}
+
+.cmo-platform-connection-panel .missing {
+  border-color: rgba(255,211,122,0.18);
+}
+
+.cmo-platform-connection-panel .missing span {
+  color: #ffd37a;
+}
+
 .cmo-timezone-note,
 .cmo-posting-message,
 .cmo-posting-error {
@@ -23201,6 +23284,7 @@ a:focus-visible {
   .cmo-posting-days > div,
   .cmo-posting-platforms > div,
   .cmo-provider-status > div,
+  .cmo-platform-connection-panel > div:last-child,
   .cmo-history-meta,
   .cmo-history-preview-grid,
   .cmo-package-summary-grid,

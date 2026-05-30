@@ -3818,7 +3818,7 @@ function LearningCentrePage({ navigate, onBack, reportMode = false }) {
                   <span>{finding.source_url ? <a href={finding.source_url} target="_blank" rel="noreferrer">Open source</a> : 'Source unavailable.'}</span>
                   <span title="Model self-assessment only. This is not a verified truth score.">{Number(finding.confidence_score || 0).toFixed(2)}</span>
                   <span>{finding.status}</span>
-                  <span>{finding.memory_saved ? '✓' : '✗}</span>
+                  <span>{finding.memory_saved ? '✓' : '✗'}</span>
                   <span>{finding.tokens_processed || 0}</span>
                 </div>
               );
@@ -25896,9 +25896,18 @@ function CMOPostingTimeSettings({ preference }) {
   const [saveState, setSaveState] = useState(preference?.source || 'fallback');
   const [message, setMessage] = useState('');
   const [providerStatuses, setProviderStatuses] = useState([]);
+  const [envStatus, setEnvStatus] = useState(null);
   const selectedOption = getCmoTimezoneOption(timezone);
   const timezoneOptions = CMO_TIMEZONE_OPTIONS;
-  const postingPlatforms = ['LinkedIn', 'Facebook', 'Instagram', 'YouTube', 'X/Twitter', 'Blog', 'Email'];
+  const postingPlatforms = ['LinkedIn', 'Facebook', 'Instagram'];
+  const platformEnvRows = [
+    ['LinkedIn', envStatus?.linkedin],
+    ['Instagram', envStatus?.meta],
+    ['Facebook', envStatus?.meta],
+    ['OpenAI', envStatus?.openai],
+    ['Slack', envStatus?.slack],
+    ['Cron', envStatus?.cron]
+  ];
 
   useEffect(() => {
     let active = true;
@@ -25906,8 +25915,19 @@ function CMOPostingTimeSettings({ preference }) {
       if (!active) return;
       setProviderStatuses(Array.isArray(response.data) ? response.data : []);
     });
+    refreshCmoEnvStatus(() => active);
     return () => { active = false; };
   }, []);
+
+  async function refreshCmoEnvStatus(isActive = () => true) {
+    try {
+      const response = await fetch('/api/cmo/env/status', { headers: { Accept: 'application/json' }, cache: 'no-store' });
+      const result = await response.json().catch(() => ({}));
+      if (isActive() && result.ok) setEnvStatus(result.env || null);
+    } catch {
+      if (isActive()) setEnvStatus(null);
+    }
+  }
 
   async function updateTimezone(value) {
     const selected = getSelectedCmoTimezone({ timezone: value });
@@ -26064,6 +26084,25 @@ function CMOPostingTimeSettings({ preference }) {
               <small>{item.connected ? item.last_verified : item.message}</small>
             </div>
           ))}
+        </div>
+      </div>
+      <div className="cmo-platform-connection-panel">
+        <div>
+          <span>Platform API Readiness</span>
+          <button type="button" onClick={() => refreshCmoEnvStatus()}>Refresh</button>
+        </div>
+        <div>
+          {platformEnvRows.map(([platform, status]) => {
+            const configured = Boolean(status?.configured);
+            const missing = status?.missing || [];
+            return (
+              <article key={platform} className={configured ? 'connected' : 'missing'}>
+                <strong>{platform}</strong>
+                <span>{configured ? 'Configured' : 'Setup required'}</span>
+                <small>{configured ? 'Server credentials are present.' : `Missing: ${missing.join(', ') || 'status unavailable'}`}</small>
+              </article>
+            );
+          })}
         </div>
       </div>
       {message && <p className={`cmo-posting-message ${message.includes('Select at least') ? 'error' : ''}`}>{message}</p>}
