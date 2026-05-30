@@ -10395,7 +10395,22 @@ const paymentTermRiskProfiles = {
   Escrow: ['Low', 'Funds are controlled by neutral escrow if terms are verified.', 'Verify escrow provider and release conditions.'],
   'Mixed Terms - Manual Review': ['High', 'Custom terms need manual commercial review.', 'CFO must document exact payment sequence.']
 };
-const pricingCostRowsSeed = [];
+const pricingCostRowsSeed = [
+  ['raw_material_cost', 'Raw material / product cost'],
+  ['packaging_cost', 'Packaging'],
+  ['processing_cost', 'Processing / cleaning'],
+  ['labor_cost', 'Labor / handling'],
+  ['overhead_cost', 'Overhead'],
+  ['inland_logistics_cost', 'Inland logistics'],
+  ['export_clearance_cost', 'Export clearance'],
+  ['cha_charges_cost', 'CHA charges'],
+  ['documentation_charges_cost', 'Documentation charges'],
+  ['port_charges_cost', 'Port charges'],
+  ['freight_cost', 'Freight'],
+  ['insurance_cost', 'Insurance'],
+  ['commission_cost', 'Commission'],
+  ['misc_cost', 'Miscellaneous buffer']
+];
 const pricingMarketFallbacks = {
   pepper: 708,
   cardamom: 2419.4,
@@ -10413,8 +10428,13 @@ const pricingCommercialPresets = {
   pepper: { baseInrPerKg: 708, packagingInrPerKg: 10.5, processingInrPerKg: 15, laborInrPerKg: 4.8, overheadInrPerKg: 6.5, complexity: 'Medium', packing: '25 KG moisture-protected export bags', category: 'Spice Board product' },
   turmeric: { baseInrPerKg: 132.22, packagingInrPerKg: 8.5, processingInrPerKg: 12, laborInrPerKg: 3.8, overheadInrPerKg: 5.5, complexity: 'Medium', packing: '25 KG PP bags or retail master cartons', category: 'Spice Board / APEDA product' },
   chilli: { baseInrPerKg: 180, packagingInrPerKg: 9.5, processingInrPerKg: 13.5, laborInrPerKg: 4.2, overheadInrPerKg: 6, complexity: 'High', packing: '10 KG cartons or 25 KG PP bags', category: 'Spice Board product' },
+  coriander: { baseInrPerKg: 85, packagingInrPerKg: 7.5, processingInrPerKg: 9.5, laborInrPerKg: 3.2, overheadInrPerKg: 4.8, complexity: 'Medium', packing: '25 KG PP bags / 50 KG bulk bags after cleaning', category: 'Spice Board seed spice' },
+  cumin: { baseInrPerKg: 230, packagingInrPerKg: 10, processingInrPerKg: 16, laborInrPerKg: 5.5, overheadInrPerKg: 8.4, complexity: 'Medium', packing: '25 KG PP bags / kraft bags with moisture protection', category: 'Spice Board seed spice' },
   cardamom: { baseInrPerKg: 2419.4, packagingInrPerKg: 14, processingInrPerKg: 22, laborInrPerKg: 6.5, overheadInrPerKg: 10, complexity: 'High', packing: 'Vacuum / premium cartons after buyer approval', category: 'Spice Board product' },
+  fenugreek: { baseInrPerKg: 75, packagingInrPerKg: 7.5, processingInrPerKg: 9, laborInrPerKg: 3.1, overheadInrPerKg: 4.5, complexity: 'Medium', packing: '25 KG PP bags / 50 KG bulk bags after cleaning', category: 'Spice Board seed spice' },
+  mustard: { baseInrPerKg: 65, packagingInrPerKg: 7, processingInrPerKg: 8.5, laborInrPerKg: 3, overheadInrPerKg: 4.2, complexity: 'Medium', packing: '25 KG PP bags / 50 KG bulk bags', category: 'Seed spice / oilseed product' },
   rice: { baseInrPerKg: 68, packagingInrPerKg: 6, processingInrPerKg: 7, laborInrPerKg: 2.5, overheadInrPerKg: 4, complexity: 'Medium', packing: '25 KG / 50 KG woven export bags', category: 'APEDA product' },
+  'seed-spice': { baseInrPerKg: 115, packagingInrPerKg: 8, processingInrPerKg: 9.5, laborInrPerKg: 3.2, overheadInrPerKg: 4.8, complexity: 'Medium', packing: '25 KG / 50 KG seed-spice export bags', category: 'Spice Board seed spice' },
   default: { baseInrPerKg: 115, packagingInrPerKg: 8, processingInrPerKg: 9, laborInrPerKg: 3, overheadInrPerKg: 4.5, complexity: 'Medium', packing: 'Buyer-specific export packing', category: 'Export product' }
 };
 
@@ -10449,13 +10469,14 @@ const defaultPricingInputs = {
   buyer_type: 'New',
   buyer_risk_tier: 'LOW',
   payment_terms: 'Advance',
-  currency: 'USD',
+  currency: 'INR',
   cost_currency: 'INR',
   exchange_rate: '95.8824',
-  margin_type: 'MARGIN_ON_SELLING_PRICE',
+  margin_type: 'MARKUP_ON_COST',
   target_margin_percent: '20',
   minimum_margin_percent: '12',
   market_reference_price: '320',
+  buyer_entered_price: '',
   previous_customer_price: '',
   notes: '----- MARKET PRICE AUTO CHECK START -----\nMARKET PRICE CHECK\nStatus: REFERENCE ESTIMATE\nProduct: Red Chilli Powder\nGrade/source match: Red Chilli/Guntur Chilli\nLive/reference price: Rs 180.00/kg | Rs 180,000.00/ton\nManual source check required before buyer-facing quote.'
 };
@@ -10517,7 +10538,7 @@ function buildAiAssistedCostRows(inputs) {
   const freightOrder = roundMoney(kg * freightInrPerKg(inputs) * modeMultiplier);
   const miscOrder = roundMoney(Math.max(8500, kg * 0.75));
   const estimates = {
-    raw_material_cost: { amount: estimateAmount(preset.baseInrPerKg), basis: 'PER_KG', notes: `AI-assisted ${preset.category} base estimate; verify with supplier/current market.` },
+    raw_material_cost: { amount: estimateAmount(moneyNumber(inputs.market_reference_price) || preset.baseInrPerKg), basis: 'PER_KG', notes: `Market/product reference cost for ${displayProduct}; verify with supplier/current market.` },
     packaging_cost: { amount: estimateAmount(preset.packagingInrPerKg), basis: 'PER_KG', notes: `Suggested packing: ${preset.packing}.` },
     processing_cost: { amount: estimateAmount(preset.processingInrPerKg), basis: 'PER_KG', notes: 'AI-assisted processing estimate; verify factory/supplier quote.' },
     labor_cost: { amount: estimateAmount(preset.laborInrPerKg), basis: 'PER_KG', notes: 'Estimated packing, handling, and preparation labor.' },
@@ -10708,8 +10729,7 @@ function convertCurrency(amount, from, to, usdToInrRate) {
 
 function quotePriceFromCost(cost, percent, marginType) {
   if (!Number.isFinite(cost) || cost <= 0) return 0;
-  if (marginType === 'MARKUP_ON_COST') return roundMoney(cost * (1 + percent / 100));
-  return percent < 100 ? roundMoney(cost / (1 - percent / 100)) : 0;
+  return roundMoney(cost * (1 + percent / 100));
 }
 
 function calculatePricing(inputs, costRows) {
@@ -10759,8 +10779,12 @@ function calculatePricing(inputs, costRows) {
   const aggressiveTotalQuote = quotePriceFromCost(totalCost, Math.max(minimumMargin, Math.min(targetMargin, 18)), marginType);
   const recommendedTotalQuote = roundMoney(Math.max(targetTotalQuote, minimumTotalQuote));
   const recommendedUnitPrice = quantityValue > 0 ? roundMoney(recommendedTotalQuote / quantityValue) : 0;
+  const breakEvenPricePerKg = quantity.kg > 0 ? roundMoney(totalCostInr / quantity.kg) : 0;
+  const recommendedPricePerKgInr = roundMoney(breakEvenPricePerKg * (1 + targetMargin / 100));
+  const roundedRecommendedPricePerKgInr = Math.ceil(recommendedPricePerKgInr);
+  const recommendedTotalInr = roundMoney(recommendedPricePerKgInr * quantity.kg);
   const profitAmount = roundMoney(Math.max(0, recommendedTotalQuote - totalCost));
-  const achievedMarginPercent = recommendedTotalQuote > 0 ? roundMoney((profitAmount / recommendedTotalQuote) * 100) : 0;
+  const achievedMarginPercent = targetMargin;
   const rangeSpread = getMissingPricingFields(inputs, costRows).length > 0 ? 0.08 : 0.03;
   return {
     productBaseCost: costs.raw_material_cost || 0,
@@ -10779,6 +10803,10 @@ function calculatePricing(inputs, costRows) {
     aggressiveMarketPrice: aggressiveTotalQuote,
     recommendedOfferPrice: recommendedTotalQuote,
     recommendedUnitPrice,
+    breakEvenPricePerKg,
+    recommendedPricePerKgInr,
+    roundedRecommendedPricePerKgInr,
+    recommendedTotalInr,
     recommendedPriceRangeLow: roundMoney(recommendedUnitPrice * (1 - rangeSpread)),
     recommendedPriceRangeHigh: roundMoney(recommendedUnitPrice * (1 + rangeSpread)),
     profitAmount,
@@ -10855,9 +10883,11 @@ function marketProductKey(productName) {
   if (normalized.includes('cinnamon') || normalized.includes('cassia') || normalized.includes('tejpat') || normalized.includes('bay leaf')) return 'cinnamon';
   if (normalized.includes('clove')) return 'clove';
   if (normalized.includes('nutmeg') || normalized.includes('mace')) return 'nutmeg-mace';
+  if (normalized.includes('cumin') || normalized.includes('cummin') || normalized.includes('jeera')) return 'cumin';
+  if (normalized.includes('coriander') || normalized.includes('dhania')) return 'coriander';
   if (normalized.includes('mustard')) return 'mustard';
   if (normalized.includes('fenugreek')) return 'fenugreek';
-  if (normalized.includes('anise') || normalized.includes('ajowan') || normalized.includes('bishop') || normalized.includes('caraway') || normalized.includes('coriander') || normalized.includes('cumin') || normalized.includes('fennel') || normalized.includes('juniper')) return 'seed-spice';
+  if (normalized.includes('anise') || normalized.includes('ajowan') || normalized.includes('bishop') || normalized.includes('caraway') || normalized.includes('fennel') || normalized.includes('juniper')) return 'seed-spice';
   if (normalized.includes('turmeric') || normalized.includes('basil') || normalized.includes('curry') || normalized.includes('dill') || normalized.includes('galanga') || normalized.includes('horse radish') || normalized.includes('hyssop') || normalized.includes('kokam') || normalized.includes('lovage') || normalized.includes('marjoram') || normalized.includes('mint') || normalized.includes('oregano') || normalized.includes('parsley') || normalized.includes('pomegranate') || normalized.includes('poppy') || normalized.includes('rosemary') || normalized.includes('sage') || normalized.includes('savory') || normalized.includes('star anise') || normalized.includes('sweet flag') || normalized.includes('tamarind') || normalized.includes('tarragon') || normalized.includes('thyme') || normalized.includes('allspice') || normalized.includes('asafoetida') || normalized.includes('camboge') || normalized.includes('caper') || normalized.includes('celery')) return 'turmeric';
   if (normalized.includes('garlic')) return 'garlic';
   if (normalized.includes('ginger')) return 'ginger';
@@ -10889,6 +10919,23 @@ function getAutoMarketSourcePrice(inputs) {
   return pricingMarketFallbacks[key] || getCommercialPreset(getDisplayProduct(inputs)).baseInrPerKg || 0;
 }
 
+function getProductGradeSourceMatch(productName) {
+  const key = marketProductKey(productName);
+  const product = String(productName || '').trim();
+  const gradeMap = {
+    chilli: 'Red Chilli/Guntur Chilli',
+    cumin: 'Cumin Seeds / Jeera export grade',
+    coriander: 'Coriander Seeds / Dhania export grade',
+    fenugreek: 'Fenugreek Seeds / Methi export grade',
+    mustard: 'Mustard Seeds export grade',
+    pepper: 'Black Pepper / export grade',
+    turmeric: 'Turmeric / Curcuma export grade',
+    cardamom: 'Cardamom / buyer-approved grade',
+    'seed-spice': 'Whole seed spice / buyer-approved grade'
+  };
+  return gradeMap[key] || product || 'Manual product match';
+}
+
 const pricingChannelRequiredFields = [
   ['company_name', 'Buyer / company name'],
   ['product_name', 'Product'],
@@ -10898,7 +10945,7 @@ const pricingChannelRequiredFields = [
   ['destination_port', 'Destination port'],
   ['incoterm', 'Incoterm'],
   ['payment_terms', 'Payment terms'],
-  ['market_reference_price', 'Buyer-required price']
+  ['market_reference_price', 'Market/product cost']
 ];
 
 const pricingCountryAliases = {
@@ -10957,6 +11004,8 @@ function parsePricingChannelMessage(message) {
     .sort((a, b) => b.length - a.length)[0];
   if (productMatch) updates.product_name = productMatch;
   else if (lower.includes('red chilli') || lower.includes('red chili')) updates.product_name = 'Red Chilli Powder';
+  else if (lower.includes('cumin') || lower.includes('cummin') || lower.includes('jeera')) updates.product_name = 'Cumin Seeds';
+  else if (lower.includes('coriander') || lower.includes('dhania')) updates.product_name = 'Coriander Seeds';
   else if (lower.includes('black pepper')) updates.product_name = 'Product pending';
   else if (lower.includes('turmeric')) updates.product_name = 'Turmeric Powder';
   else if (lower.includes('rice')) updates.product_name = 'Rice';
@@ -11043,11 +11092,22 @@ function buildDirectorCommercialPosition(inputs, calc) {
   const recommendedQuote = roundMoney(calc.recommendedOfferPrice || 0);
   const recommendedProfit = roundMoney(recommendedQuote - totalCost);
   const quantity = pricingQuantities(inputs.quantity, inputs.unit_of_measure);
-  const buyerPriceInrPerKg = moneyNumber(inputs.market_reference_price);
+  const buyerPriceInrPerKg = moneyNumber(inputs.buyer_entered_price);
   const buyerOfferTotalInr = buyerPriceInrPerKg && quantity.kg ? roundMoney(buyerPriceInrPerKg * quantity.kg) : 0;
   const buyerOfferTotal = buyerOfferTotalInr ? roundMoney(convertCurrency(buyerOfferTotalInr, 'INR', currency, moneyNumber(inputs.exchange_rate))) : 0;
   const buyerProfit = buyerOfferTotal ? roundMoney(buyerOfferTotal - totalCost) : null;
   const activeProfit = buyerProfit ?? recommendedProfit;
+  const breakEvenPricePerKg = calc.breakEvenPricePerKg || (quantity.kg ? roundMoney(convertCurrency(totalCost, currency, 'INR', moneyNumber(inputs.exchange_rate)) / quantity.kg) : 0);
+  const recommendedPricePerKgInr = calc.recommendedPricePerKgInr || roundMoney(breakEvenPricePerKg * 1.2);
+  const buyerPriceState = buyerProfit === null
+    ? 'empty'
+    : buyerPriceInrPerKg < breakEvenPricePerKg
+      ? 'loss'
+      : buyerPriceInrPerKg === breakEvenPricePerKg
+        ? 'break-even'
+        : buyerPriceInrPerKg < recommendedPricePerKgInr
+          ? 'low-margin'
+          : 'safe';
   const lossAmount = activeProfit < 0 ? Math.abs(activeProfit) : 0;
   return {
     currency,
@@ -11056,15 +11116,19 @@ function buildDirectorCommercialPosition(inputs, calc) {
     recommendedProfit,
     buyerOfferTotal,
     buyerProfit,
+    buyerPriceInrPerKg,
+    buyerPriceState,
+    breakEvenPricePerKg,
+    recommendedPricePerKgInr,
     activeProfit,
     lossAmount,
-    isLoss: activeProfit < 0,
+    isLoss: buyerPriceState === 'loss',
     basis: buyerProfit === null ? 'recommended quote' : 'buyer-required price'
   };
 }
 
 function formatProfitLossLine(value, currency) {
-  const amount = formatMoney(Math.abs(value || 0), currency);
+  const amount = currency === 'INR' ? formatInrZero(Math.abs(value || 0)) : formatMoney(Math.abs(value || 0), currency);
   if (value < 0) return `LOSS ${amount}`;
   if (value > 0) return `PROFIT ${amount}`;
   return `BREAK EVEN ${amount}`;
@@ -11087,7 +11151,8 @@ function buildDirectorPricingReviewNote(inputs, calc, risk, approvalReasons, cha
     `Destination: ${inputs.destination_country || 'Missing'} / ${inputs.destination_port || 'Port missing'}`,
     `Incoterm: ${inputs.incoterm || 'Missing'}`,
     `Payment terms: ${inputs.payment_terms || 'Missing'} (${paymentRisk.risk} risk)`,
-    `Entered buyer price: ${formatInrFixed(inputs.market_reference_price)}/kg`,
+    `Market/product cost: ${formatInrFixed(inputs.market_reference_price)}/kg`,
+    `Entered buyer price: ${inputs.buyer_entered_price ? `${formatInrFixed(inputs.buyer_entered_price)}/kg` : 'No buyer price entered. Use recommended export price.'}`,
     `Total landed cost: ${formatMoney(position.totalCost, position.currency)}`,
     `Recommended quote: ${formatMoney(calc.recommendedOfferPrice, inputs.currency)}`,
     `Recommended quote result: ${formatProfitLossLine(position.recommendedProfit, position.currency)}`,
@@ -11553,6 +11618,7 @@ const incotermIntelligence = {
 
 function getProductIntelligence(productName) {
   const key = marketProductKey(productName);
+  if (['cumin', 'coriander'].includes(key)) return productIntelligencePresets['seed-spice'];
   return productIntelligencePresets[key] || productIntelligencePresets.default;
 }
 
@@ -11571,12 +11637,12 @@ function formatDualMoney(line, currency) {
 }
 
 function formatPricingInr(value) {
-  return `Rs ${Number(value || 0).toLocaleString(undefined, { maximumFractionDigits: 2 })}`;
+  return `Rs ${Number(value || 0).toLocaleString('en-IN', { maximumFractionDigits: 2 })}`;
 }
 
 function formatPricingInrLive(value) {
   if (!Number.isFinite(Number(value)) || Number(value) <= 0) return 'Awaiting calculation';
-  return `Rs ${Number(value || 0).toLocaleString(undefined, { maximumFractionDigits: 2 })}`;
+  return `Rs ${Number(value || 0).toLocaleString('en-IN', { maximumFractionDigits: 2 })}`;
 }
 
 function getCfoApprovalReasons(inputs, calc, risk, costRows, productIntel) {
@@ -11708,7 +11774,8 @@ function PricingEnginePage({ onBack, onOpenApprovalWall, onOpenTasks }) {
     inputs.shipping_mode,
     inputs.incoterm,
     inputs.cost_currency,
-    inputs.exchange_rate
+    inputs.exchange_rate,
+    inputs.market_reference_price
   ]);
 
   function updateInput(field, value) {
@@ -11721,6 +11788,10 @@ function PricingEnginePage({ onBack, onOpenApprovalWall, onOpenTasks }) {
       if (field === 'product_name') {
         const key = marketProductKey(value);
         if (pricingMarketFallbacks[key]) next.market_reference_price = String(pricingMarketFallbacks[key]);
+        next.spice_grade_or_spec = getProductGradeSourceMatch(value);
+      }
+      if (['product_name', 'custom_product_name', 'market_reference_price'].includes(field)) {
+        next.notes = buildMarketCheckNote(next);
       }
       return next;
     });
@@ -12023,6 +12094,7 @@ function QuotationSopPricingPage({ inputs, errors, costRows, calc, rates, risk, 
   const directorCommercialPosition = buildDirectorCommercialPosition(inputs, calc);
   const directorReviewNeeded = approvalReasons.length || risk.decision !== 'QUOTE';
   const directorReviewNote = buildDirectorPricingReviewNote(inputs, calc, risk, approvalReasons, channel);
+  const pricingExplanation = buildPricingResultExplanation(inputs, calc, risk, directorCommercialPosition, approvalReasons);
   const runUsdMarketCheck = () => {
     updateInput('exchange_rate', String(usdInrRate));
     if (sourceMarketPrice) updateInput('market_reference_price', String(sourceMarketPrice));
@@ -12105,11 +12177,12 @@ function QuotationSopPricingPage({ inputs, errors, costRows, calc, rates, risk, 
             <strong>{autoHsnCode}</strong>
             <small>Fetched from selected product</small>
           </div>
-          <QuoteTextField label="Market Reference Price (INR/KG)" type="number" inputMode="decimal" value={inputs.market_reference_price} onChange={(value) => updateInput('market_reference_price', value.replace(/[^\d.]/g, ''))} />
+          <QuoteTextField label="Market / Product Cost (INR/KG)" type="number" inputMode="decimal" value={inputs.market_reference_price} onChange={(value) => updateInput('market_reference_price', value.replace(/[^\d.]/g, ''))} />
+          <QuoteTextField label="Buyer Entered Price (INR/KG)" type="number" inputMode="decimal" value={inputs.buyer_entered_price} onChange={(value) => updateInput('buyer_entered_price', value.replace(/[^\d.]/g, ''))} />
           <div className="quote-static-field quote-live-price-field">
             <span>Market Source</span>
             <strong><i />Live <b>{liveSourceLabel}</b></strong>
-            <small>Does not change when buyer-required price is edited.</small>
+            <small>Used only as product/raw material cost. Buyer price is checked separately.</small>
           </div>
         </div>
         <div className="quote-incoterm-logic">
@@ -12183,24 +12256,25 @@ function QuotationSopPricingPage({ inputs, errors, costRows, calc, rates, risk, 
           <p>Live pricing preview. Results update from product, quantity, destination, Incoterm, freight, FX, and margin inputs.</p>
         </div>
         <div className="quotation-result-grid">
-          <QuoteResultCard label="Total Cost INR" value={formatInrZero(calc.totalCostInr)} />
-          <QuoteResultCard label="Total Cost USD" value={formatCurrencyZero(calc.totalCostUsd, 'USD')} />
-          <QuoteResultCard label="Unit Cost" value={`${formatCurrencyZero(calc.quantity.value ? calc.totalLandedCost / calc.quantity.value : 0, inputs.currency)} / ${inputs.unit_of_measure || 'kg'}`} />
-          <QuoteResultCard label="Recommended Unit Price" value={`${formatCurrencyZero(calc.recommendedUnitPrice, inputs.currency)} / ${inputs.unit_of_measure || 'kg'}`} />
-          <QuoteResultCard label="Actual Calculated Total" value={formatCurrencyZero(calc.recommendedOfferPrice, inputs.currency)} />
-          <QuoteResultCard label="Estimated Min Unit" value={formatCurrencyZero(calc.recommendedPriceRangeLow, inputs.currency)} />
-          <QuoteResultCard label="Estimated Max Unit" value={formatCurrencyZero(calc.recommendedPriceRangeHigh, inputs.currency)} />
-          <QuoteResultCard label="Profit Amount" value={formatCurrencyZero(calc.profitAmount, inputs.currency)} />
+          <QuoteResultCard label="Product Cost" value={formatInrZero(calc.productBaseCost)} note={formatRupeesInWords(calc.productBaseCost)} />
+          <QuoteResultCard label="Total Cost" value={formatInrZero(calc.totalCostInr)} note={formatRupeesInWords(calc.totalCostInr)} />
+          <QuoteResultCard label="Break-even Price" value={`${formatInrFixed(calc.breakEvenPricePerKg)} / kg`} note="Minimum price before profit." />
+          <QuoteResultCard label="Recommended Price" value={`${formatInrFixed(calc.recommendedPricePerKgInr)} / kg`} note="20% markup on break-even cost." />
+          <QuoteResultCard label="Rounded Quote Price" value={`${formatInrFixed(calc.roundedRecommendedPricePerKgInr)} / kg`} note="Use this for buyer quote." />
+          <QuoteResultCard label="Recommended Total" value={formatInrZero(calc.recommendedTotalInr)} note={formatRupeesInWords(calc.recommendedTotalInr)} />
+          <QuoteResultCard label="Recommended Profit" value={formatInrZero(calc.recommendedTotalInr - calc.totalCostInr)} note={formatRupeesInWords(calc.recommendedTotalInr - calc.totalCostInr)} />
+          <QuoteResultCard label="Buyer Price Check" value={directorCommercialPosition.buyerProfit === null ? 'No buyer price' : formatProfitLossLine(directorCommercialPosition.buyerProfit, 'INR')} note={directorCommercialPosition.buyerProfit === null ? 'No buyer price entered. Use recommended export price.' : formatRupeesInWords(Math.abs(directorCommercialPosition.buyerProfit))} />
         </div>
         <div className="quote-pricing-safety-row">
           <StatusBadge label={risk.missingCriticalFields.length ? 'Manual review required' : 'Estimated'} state={risk.missingCriticalFields.length ? 'attention' : 'progress'} />
           <StatusBadge label="Founder approval required for final quote" state="attention" />
           <StatusBadge label="No buyer-facing quote sent" state="progress" />
         </div>
+        <PricingResultExplanation explanation={pricingExplanation} />
         <ChargeSummaryCards rows={visibleRows} calc={calc} inputs={inputs} />
         <div className="quote-market-result">
           <span>Market Lookup Result</span>
-          <strong><i />Live {liveSourceLabel} / Entered price: {formatInrFixed(enteredMarketPrice)}/kg / manual source check required</strong>
+          <strong><i />Live {liveSourceLabel} / Product cost used: {formatInrFixed(enteredMarketPrice)}/kg / manual source check required</strong>
         </div>
         <div className="quote-ai-recommendation-card">
           <div className="quotation-section-title">
@@ -12255,7 +12329,7 @@ function QuotationSopPricingPage({ inputs, errors, costRows, calc, rates, risk, 
             <textarea
               value={channelMessage}
               onChange={(event) => setChannelMessage(event.target.value)}
-              placeholder="Example: Buyer: Gulf Foods LLC, Red Chilli Powder 500 kg, Country pending, FOB, Advance, price INR 320/kg"
+              placeholder={`Example: Buyer: Gulf Foods LLC, ${productName || 'Cumin Seeds'} ${inputs.quantity || '20'} ${inputs.unit_of_measure || 'Ton'}, ${inputs.destination_country || 'Country pending'}, ${inputs.incoterm || 'FOB'}, ${inputs.payment_terms || 'Advance'}, price INR ${inputs.market_reference_price || '230'}/kg`}
             />
             <div className="quote-intake-actions">
               <button type="button" onClick={analyzeChannelIntake}>Check message</button>
@@ -12320,8 +12394,105 @@ function QuoteSelectField({ label, value, options, error, onChange }) {
   );
 }
 
-function QuoteResultCard({ label, value }) {
-  return <div className="quote-result-card"><span>{label}</span><strong>{value}</strong></div>;
+function QuoteResultCard({ label, value, note }) {
+  return <div className="quote-result-card"><span>{label}</span><strong>{value}</strong>{note && <small>{note}</small>}</div>;
+}
+
+function buildPricingResultExplanation(inputs, calc, risk, position, approvalReasons = []) {
+  const quantity = pricingQuantities(inputs.quantity, inputs.unit_of_measure);
+  const currency = String(inputs.currency || 'INR').toUpperCase();
+  const unitLabel = inputs.unit_of_measure || 'unit';
+  const buyerPriceInrPerKg = moneyNumber(inputs.buyer_entered_price);
+  const kgPerSelectedUnit = quantity.value ? quantity.kg / quantity.value : 1;
+  const buyerPricePerSelectedUnitInr = roundMoney(buyerPriceInrPerKg * kgPerSelectedUnit);
+  const buyerTotal = position.buyerOfferTotal || 0;
+  const buyerProfit = position.buyerProfit;
+  const lossAmount = buyerProfit !== null && buyerProfit < 0 ? Math.abs(buyerProfit) : 0;
+  const reviewReasons = [
+    position.buyerPriceState === 'empty' ? 'No buyer price entered. Use recommended export price.' : '',
+    position.isLoss ? `Buyer-entered total is ${formatInrZero(lossAmount)} below total landed cost.` : '',
+    position.buyerPriceState === 'break-even' ? 'Buyer price equals break-even. This gives zero margin.' : '',
+    position.buyerPriceState === 'low-margin' ? `Buyer price is above break-even ${formatInrFixed(position.breakEvenPricePerKg)}/kg but below safe recommended price ${formatInrFixed(position.recommendedPricePerKgInr)}/kg.` : '',
+    risk.paymentTermRisk?.risk === 'Medium' ? risk.paymentTermRisk.action : '',
+    ...approvalReasons.slice(0, 2)
+  ].filter(Boolean);
+  const state = position.buyerPriceState === 'empty'
+    ? 'empty'
+    : position.isLoss
+    ? 'loss'
+    : position.buyerPriceState === 'break-even' || position.buyerPriceState === 'low-margin' || risk.confidence === 'MEDIUM' || risk.decision !== 'QUOTE'
+      ? 'moderate'
+      : 'profit';
+  const headline = state === 'empty'
+    ? 'No buyer price entered'
+    : position.isLoss
+    ? 'Loss on buyer-entered price'
+    : state === 'moderate'
+      ? 'Moderate review before release'
+      : 'Profit on recommended price';
+  const summary = state === 'empty'
+    ? 'No buyer price entered. Use recommended export price.'
+    : position.isLoss
+    ? `Do not release. Buyer price total ${formatInrZero(buyerTotal)} is lower than landed cost ${formatInrZero(position.totalCost)}.`
+    : state === 'moderate'
+      ? `Numbers are calculated, but ${reviewReasons[0] || risk.reason || 'commercial review is still required before buyer release.'}`
+      : `Recommended quote gives ${formatInrZero(calc.recommendedTotalInr - calc.totalCostInr)} profit at the confirmed 20% markup.`;
+
+  return {
+    state,
+    headline,
+    summary,
+    reviewReasons,
+    rows: [
+      ['Quantity', `${formatPlainNumber(quantity.value)} ${unitLabel} = ${formatPlainNumber(quantity.kg)} kg`],
+      ['Product cost', `${formatInrZero(calc.productBaseCost)} (${formatPlainNumber(calc.productBaseCost)} INR)`],
+      ['Total landed cost', `${formatInrZero(calc.totalCostInr)} (${formatPlainNumber(calc.totalCostInr)} INR)`],
+      ['Break-even price', `${formatInrFixed(calc.breakEvenPricePerKg)}/kg`],
+      ['Recommended price', `${formatInrFixed(calc.recommendedPricePerKgInr)}/kg`],
+      ['Rounded quote price', `${formatInrFixed(calc.roundedRecommendedPricePerKgInr)}/kg`],
+      ['Recommended total', `${formatInrZero(calc.recommendedTotalInr)} (${formatPlainNumber(calc.recommendedTotalInr)} INR)`],
+      ['Buyer-entered rate', buyerPriceInrPerKg ? `${formatInrFixed(buyerPriceInrPerKg)}/kg = ${formatInrFixed(buyerPricePerSelectedUnitInr)} / ${unitLabel}` : 'No buyer price entered'],
+      ['Buyer-entered result', buyerProfit === null ? 'No buyer price entered. Use recommended export price.' : `${formatProfitLossLine(buyerProfit, 'INR')} (${formatPlainNumber(buyerProfit)} INR)`]
+    ],
+    formula: `Market/product cost is raw material only. Break-even = total cost ${formatInrZero(calc.totalCostInr)} / ${formatPlainNumber(quantity.kg)} kg = ${formatInrFixed(calc.breakEvenPricePerKg)}/kg. Recommended = break-even x 1.20 = ${formatInrFixed(calc.recommendedPricePerKgInr)}/kg.`
+  };
+}
+
+function formatPlainNumber(value) {
+  return Number(value || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+
+function PricingResultExplanation({ explanation }) {
+  return (
+    <section className={`quote-result-explanation ${explanation.state}`} aria-label="Pricing result explanation">
+      <div className="quote-result-explanation-head">
+        <div>
+          <span>{explanation.state === 'empty' ? 'Buyer price check' : explanation.state === 'loss' ? 'Loss check' : explanation.state === 'moderate' ? 'Review check' : 'Profit check'}</span>
+          <h3>{explanation.headline}</h3>
+          <p>{explanation.summary}</p>
+        </div>
+        <strong>{explanation.state === 'empty' ? 'Use recommended' : explanation.state === 'loss' ? 'Block release' : explanation.state === 'moderate' ? 'Verify first' : 'Calculated'}</strong>
+      </div>
+      <div className="quote-result-explanation-grid">
+        {explanation.rows.map(([label, value]) => (
+          <div key={label}>
+            <span>{label}</span>
+            <strong>{value}</strong>
+          </div>
+        ))}
+      </div>
+      <div className="quote-result-formula">
+        <span>How this is calculated</span>
+        <strong>{explanation.formula}</strong>
+      </div>
+      {explanation.reviewReasons.length > 0 && (
+        <div className="quote-result-reasons">
+          <span>Why review is required</span>
+          {explanation.reviewReasons.map((reason) => <strong key={reason}>{reason}</strong>)}
+        </div>
+      )}
+    </section>
+  );
 }
 
 function ChargeSummaryCards({ rows, calc, inputs }) {
@@ -12384,11 +12555,41 @@ function splitPricingRange(range) {
 }
 
 function formatInrZero(value) {
-  return `Rs ${Number(value || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+  return `Rs ${Number(value || 0).toLocaleString('en-IN', { maximumFractionDigits: 2 })}`;
 }
 
 function formatInrFixed(value) {
-  return `Rs ${Number(value || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+  return `Rs ${Number(value || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+}
+
+function formatRupeesInWords(value) {
+  const amount = Math.round(Math.abs(Number(value || 0)));
+  if (!amount) return '(Zero Rupees Only)';
+  return `(${numberToIndianWords(amount)} Rupees Only)`;
+}
+
+function numberToIndianWords(value) {
+  const ones = ['', 'One', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight', 'Nine', 'Ten', 'Eleven', 'Twelve', 'Thirteen', 'Fourteen', 'Fifteen', 'Sixteen', 'Seventeen', 'Eighteen', 'Nineteen'];
+  const tens = ['', '', 'Twenty', 'Thirty', 'Forty', 'Fifty', 'Sixty', 'Seventy', 'Eighty', 'Ninety'];
+  const underHundred = (num) => {
+    if (num < 20) return ones[num];
+    return [tens[Math.floor(num / 10)], ones[num % 10]].filter(Boolean).join(' ');
+  };
+  const underThousand = (num) => {
+    const hundred = Math.floor(num / 100);
+    const rest = num % 100;
+    return [hundred ? `${ones[hundred]} Hundred` : '', rest ? underHundred(rest) : ''].filter(Boolean).join(' ');
+  };
+  const parts = [
+    [Math.floor(value / 10000000), 'Crore'],
+    [Math.floor((value % 10000000) / 100000), 'Lakh'],
+    [Math.floor((value % 100000) / 1000), 'Thousand'],
+    [value % 1000, '']
+  ];
+  return parts
+    .filter(([num]) => num > 0)
+    .map(([num, label]) => `${underThousand(num)}${label ? ` ${label}` : ''}`)
+    .join(' ');
 }
 
 function formatCurrencyZero(value, currency = 'USD') {
@@ -12415,9 +12616,9 @@ function buildMarketCheckNote(inputs) {
     'MARKET PRICE CHECK',
     'Status: REFERENCE ESTIMATE',
     `Product: ${product}`,
-    `Grade/source match: ${product.includes('Chilli') ? 'Red Chilli/Guntur Chilli' : product}`,
+    `Grade/source match: ${getProductGradeSourceMatch(product)}`,
     `Auto/source reference price: ${formatInrFixed(referencePrice)}/kg | ${formatInrFixed(referencePrice * 1000)}/ton`,
-    `Entered buyer/commercial price: ${formatInrFixed(enteredPrice)}/kg`,
+    `Product/raw material cost used: ${formatInrFixed(enteredPrice)}/kg`,
     'Manual source check required before buyer-facing quote.'
   ].map((line) => safeCfoString(line)).join('\n');
 }
@@ -30682,4 +30883,3 @@ appRoot.render(
     </GlobalErrorBoundary>
   </React.StrictMode>
 );
-

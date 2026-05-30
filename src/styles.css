@@ -8182,6 +8182,13 @@ input[type="range"] {
   letter-spacing: 0;
 }
 
+.quote-result-card small {
+  color: #9fb0c3;
+  font-size: 0.76rem;
+  font-weight: 750;
+  line-height: 1.35;
+}
+
 .quote-market-result {
   display: grid;
   gap: 6px;
@@ -8204,6 +8211,153 @@ input[type="range"] {
   flex-wrap: wrap;
   gap: 8px;
   margin-top: 14px;
+}
+
+.quote-result-explanation {
+  display: grid;
+  gap: 14px;
+  margin-top: 16px;
+  padding: 16px;
+  border: 1px solid rgba(46, 242, 255, 0.14);
+  border-radius: 12px;
+  background:
+    linear-gradient(135deg, rgba(46,242,255,0.07), rgba(255,255,255,0.018)),
+    rgba(6, 12, 18, 0.93);
+}
+
+.quote-result-explanation.loss {
+  border-color: rgba(255, 77, 77, 0.48);
+  background:
+    linear-gradient(135deg, rgba(255,77,77,0.16), rgba(255,199,93,0.045)),
+    rgba(24, 7, 10, 0.92);
+}
+
+.quote-result-explanation.empty {
+  border-color: rgba(46, 242, 255, 0.18);
+  background:
+    linear-gradient(135deg, rgba(46,242,255,0.08), rgba(255,255,255,0.02)),
+    rgba(6, 12, 18, 0.93);
+}
+
+.quote-result-explanation.moderate {
+  border-color: rgba(255, 199, 93, 0.38);
+  background:
+    linear-gradient(135deg, rgba(255,199,93,0.12), rgba(46,242,255,0.035)),
+    rgba(16, 12, 7, 0.92);
+}
+
+.quote-result-explanation-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.quote-result-explanation-head span,
+.quote-result-formula span,
+.quote-result-reasons span,
+.quote-result-explanation-grid span {
+  color: #8190a4;
+  font-size: 0.72rem;
+  font-weight: 900;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.quote-result-explanation-head h3 {
+  margin: 4px 0 6px;
+  color: #f6feff;
+  font-size: 1rem;
+  font-weight: 900;
+}
+
+.quote-result-explanation-head p {
+  margin: 0;
+  color: #aab5c4;
+  font-size: 0.86rem;
+  line-height: 1.45;
+}
+
+.quote-result-explanation-head > strong {
+  flex: 0 0 auto;
+  padding: 7px 10px;
+  border: 1px solid rgba(46,242,255,0.22);
+  border-radius: 8px;
+  color: #80f7ff;
+  background: rgba(46,242,255,0.08);
+  font-size: 0.72rem;
+  font-weight: 900;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.quote-result-explanation.loss .quote-result-explanation-head > strong {
+  border-color: rgba(255,77,77,0.45);
+  color: #ff8a8a;
+  background: rgba(255,77,77,0.11);
+}
+
+.quote-result-explanation.moderate .quote-result-explanation-head > strong {
+  border-color: rgba(255,199,93,0.42);
+  color: #ffd37a;
+  background: rgba(255,199,93,0.1);
+}
+
+.quote-result-explanation-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.quote-result-explanation-grid > div {
+  min-width: 0;
+  display: grid;
+  gap: 5px;
+  padding: 11px;
+  border: 1px solid rgba(255,255,255,0.065);
+  border-radius: 9px;
+  background: rgba(255,255,255,0.025);
+}
+
+.quote-result-explanation-grid strong,
+.quote-result-formula strong,
+.quote-result-reasons strong {
+  color: #f4f7fb;
+  font-size: 0.82rem;
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+}
+
+.quote-result-explanation-grid strong {
+  font-family: var(--font-mono);
+  letter-spacing: 0;
+}
+
+.quote-result-formula,
+.quote-result-reasons {
+  display: grid;
+  gap: 7px;
+  padding: 12px;
+  border: 1px solid rgba(255,255,255,0.065);
+  border-radius: 10px;
+  background: rgba(3, 8, 13, 0.45);
+}
+
+.quote-result-reasons strong {
+  position: relative;
+  padding-left: 14px;
+  color: #ffd37a;
+}
+
+.quote-result-reasons strong::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0.58em;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
 }
 
 .quote-charge-card-grid {
@@ -9439,6 +9593,7 @@ input[type="range"] {
   .quotation-basics-grid,
   .quotation-margin-grid,
   .quotation-result-grid,
+  .quote-result-explanation-grid,
   .quote-charge-card-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
@@ -9506,12 +9661,17 @@ input[type="range"] {
   .quotation-basics-grid,
   .quotation-margin-grid,
   .quotation-result-grid,
+  .quote-result-explanation-grid,
   .quote-charge-card-grid,
   .quote-ai-recommendation-card > div:last-child,
   .quote-result-actions,
   .quote-director-intake-grid,
   .quote-channel-analysis {
     grid-template-columns: 1fr;
+  }
+
+  .quote-result-explanation-head {
+    display: grid;
   }
 
   .quote-cost-table {
