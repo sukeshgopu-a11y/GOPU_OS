@@ -2420,7 +2420,7 @@ const ANALYTICS_DATA = {
     revenue: [42, 38, 55, 61, 49, 67, 72],
     shipments: [3, 2, 4, 5, 3, 6, 5],
     labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
-    totalRevenue: 'Rs 48.2L',
+    totalRevenue: '₹48.2L',
     revenueChange: 12,
     totalShipments: 28,
     shipmentChange: 8,
@@ -2433,7 +2433,7 @@ const ANALYTICS_DATA = {
     revenue: [120, 135, 118, 142, 155, 148, 163, 171, 158, 168, 175, 182, 170, 188, 195, 182, 199, 210, 198, 215, 208, 222, 218, 235, 228, 242, 238, 251, 245, 258],
     shipments: [8, 10, 7, 12, 11, 9, 14, 13, 10, 15, 12, 16, 11, 14, 18, 13, 17, 20, 15, 19, 16, 21, 18, 23, 20, 24, 22, 26, 21, 25],
     labels: Array.from({ length: 30 }, (_, i) => `${i + 1}`),
-    totalRevenue: 'Rs 2.14Cr',
+    totalRevenue: '₹2.14Cr',
     revenueChange: 18,
     totalShipments: 124,
     shipmentChange: 15,
@@ -2446,7 +2446,7 @@ const ANALYTICS_DATA = {
     revenue: [380, 420, 395, 445, 468, 432, 478, 512, 488, 524, 506, 548, 532, 568, 552, 589, 575, 610, 592, 628, 614, 645, 630, 658, 645, 672, 660, 685, 670, 694, 682, 708, 695, 720, 708, 732, 718, 745, 730, 755, 742, 768, 755, 778, 765, 790, 778, 802, 790, 815],
     shipments: [22, 26, 24, 28, 30, 27, 32, 35, 31, 36, 34, 38, 36, 40, 38, 42, 40, 45, 43, 47, 45, 49, 47, 52, 50, 54, 52, 56, 54, 58],
     labels: ['Jan W1', 'Jan W2', 'Jan W3', 'Jan W4', 'Feb W1', 'Feb W2', 'Feb W3', 'Feb W4', 'Mar W1', 'Mar W2', 'Mar W3', 'Mar W4'],
-    totalRevenue: 'Rs 6.8Cr',
+    totalRevenue: '₹6.8Cr',
     revenueChange: 24,
     totalShipments: 412,
     shipmentChange: 22,
@@ -2459,7 +2459,7 @@ const ANALYTICS_DATA = {
     revenue: [820, 940, 880, 1020, 980, 1150, 1080, 1240, 1180, 1320, 1260, 1420],
     shipments: [48, 56, 52, 62, 58, 70, 66, 76, 72, 82, 78, 90],
     labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
-    totalRevenue: 'Rs 28.4Cr',
+    totalRevenue: '₹28.4Cr',
     revenueChange: 31,
     totalShipments: 1810,
     shipmentChange: 28,
@@ -2471,11 +2471,11 @@ const ANALYTICS_DATA = {
 };
 
 const TOP_MARKETS = [
-  { country: 'UAE', flag: '', revenue: 'Rs 8.2L', share: 72, shipments: 34, trend: 'up' },
-  { country: 'Saudi Arabia', flag: '', revenue: 'Rs 5.6L', share: 49, shipments: 22, trend: 'up' },
-  { country: 'USA', flag: '', revenue: 'Rs 4.1L', share: 36, shipments: 16, trend: 'stable' },
-  { country: 'UK', flag: '', revenue: 'Rs 2.8L', share: 25, shipments: 11, trend: 'up' },
-  { country: 'Germany', flag: '', revenue: 'Rs 1.9L', share: 17, shipments: 8, trend: 'down' },
+  { country: 'UAE', flag: '', revenue: '₹8.2L', share: 72, shipments: 34, trend: 'up' },
+  { country: 'Saudi Arabia', flag: '', revenue: '₹5.6L', share: 49, shipments: 22, trend: 'up' },
+  { country: 'USA', flag: '', revenue: '₹4.1L', share: 36, shipments: 16, trend: 'stable' },
+  { country: 'UK', flag: '', revenue: '₹2.8L', share: 25, shipments: 11, trend: 'up' },
+  { country: 'Germany', flag: '', revenue: '₹1.9L', share: 17, shipments: 8, trend: 'down' },
 ];
 
 const PRODUCT_MIX = [
@@ -10478,7 +10478,7 @@ const defaultPricingInputs = {
   market_reference_price: '320',
   buyer_entered_price: '',
   previous_customer_price: '',
-  notes: '----- MARKET PRICE AUTO CHECK START -----\nMARKET PRICE CHECK\nStatus: REFERENCE ESTIMATE\nProduct: Red Chilli Powder\nGrade/source match: Red Chilli/Guntur Chilli\nLive/reference price: Rs 180.00/kg | Rs 180,000.00/ton\nManual source check required before buyer-facing quote.'
+  notes: '----- MARKET PRICE AUTO CHECK START -----\nMARKET PRICE CHECK\nStatus: REFERENCE ESTIMATE\nProduct: Red Chilli Powder\nGrade/source match: Red Chilli/Guntur Chilli\nLive/reference price: ₹180.00/kg | ₹180,000.00/ton\nManual source check required before buyer-facing quote.'
 };
 
 function buildPricingCostRows(incoterm = 'FOB', currency = 'INR') {
@@ -11059,8 +11059,8 @@ function parsePricingChannelMessage(message) {
   const currencyMatch = text.match(/\b(INR|USD|AUD|EUR|GBP|AED|SAR|SGD)\b/i);
   if (currencyMatch) updates.currency = currencyMatch[1].toUpperCase();
 
-  const priceMatch = text.match(/(?:price|rate|buyer price|target price|required price)\D{0,18}(?:inr|rs\.?|Rs )?\s*(\d+(?:\.\d+)?)/i)
-    || text.match(/(?:Rs |inr|rs\.?)\s*(\d+(?:\.\d+)?)(?:\s*\/?\s*(?:kg|per kg))?/i);
+  const priceMatch = text.match(/(?:price|rate|buyer price|target price|required price)\D{0,18}(?:inr|rs\.?|₹)?\s*(\d+(?:\.\d+)?)/i)
+    || text.match(/(?:₹|inr|rs\.?)\s*(\d+(?:\.\d+)?)(?:\s*\/?\s*(?:kg|per kg))?/i);
   if (priceMatch?.[1]) updates.market_reference_price = priceMatch[1];
   return updates;
 }
@@ -11637,12 +11637,12 @@ function formatDualMoney(line, currency) {
 }
 
 function formatPricingInr(value) {
-  return `Rs ${Number(value || 0).toLocaleString('en-IN', { maximumFractionDigits: 2 })}`;
+  return `₹${Number(value || 0).toLocaleString('en-IN', { maximumFractionDigits: 2 })}`;
 }
 
 function formatPricingInrLive(value) {
   if (!Number.isFinite(Number(value)) || Number(value) <= 0) return 'Awaiting calculation';
-  return `Rs ${Number(value || 0).toLocaleString('en-IN', { maximumFractionDigits: 2 })}`;
+  return `₹${Number(value || 0).toLocaleString('en-IN', { maximumFractionDigits: 2 })}`;
 }
 
 function getCfoApprovalReasons(inputs, calc, risk, costRows, productIntel) {
@@ -12555,11 +12555,11 @@ function splitPricingRange(range) {
 }
 
 function formatInrZero(value) {
-  return `Rs ${Number(value || 0).toLocaleString('en-IN', { maximumFractionDigits: 2 })}`;
+  return `₹${Number(value || 0).toLocaleString('en-IN', { maximumFractionDigits: 2 })}`;
 }
 
 function formatInrFixed(value) {
-  return `Rs ${Number(value || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+  return `₹${Number(value || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 }
 
 function formatRupeesInWords(value) {
@@ -12598,7 +12598,7 @@ function formatCurrencyZero(value, currency = 'USD') {
 
 function currencySymbol(currency) {
   if (currency === 'USD') return '$';
-  if (currency === 'INR') return 'Rs ';
+  if (currency === 'INR') return '₹';
   if (currency === 'AED') return 'AED ';
   if (currency === 'EUR') return 'EUR';
   if (currency === 'GBP') return 'GBP';
@@ -12772,7 +12772,7 @@ function PricingResultPanel({ calc, inputs, approvalReasons }) {
       <div className="cfo-result-hero">
         <div><span>Margin</span><strong>{calc.margin.toFixed(2)}%</strong><small>Target: {inputs.target_margin_percent}%</small></div>
         <div><span>Unit Price</span><strong>{formatPricingValue(calc.recommendedUnitPrice, inputs.currency)}</strong><small>{formatPricingInrLive(convertCurrency(calc.recommendedUnitPrice, inputs.currency, 'INR', moneyNumber(inputs.exchange_rate)))}</small></div>
-        <div><span>FX Basis</span><strong>1 USD = Rs {inputs.exchange_rate}</strong><small>Manual override allowed, approval tracked.</small></div>
+        <div><span>FX Basis</span><strong>1 USD = ₹{inputs.exchange_rate}</strong><small>Manual override allowed, approval tracked.</small></div>
       </div>
       <div className="ai-quote-grid">
         <div><span>Safe Quote</span><strong>{formatPricingValue(calc.safeQuotePrice, inputs.currency)}</strong><small>Conservative margin for freight/FX uncertainty.</small></div>
@@ -12925,17 +12925,17 @@ const cfoFinanceData = {
     ['Pending quote approvals', '4', 'Director review gate active -- no buyer release'],
     ['Margin risk alerts', '3', 'Black pepper 14.2% -- below 18% floor'],
     ['Invoice approval pending', '2', 'LUT gate + HSN verification active'],
-    ['RoDTEP & Drawback receivable', 'Rs 2.4L', 'Q1 claim filed, ICEGATE pending'],
+    ['RoDTEP & Drawback receivable', '₹2.4L', 'Q1 claim filed, ICEGATE pending'],
     ['Receivables (LC/TT)', '5', 'USD 48,200 outstanding -- 30-90d aging'],
     ['Payables (supplier + freight)', '6', 'CFO controlled -- no auto-pay'],
-    ['Monthly working capital (PCFC)', 'Rs 18.5L', 'Packing credit utilised this cycle'],
+    ['Monthly working capital (PCFC)', '₹18.5L', 'Packing credit utilised this cycle'],
     ['High-risk finance items', '5', 'Founder attention -- FEMA overdue watch']
   ],
   cashRows: [
-    ['PCFC utilisation', 'Rs 18.5L drawn', 'Packing credit against confirmed LC -- standard', 'Monitoring'],
+    ['PCFC utilisation', '₹18.5L drawn', 'Packing credit against confirmed LC -- standard', 'Monitoring'],
     ['Forward cover open', 'USD 25,000 @ 83.40', 'Hedged against USD/INR volatility -- 90d', 'Covered'],
-    ['RoDTEP credit ledger', 'Rs 2.4L pending', 'ICEGATE claim filed -- awaiting credit', 'Review Required'],
-    ['Duty drawback claim', 'Rs 68,000', 'Filed with customs -- 45d expected realisation', 'Monitoring'],
+    ['RoDTEP credit ledger', '₹2.4L pending', 'ICEGATE claim filed -- awaiting credit', 'Review Required'],
+    ['Duty drawback claim', '₹68,000', 'Filed with customs -- 45d expected realisation', 'Monitoring'],
     ['Overdue EDPMS entries', '2 shipments', 'BRC/FIRC not filed -- FEMA risk if >9 months', 'Attention']
   ],
   receivablesRows: [
@@ -12945,11 +12945,11 @@ const cfoFinanceData = {
     ['Singapore Spice House', 'CI-SGP-009', 'USD 4,950', '2026-07-01', 'DA 30 days', 'CFO Command']
   ],
   payableRows: [
-    ['Rajkot Chilli Mandi', 'Raw material procurement', 'Rs 4,20,000', 'COO confirmation required', 'Supplier Control'],
-    ['Freight forwarder -- JNPT', 'Sea freight + THC charges', 'Rs 85,000', 'COO + CFO approval', 'Shipment System'],
-    ['CHA charges -- SB filing', 'Custom house agent fees', 'Rs 12,500', 'COO controlled', 'Customs'],
-    ['Fumigation agency', 'Methyl bromide treatment', 'Rs 8,200', 'COO + quality clearance', 'Quality'],
-    ['Insurance premium', 'Marine cargo insurance', 'Rs 6,800', 'CFO auto-eligible', 'Payment Vault']
+    ['Rajkot Chilli Mandi', 'Raw material procurement', '₹4,20,000', 'COO confirmation required', 'Supplier Control'],
+    ['Freight forwarder -- JNPT', 'Sea freight + THC charges', '₹85,000', 'COO + CFO approval', 'Shipment System'],
+    ['CHA charges -- SB filing', 'Custom house agent fees', '₹12,500', 'COO controlled', 'Customs'],
+    ['Fumigation agency', 'Methyl bromide treatment', '₹8,200', 'COO + quality clearance', 'Quality'],
+    ['Insurance premium', 'Marine cargo insurance', '₹6,800', 'CFO auto-eligible', 'Payment Vault']
   ],
   marginRows: [
     ['Chilli Powder 100MT', 'Khalid Trading UAE', 'UAE', '14.2%', 'Low Margin -- Director Block'],
@@ -13076,7 +13076,7 @@ function CfoOverviewTab({ onOpenPricing }) {
       </div>
       <div className="cfo-finance-grid two">
         <CfoFinancePanel title="Approval Control" subtitle="Founder-sensitive finance queue" icon={FileCheck2} rows={['Low margin quotations require founder approval.', 'Invoice release remains blocked until approval.', 'Document release must route through Director Queue.', 'Payment caps remain INR-governed.']} />
-        <CfoFinancePanel title="Payment Vault Summary" subtitle="Infrastructure spend and renewals" icon={CircleDollarSign} rows={['Auto-pay allowed only for trusted infrastructure vendors.', 'Above Rs 1,500 requires founder approval.', 'OTP is never stored or logged.', 'Receipts remain audit-controlled.']} />
+        <CfoFinancePanel title="Payment Vault Summary" subtitle="Infrastructure spend and renewals" icon={CircleDollarSign} rows={['Auto-pay allowed only for trusted infrastructure vendors.', 'Above ₹1,500 requires founder approval.', 'OTP is never stored or logged.', 'Receipts remain audit-controlled.']} />
       </div>
       <button className="tactical-button" onClick={onOpenPricing}>Open Quotations Pricing Engine</button>
     </section>
@@ -13464,16 +13464,16 @@ function CfoPaymentVaultInteractiveTab({ data }) {
       {activeVaultTab === 'Overview' && (
         <>
           <BillingVaultOverview billingMethods={billingMethods} providerConnected={billingMethods.length > 0} onConnect={() => setConnectModalOpen(true)} />
-          <CfoFinanceTable title="Recent Payment Vault Records" subtitle="CFO-controlled infrastructure payment evidence" columns={['Vendor', 'Amount INR', 'Payment status', 'Receipt status']} rows={vaultRecentPayments.length ? vaultRecentPayments : [['OpenAI', 'Rs 950', 'OTP Required', 'Receipt Pending']]} />
+          <CfoFinanceTable title="Recent Payment Vault Records" subtitle="CFO-controlled infrastructure payment evidence" columns={['Vendor', 'Amount INR', 'Payment status', 'Receipt status']} rows={vaultRecentPayments.length ? vaultRecentPayments : [['OpenAI', '₹950', 'OTP Required', 'Receipt Pending']]} />
         </>
       )}
-      {activeVaultTab === 'Payments' && <CfoFinanceTable title="Recent Payment Vault Records" subtitle="CFO-controlled infrastructure payment evidence" columns={['Vendor', 'Amount INR', 'Payment status', 'Receipt status']} rows={vaultRecentPayments.length ? vaultRecentPayments : [['OpenAI', 'Rs 950', 'OTP Required', 'Receipt Pending']]} />}
+      {activeVaultTab === 'Payments' && <CfoFinanceTable title="Recent Payment Vault Records" subtitle="CFO-controlled infrastructure payment evidence" columns={['Vendor', 'Amount INR', 'Payment status', 'Receipt status']} rows={vaultRecentPayments.length ? vaultRecentPayments : [['OpenAI', '₹950', 'OTP Required', 'Receipt Pending']]} />}
       {activeVaultTab === 'Renewals' && <RenewalForecastPanel forecasts={paymentForecastSeed} expanded={paymentForecastSeed[0]?.id} onToggle={() => setNotice('Renewal forecast opened. Payment execution still requires token, INR limit, and approval rule.')} />}
       {activeVaultTab === 'Vendors' && <VendorTrustRegistry vendors={vendorTrustSeed} />}
       {activeVaultTab === 'Receipts' && <ReceiptRepository receipts={paymentReceiptsSeed} onMarkReviewed={(id) => setNotice(`Receipt ${id} marked reviewed locally.`)} />}
       {activeVaultTab === 'Audit' && <BillingAuditPanel audit={billingAudit} />}
       <div className="cfo-finance-grid two">
-        <CfoFinancePanel title="Payment Governance Rules" subtitle="INR-capped and founder-controlled" icon={ShieldCheck} rows={['<= Rs 1,000: CFO-controlled auto-renew only for trusted infrastructure vendors.', 'Rs 1,001-Rs 1,500: CFO + COO confirmation required.', '> Rs 1,500: Director review required.', 'Never auto-pay suppliers, freight, customs, tax, salaries, refunds, or arbitrary invoices.']} />
+        <CfoFinancePanel title="Payment Governance Rules" subtitle="INR-capped and founder-controlled" icon={ShieldCheck} rows={['<= ₹1,000: CFO-controlled auto-renew only for trusted infrastructure vendors.', '₹1,001-₹1,500: CFO + COO confirmation required.', '> ₹1,500: Director review required.', 'Never auto-pay suppliers, freight, customs, tax, salaries, refunds, or arbitrary invoices.']} />
         <CfoFinancePanel title="OTP Security Rule" subtitle="CFO payment confirmation" icon={LockKeyhole} rows={['Founder receives OTP externally.', 'Founder securely shares OTP with CFO.', 'CFO enters OTP once in secure confirmation screen.', 'OTP is never stored, logged, reused, or included in AI memory.']} />
       </div>
       {connectModalOpen && <ConnectBillingMethodModal onCancel={() => setConnectModalOpen(false)} onTokenize={connectCfoBillingMethod} />}
@@ -13498,9 +13498,9 @@ function CfoPaymentVaultTab({ data }) {
           return <article key={`${label}-${index}`}><span>{label}</span><strong>{value}</strong><small>{status}</small></article>;
         })}
       </div>
-      <CfoFinanceTable title="Recent Payment Vault Records" subtitle="CFO-controlled infrastructure payment evidence" columns={['Vendor', 'Amount INR', 'Payment status', 'Receipt status']} rows={vaultRecentPayments.length ? vaultRecentPayments : [['OpenAI', 'Rs 950', 'OTP Required', 'Receipt Pending']]} />
+      <CfoFinanceTable title="Recent Payment Vault Records" subtitle="CFO-controlled infrastructure payment evidence" columns={['Vendor', 'Amount INR', 'Payment status', 'Receipt status']} rows={vaultRecentPayments.length ? vaultRecentPayments : [['OpenAI', '₹950', 'OTP Required', 'Receipt Pending']]} />
       <div className="cfo-finance-grid two">
-        <CfoFinancePanel title="Payment Governance Rules" subtitle="INR-capped and founder-controlled" icon={ShieldCheck} rows={['<= Rs 1,000: CFO-controlled auto-renew only for trusted infrastructure vendors.', 'Rs 1,001-Rs 1,500: CFO + COO confirmation required.', '> Rs 1,500: Founder approval mandatory.', 'Never auto-pay suppliers, freight, customs, tax, salaries, refunds, or arbitrary invoices.']} />
+        <CfoFinancePanel title="Payment Governance Rules" subtitle="INR-capped and founder-controlled" icon={ShieldCheck} rows={['<= ₹1,000: CFO-controlled auto-renew only for trusted infrastructure vendors.', '₹1,001-₹1,500: CFO + COO confirmation required.', '> ₹1,500: Founder approval mandatory.', 'Never auto-pay suppliers, freight, customs, tax, salaries, refunds, or arbitrary invoices.']} />
         <CfoFinancePanel title="OTP Security Rule" subtitle="CFO payment confirmation" icon={LockKeyhole} rows={['Founder receives OTP externally.', 'Founder securely shares OTP with CFO.', 'CFO enters OTP once in secure confirmation screen.', 'OTP is never stored, logged, reused, or included in AI memory.']} />
       </div>
       <CfoFinancePanel title="Payment Workflow" subtitle="CTO detects, CFO executes" icon={Route} rows={vaultWorkflowSteps.length ? vaultWorkflowSteps : ['CTO detects renewal.', 'COO confirms need.', 'CFO validates and executes.', 'Founder approval/OTP if required.', 'CFO stores receipt in Payment Vault.']} />
@@ -13561,7 +13561,7 @@ function CfoIntelligencePanel({ data, onOpenPricing, onOpenPaymentVault }) {
       {openedItem && <div className="cfo-inline-detail"><strong>Risk opened</strong><span>{openedItem}</span><small>Route to pricing, Payment Vault, or Director approval if this risk blocks release.</small></div>}
       <div className="cfo-intelligence-subpanel">
         <strong>Renewal Risks</strong>
-        {(renewals.length ? renewals : [['OpenAI credits', '2026-05-31', 'Rs 950', 'Attention']]).map((row, index) => {
+        {(renewals.length ? renewals : [['OpenAI credits', '2026-05-31', '₹950', 'Attention']]).map((row, index) => {
           const rowKey = safeCfoJoin(row, '-');
           const rowDetail = safeCfoJoin(row, ' / ');
           return <button type="button" key={`${rowKey}-${index}`} onClick={() => setOpenedItem(`Renewal: ${rowDetail}`)}>{row[0]} / {row[2]} / {row[4] || row[3]}</button>;
@@ -13569,7 +13569,7 @@ function CfoIntelligencePanel({ data, onOpenPricing, onOpenPaymentVault }) {
       </div>
       <div className="cfo-intelligence-subpanel">
         <strong>Approval Logic</strong>
-        {['Margin < 20% requires founder approval.', 'Payment > Rs 1,500 requires founder approval.', 'Unknown vendor or high-risk buyer requires founder approval.', 'Aggressive pricing or freight uncertainty requires review.'].map((item) => <button type="button" key={item} onClick={() => setOpenedItem(item)}>{item}</button>)}
+        {['Margin < 20% requires founder approval.', 'Payment > ₹1,500 requires founder approval.', 'Unknown vendor or high-risk buyer requires founder approval.', 'Aggressive pricing or freight uncertainty requires review.'].map((item) => <button type="button" key={item} onClick={() => setOpenedItem(item)}>{item}</button>)}
       </div>
       <div className="cfo-report-actions">
         <button className="tactical-button" onClick={onOpenPricing}>Review Quotations</button>
@@ -13986,7 +13986,7 @@ function CreativeWalletCard() {
     try {
       const res = await fetch('/api/cfo/wallet/topup', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ amount, note: 'Founder top-up' }) });
       const json = await res.json();
-      if (json.ok) { setMsg(`Topped up Rs ${amount}. New balance: Rs ${json.balance}`); await load(); }
+      if (json.ok) { setMsg(`Topped up ₹${amount}. New balance: ₹${json.balance}`); await load(); }
       else setMsg(json.message || 'Top-up failed.');
     } catch { setMsg('Request failed.'); }
     setLoading(false);
@@ -16469,16 +16469,16 @@ const paymentGovernanceRules = {
 const trustedInfrastructureVendors = ['OpenAI credits', 'Supabase', 'Vercel', 'Cloudflare', 'Domain / SSL renewals', 'Email provider', 'Automation tools'];
 const neverAutoPayCategories = ['Supplier payments', 'Freight', 'Customs', 'Tax', 'Salaries', 'Refunds', 'Unknown invoices', 'Bank transfers', 'Manual vendor invoices'];
 const paymentApprovalBands = [
-  ['Safe auto-pay', 'Rs 0-Rs 1,000', 'Trusted infrastructure vendor only', 'CFO can approve after COO confirms operational need'],
-  ['Controlled auto-pay', 'Rs 1,001-Rs 1,500', 'Trusted infrastructure vendor only', 'CFO + COO confirmation required before auto-pay'],
-  ['Founder approval required', 'Above Rs 1,500', 'Any vendor', 'Founder approval required before payment'],
+  ['Safe auto-pay', '₹0-₹1,000', 'Trusted infrastructure vendor only', 'CFO can approve after COO confirms operational need'],
+  ['Controlled auto-pay', '₹1,001-₹1,500', 'Trusted infrastructure vendor only', 'CFO + COO confirmation required before auto-pay'],
+  ['Founder approval required', 'Above ₹1,500', 'Any vendor', 'Founder approval required before payment'],
   ['Auto-pay blocked', 'Any amount', 'Unknown, high-risk, or non-infrastructure', 'Route to Director Command Center']
 ];
 const paymentVaultRecords = [
-  ['OpenAI credits', 'Rs 950', 'AI workflow credit top-up', 'Trusted Infrastructure', 'CTO requirement -> COO necessity -> CFO validation/execution', 'Receipt pending', 'CFO Command', 'Requirement raised', 'Confirmed', 'Ready to initiate', 'Not required', 'Pending until gateway OTP completes', 'Draft audit event'],
-  ['Supabase', 'Rs 1,250', 'Database platform renewal buffer', 'Trusted Infrastructure', 'CTO requirement -> COO + CFO confirmation', 'Invoice pending', 'CFO Command', 'Requirement raised', 'Pending', 'Review', 'Not required', 'Pending until CFO + COO confirmation', 'Controlled auto-pay review'],
-  ['Freight vendor invoice', 'Rs 1,200', 'Manual shipment invoice', 'Freight', 'Blocked -> Founder Review', 'Not uploaded', 'Not paid', 'Blocked', 'Blocked', 'Blocked', 'Required', 'No payment timestamp', 'Non-infrastructure category blocked'],
-  ['Unknown SaaS vendor', 'Rs 800', 'Unverified renewal request', 'Unknown Vendor', 'Blocked -> Founder Review', 'Missing', 'Not paid', 'Pending', 'Pending', 'Blocked', 'Required', 'No payment timestamp', 'New vendor approval required']
+  ['OpenAI credits', '₹950', 'AI workflow credit top-up', 'Trusted Infrastructure', 'CTO requirement -> COO necessity -> CFO validation/execution', 'Receipt pending', 'CFO Command', 'Requirement raised', 'Confirmed', 'Ready to initiate', 'Not required', 'Pending until gateway OTP completes', 'Draft audit event'],
+  ['Supabase', '₹1,250', 'Database platform renewal buffer', 'Trusted Infrastructure', 'CTO requirement -> COO + CFO confirmation', 'Invoice pending', 'CFO Command', 'Requirement raised', 'Pending', 'Review', 'Not required', 'Pending until CFO + COO confirmation', 'Controlled auto-pay review'],
+  ['Freight vendor invoice', '₹1,200', 'Manual shipment invoice', 'Freight', 'Blocked -> Founder Review', 'Not uploaded', 'Not paid', 'Blocked', 'Blocked', 'Blocked', 'Required', 'No payment timestamp', 'Non-infrastructure category blocked'],
+  ['Unknown SaaS vendor', '₹800', 'Unverified renewal request', 'Unknown Vendor', 'Blocked -> Founder Review', 'Missing', 'Not paid', 'Pending', 'Pending', 'Blocked', 'Required', 'No payment timestamp', 'New vendor approval required']
 ].map(([vendor_name, amount_inr, payment_reason, category, approval_path, receipt_invoice, paid_by, cto_confirmation, coo_confirmation, cfo_confirmation, founder_approval, payment_timestamp, audit_trail], index) => ({
   id: `payment-vault-${index}`,
   vendor_name,
@@ -17766,9 +17766,9 @@ function PaymentGovernancePanel({ compact = false }) {
     <section className={`cto-panel payment-governance-panel ${compact ? 'compact' : ''}`}>
       <div className="approval-section-header"><div><span>Payment Governance</span><h2>CFO execution / Founder OTP authority</h2></div><LockKeyhole size={18} /></div>
       <div className="payment-limit-grid">
-        <div><span>Safe auto-pay</span><strong>Rs 0-Rs 1,000</strong><small>Trusted infrastructure only</small></div>
-        <div><span>Controlled cap</span><strong>Rs 1,001-Rs 1,500</strong><small>CFO + COO confirmation</small></div>
-        <div><span>Founder required</span><strong>Above Rs 1,500</strong><small>No auto-pay above cap</small></div>
+        <div><span>Safe auto-pay</span><strong>₹0-₹1,000</strong><small>Trusted infrastructure only</small></div>
+        <div><span>Controlled cap</span><strong>₹1,001-₹1,500</strong><small>CFO + COO confirmation</small></div>
+        <div><span>Founder required</span><strong>Above ₹1,500</strong><small>No auto-pay above cap</small></div>
         <div><span>OTP owner</span><strong>Founder</strong><small>CFO enters once after founder shares</small></div>
       </div>
       <div className="payment-policy-callout">
@@ -17929,11 +17929,11 @@ const paymentRecordsSeed = [];
 const paymentReceiptsSeed = [];
 
 const vendorTrustSeed = [
-  ['OpenAI', 'Trusted Infrastructure', 'Trusted', 'Rs 1,000', 'Allowed under cap', 'Low', 'Pending', 'Usage-based'],
-  ['Supabase', 'Trusted Infrastructure', 'Trusted', 'Rs 1,500', 'Controlled', 'Medium', 'Pending', 'Monthly'],
-  ['Vercel', 'Trusted Infrastructure', 'Trusted', 'Rs 1,000', 'Allowed under cap', 'Low', 'May 24, 2026', 'Monthly'],
-  ['Cloudflare', 'Domain / SSL renewal', 'Review Required', 'Rs 1,500', 'Founder approval over cap', 'High', 'Pending', 'Annual'],
-  ['Unknown SaaS vendor', 'Unknown Vendor', 'Blocked', 'Rs 0', 'Not allowed', 'Critical', 'Never paid', 'Unknown']
+  ['OpenAI', 'Trusted Infrastructure', 'Trusted', '₹1,000', 'Allowed under cap', 'Low', 'Pending', 'Usage-based'],
+  ['Supabase', 'Trusted Infrastructure', 'Trusted', '₹1,500', 'Controlled', 'Medium', 'Pending', 'Monthly'],
+  ['Vercel', 'Trusted Infrastructure', 'Trusted', '₹1,000', 'Allowed under cap', 'Low', 'May 24, 2026', 'Monthly'],
+  ['Cloudflare', 'Domain / SSL renewal', 'Review Required', '₹1,500', 'Founder approval over cap', 'High', 'Pending', 'Annual'],
+  ['Unknown SaaS vendor', 'Unknown Vendor', 'Blocked', '₹0', 'Not allowed', 'Critical', 'Never paid', 'Unknown']
 ].map(([vendorName, category, trustLevel, monthlyLimit, autoPayEligibility, riskLevel, lastPayment, renewalFrequency], index) => ({ id: `vendor-${index}`, vendorName, category, trustLevel, monthlyLimit, autoPayEligibility, riskLevel, lastPayment, renewalFrequency }));
 
 const paymentForecastSeed = [];
@@ -17994,7 +17994,7 @@ function buildRenewalDashboardItems(payments = paymentRecordsSeed, forecasts = p
 
 const paymentRiskSeed = [
   ['Missing receipt', 'Medium', 'Resend receipt still pending review.', 'CFO Command'],
-  ['Founder approval missing', 'High', 'Cloudflare amount exceeds Rs 1,500 cap.', 'Founder'],
+  ['Founder approval missing', 'High', 'Cloudflare amount exceeds ₹1,500 cap.', 'Founder'],
   ['Duplicate renewal risk', 'Low', 'No duplicate charge detected; monitor next cycle.', 'CFO Command'],
   ['Failed payment retry', 'Medium', 'WhatsApp API payment processing should be checked after OTP step.', 'CFO Command']
 ].map(([title, severity, detail, owner], index) => ({ id: `payment-risk-${index}`, title, severity, detail, owner }));
@@ -18544,9 +18544,9 @@ function BillingSecurityRulesPanel({ rules = billingVendorRuleSeed }) {
     <section className="payment-vault-panel billing-rules-panel">
       <div className="approval-section-header"><div><span>Auto-Renew Security Rules</span><h2>Limits and OTP policy</h2></div><ShieldCheck size={18} /></div>
       <div className="billing-rule-list">
-        <span>Up to Rs 1,000: safe auto-renew allowed only for trusted infrastructure vendors with approved token and no risk flag.</span>
-        <span>Rs 1,001-Rs 1,500: CFO + COO confirmation required.</span>
-        <span>&gt; Rs 1,500: Director review required.</span>
+        <span>Up to ₹1,000: safe auto-renew allowed only for trusted infrastructure vendors with approved token and no risk flag.</span>
+        <span>₹1,001-₹1,500: CFO + COO confirmation required.</span>
+        <span>&gt; ₹1,500: Director review required.</span>
         <span>Unknown vendor or high-risk vendor: blocked.</span>
         <span>OTP is entered once, submitted to provider, then cleared immediately. Audit never records OTP value.</span>
       </div>
@@ -19048,7 +19048,7 @@ function getPaymentState(status) {
 }
 
 function formatInr(value) {
-  return `Rs ${Number(value || 0).toLocaleString('en-IN')}`;
+  return `₹${Number(value || 0).toLocaleString('en-IN')}`;
 }
 
 function WorkflowGuidanceEngine({ navigate, onBack, initialView = 'Workflow Guidance' }) {
@@ -20318,7 +20318,7 @@ function WarehouseDashboard({ navigate, onBack, view = 'warehouse', inventoryId 
         </div>
         <div className="deck-header-controls">
           <div className="coo-verified"><ShieldCheck size={16} /><span>Founder session verified</span></div>
-          <div className="coo-status"><PackageCheck size={16} /><strong>Stock Value: Rs 18.4L Local</strong></div>
+          <div className="coo-status"><PackageCheck size={16} /><strong>Stock Value: ₹18.4L Local</strong></div>
           <StatusBadge label={`${lowStockCount} low stock`} state="attention" />
           <StatusBadge label={`${shipmentAllocationSeed.length} dispatch pending`} state="progress" />
           <span className="deck-time-chip">{currentDateTime}</span>
@@ -26810,7 +26810,7 @@ const campaignObjectives = ['Brand Awareness', 'Lead Generation', 'Website Traff
 
 function formatInrValue(value) {
   const amount = Number(value) || 0;
-  return `Rs ${new Intl.NumberFormat('en-IN', { maximumFractionDigits: 0 }).format(amount)}`;
+  return `₹${new Intl.NumberFormat('en-IN', { maximumFractionDigits: 0 }).format(amount)}`;
 }
 
 function CampaignBudgetPanel({ control, navigate }) {
