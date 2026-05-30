@@ -17007,9 +17007,17 @@ function CTOCommandPage({ navigate, onBack }) {
   const [inputs, setInputs] = useState({});
   const [saveState, setSaveState] = useState({});
   const [notice, setNotice] = useState('Integration health not checked yet.');
+  const [providerStatus, setProviderStatus] = useState({});
+  const [revealed, setRevealed] = useState({});
 
   const envValue = React.useCallback((name) => (typeof import.meta !== 'undefined' ? import.meta.env?.[name] : '') || '', []);
 
+  React.useEffect(() => {
+    fetch("/api/cto/provider-env/status")
+      .then(r => r.ok ? r.json() : null)
+      .then(d => { if (d?.providers) setProviderStatus(d.providers); })
+      .catch(() => null);
+  }, []);
   const refreshCTOStatus = React.useCallback(async () => {
     setNotice('Running live CTO integration health check...');
     const [healthResult, statusRows, incidentResult, subscriptionResult] = await Promise.all([
@@ -17059,24 +17067,53 @@ function CTOCommandPage({ navigate, onBack }) {
     return `${value.slice(0, 4)}...${value.slice(-4)}`;
   }
 
+  function fieldIsConfigured(fieldId) {
+    return providerStatus[fieldId]?.resolved === true;
+  }
+
   function integrationStatus(service) {
+    if (service.id === 'vercel') {
+      const isDeployed = typeof window !== 'undefined' && window.location.hostname !== 'localhost' && !window.location.hostname.startsWith('127.');
+      return isDeployed ? { label: 'LIVE', tone: 'live' } : { label: 'LOCAL DEV', tone: 'partial' };
+    }
     if (service.id === 'supabase') {
-      const urlSet = Boolean(envValue('VITE_SUPABASE_URL'));
-      const anonSet = Boolean(envValue('VITE_SUPABASE_ANON_KEY'));
-      if (urlSet && anonSet) return { label: 'LIVE', tone: 'live' };
-      if (urlSet || anonSet) return { label: 'PARTIAL', tone: 'partial' };
+      const urlOk = providerStatus['supabase_url']?.resolved;
+      const anonOk = providerStatus['supabase_anon_key']?.resolved;
+      if (urlOk && anonOk) return { label: 'LIVE', tone: 'live' };
+      if (urlOk || anonOk) return { label: 'PARTIAL', tone: 'partial' };
       return { label: 'NOT SET', tone: 'not-set' };
     }
     if (service.id === 'openai') {
-      return envValue('VITE_OPENAI_API_KEY') ? { label: 'LIVE', tone: 'live' } : { label: 'NOT SET', tone: 'not-set' };
+      return providerStatus['openai']?.resolved ? { label: 'LIVE', tone: 'live' } : { label: 'NOT SET', tone: 'not-set' };
     }
-    if (service.id === 'vercel') {
-      return envValue('VERCEL_URL') ? { label: 'LIVE', tone: 'live' } : { label: 'PARTIAL', tone: 'partial' };
+    if (service.id === 'slack') {
+      const tokenOk = providerStatus['slack_bot_token']?.resolved;
+      const channelOk = providerStatus['slack_channel_id']?.resolved;
+      const webhookOk = providerStatus['slack']?.resolved;
+      if ((tokenOk && channelOk) || webhookOk) return { label: 'LIVE', tone: 'live' };
+      if (tokenOk || channelOk || webhookOk) return { label: 'PARTIAL', tone: 'partial' };
+      return { label: 'NOT SET', tone: 'not-set' };
     }
-    const row = statusFor(service.name);
-    if (row?.status === 'live') return { label: 'LIVE', tone: 'live' };
-    if (row?.status === 'partial') return { label: 'PARTIAL', tone: 'partial' };
-    if (row?.status === 'unconfigured' || row?.status === 'error') return { label: service.id === 'slack' && row?.message?.includes('Missing') ? 'PARTIAL' : 'NOT SET', tone: service.id === 'slack' && row?.message?.includes('Missing') ? 'partial' : 'not-set' };
+    if (service.id === 'resend') {
+      return providerStatus['resend']?.resolved ? { label: 'LIVE', tone: 'live' } : { label: 'NOT SET', tone: 'not-set' };
+    }
+    if (service.id === 'twilio') {
+      const sidOk = providerStatus['twilio_account_sid']?.resolved;
+      const tokenOk = providerStatus['twilio_auth_token']?.resolved;
+      if (sidOk && tokenOk) return { label: 'LIVE', tone: 'live' };
+      if (sidOk || tokenOk) return { label: 'PARTIAL', tone: 'partial' };
+      return { label: 'NOT SET', tone: 'not-set' };
+    }
+    if (service.id === 'linkedin') {
+      return providerStatus['linkedin']?.resolved ? { label: 'LIVE', tone: 'live' } : { label: 'NOT SET', tone: 'not-set' };
+    }
+    if (service.id === 'meta' || service.id === 'instagram') {
+      return providerStatus['meta']?.resolved ? { label: 'LIVE', tone: 'live' } : { label: 'NOT SET', tone: 'not-set' };
+    }
+    const anyField = service.fields?.some(f => providerStatus[f.id]?.resolved);
+    const allFields = service.fields?.length > 0 && service.fields.every(f => providerStatus[f.id]?.resolved);
+    if (allFields) return { label: 'LIVE', tone: 'live' };
+    if (anyField) return { label: 'PARTIAL', tone: 'partial' };
     return { label: 'NOT SET', tone: 'not-set' };
   }
 
@@ -17086,7 +17123,6 @@ function CTOCommandPage({ navigate, onBack }) {
       logo: 'SB',
       name: 'Supabase',
       description: 'Primary database, auth, storage, audit logs, and workflow state.',
-      current: maskedValue(envValue('VITE_SUPABASE_URL')),
       fields: [
         { id: 'supabase_url', label: 'Supabase URL', placeholder: 'https://project.supabase.co', type: 'text' },
         { id: 'supabase_anon_key', label: 'Anon key', placeholder: 'Paste anon public key', type: 'password' }
@@ -17097,7 +17133,6 @@ function CTOCommandPage({ navigate, onBack }) {
       logo: 'AI',
       name: 'OpenAI',
       description: 'AI generation, analysis, captions, content quality review, and automation support.',
-      current: maskedValue(envValue('VITE_OPENAI_API_KEY')),
       fields: [{ id: 'openai', label: 'OpenAI API key', placeholder: 'Paste OpenAI API key', type: 'password' }]
     },
     {
@@ -17105,7 +17140,6 @@ function CTOCommandPage({ navigate, onBack }) {
       logo: 'SL',
       name: 'Slack',
       description: 'Founder alerts, CMO approvals, operational reports, and incident notifications.',
-      current: statusFor('Slack')?.message || 'Server-side env only',
       fields: [
         { id: 'slack_bot_token', label: 'Bot token', placeholder: 'xoxb-...', type: 'password' },
         { id: 'slack_channel_id', label: 'Channel ID', placeholder: 'C0B692ZMGSZ', type: 'text' },
@@ -17117,7 +17151,6 @@ function CTOCommandPage({ navigate, onBack }) {
       logo: 'RS',
       name: 'Resend',
       description: 'Transactional buyer email, notifications, receipts, and operational summaries.',
-      current: statusFor('Resend')?.message || 'Server-side env only',
       fields: [{ id: 'resend', label: 'Resend API key', placeholder: 're_...', type: 'password' }]
     },
     {
@@ -17125,7 +17158,6 @@ function CTOCommandPage({ navigate, onBack }) {
       logo: 'WA',
       name: 'Twilio',
       description: 'WhatsApp command interface and buyer/founder messaging infrastructure.',
-      current: statusFor('Twilio')?.message || 'Server-side env only',
       fields: [
         { id: 'twilio_account_sid', label: 'Account SID', placeholder: 'AC...', type: 'password' },
         { id: 'twilio_auth_token', label: 'Auth token', placeholder: 'Paste auth token', type: 'password' }
@@ -17136,7 +17168,6 @@ function CTOCommandPage({ navigate, onBack }) {
       logo: 'VC',
       name: 'Vercel',
       description: 'Hosting, preview deployments, cron jobs, and serverless API routes.',
-      current: envValue('VERCEL_URL') || 'Local development',
       readOnly: true,
       fields: []
     }
@@ -17231,30 +17262,71 @@ function CTOCommandPage({ navigate, onBack }) {
           return (
             <article key={service.id} className={`cto-integration-card ${status.tone}`}>
               <div className="cto-integration-header">
-                <div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                   <span className="cto-logo-text">{service.logo}</span>
                   <strong className="cto-integration-name">{service.name}</strong>
                 </div>
                 <StatusBadge label={status.label} state={status.tone === 'live' ? 'online' : status.tone === 'partial' ? 'attention' : 'error'} />
               </div>
               <p className="cto-integration-desc">{service.description}</p>
-              <div className="cto-current-value"><span>Current</span><strong>{service.current}</strong></div>
               {service.readOnly ? (
-                <div className="cto-readonly-note">Auto-detected from hosting runtime. No local key entry required.</div>
-              ) : service.fields.map((field) => (
-                <label className="cto-integration-input-row" key={field.id}>
-                  <span>{field.label}</span>
-                  <input
-                    className="cto-integration-input"
-                    type={field.type}
-                    placeholder={field.placeholder}
-                    value={inputs[field.id] || ''}
-                    onChange={(event) => setInputs((current) => ({ ...current, [field.id]: event.target.value }))}
-                  />
-                  <button className="ghost-button" type="button" onClick={() => saveProviderValue(field.id)}>Save</button>
-                  {saveState[field.id] && <em>{saveState[field.id]}</em>}
-                </label>
-              ))}
+                <div className="cto-readonly-note">
+                  {status.tone === 'live' ? 'Deployed on Vercel — hosting active.' : 'Running locally. Deploy to Vercel to go live.'}
+                </div>
+              ) : service.fields.map((field) => {
+                const configured = fieldIsConfigured(field.id);
+                const isRevealed = Boolean(revealed[field.id]);
+                const envAlias = providerStatus[field.id]?.alias || providerStatus[field.id]?.env_name || field.id;
+                return (
+                  <div className="cto-integration-input-row" key={field.id}>
+                    <span>{field.label}</span>
+                    {configured ? (
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 6, flex: 1 }}>
+                        <input
+                          className="cto-integration-input"
+                          type="text"
+                          readOnly
+                          value={isRevealed ? (revealed[field.id] === true ? 'Loading...' : revealed[field.id] || '••••••••••••') : '••••••••••••'}
+                          style={{ flex: 1, cursor: 'default', fontFamily: isRevealed && revealed[field.id] && revealed[field.id] !== true ? 'var(--font-mono, monospace)' : undefined }}
+                        />
+                        <button
+                          className="ghost-button"
+                          type="button"
+                          style={{ minWidth: 52 }}
+                          onClick={async () => {
+                            if (isRevealed) {
+                              setRevealed(prev => ({ ...prev, [field.id]: false }));
+                            } else {
+                              setRevealed(prev => ({ ...prev, [field.id]: true }));
+                              try {
+                                const r = await fetch('/api/cto/provider-env/reveal', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ fieldId: field.id }) });
+                                const d = await r.json();
+                                setRevealed(prev => ({ ...prev, [field.id]: d.ok ? d.value : '(not available)' }));
+                              } catch {
+                                setRevealed(prev => ({ ...prev, [field.id]: '(fetch error)' }));
+                              }
+                            }
+                          }}
+                        >
+                          {isRevealed ? 'Hide' : 'View'}
+                        </button>
+                      </div>
+                    ) : (
+                      <>
+                        <input
+                          className="cto-integration-input"
+                          type={field.type}
+                          placeholder={field.placeholder}
+                          value={inputs[field.id] || ''}
+                          onChange={(event) => setInputs((current) => ({ ...current, [field.id]: event.target.value }))}
+                        />
+                        <button className="ghost-button" type="button" onClick={() => saveProviderValue(field.id)}>Save</button>
+                      </>
+                    )}
+                    {saveState[field.id] && <em style={{ fontSize: 11, color: 'var(--accent-green)' }}>{saveState[field.id]}</em>}
+                  </div>
+                );
+              })}
             </article>
           );
         })}
