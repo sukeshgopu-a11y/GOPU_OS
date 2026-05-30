@@ -8696,8 +8696,7 @@ function DirectorCommandCenter({ navigate, onBack, onOpenTasks }) {
             <table className="dir-decision-table">
               <thead>
                 <tr>
-                  <th className="dir-th-sno">S.No</th>
-                  <th className="dir-th-priority">Priority</th>
+                  <th className="dir-th-priority">#&nbsp;&nbsp;Priority</th>
                   <th className="dir-th-title">Decision / Buyer</th>
                   <th className="dir-th-agent">Agent</th>
                   <th className="dir-th-date">Date</th>
@@ -8711,38 +8710,68 @@ function DirectorCommandCenter({ navigate, onBack, onOpenTasks }) {
                   const prio = String(item.priority || 'Medium');
                   const accent = priorityAccent[prio] || '#2ef2ff';
                   const role = Object.keys(agentColours).find((k) => (item.source_executive || '').toUpperCase().includes(k)) || 'COO';
+                  const isSelected = selectedId === item.id;
                   return (
-                    <tr key={item.id} className="dir-table-row" style={{ '--card-accent': accent }}>
-                      <td className="dir-td-sno">{index + 1}</td>
-                      <td className="dir-td-priority">
-                        <span className={`director-priority-badge director-priority-${prio.toLowerCase()}`} style={{ borderLeftColor: accent, borderLeftWidth: 3 }}>{prio}</span>
-                      </td>
-                      <td className="dir-td-title">
-                        <strong className="dir-table-title">{item.title}</strong>
-                        {item.buyer_name && <span className="dir-table-buyer">{item.buyer_name}</span>}
-                      </td>
-                      <td className="dir-td-agent">
-                        <span className="dir-agent-chip" style={{ color: agentColours[role], borderColor: agentColours[role] + '44' }}>{role}</span>
-                      </td>
-                      <td className="dir-td-date">{item.date_added || '—'}</td>
-                      <td className="dir-td-amount">
-                        {item.quotation_amount
-                          ? <span className="dir-table-amount">₹{Number(item.quotation_amount).toLocaleString('en-IN')}</span>
-                          : <span className="dir-table-na">—</span>}
-                      </td>
-                      <td className="dir-td-wait">
-                        <span className={item.waiting_hours >= 24 ? 'dir-wait-overdue' : 'dir-wait-ok'}>
-                          {item.waiting_hours != null ? `${item.waiting_hours}h` : '—'}
-                        </span>
-                      </td>
-                      <td className="dir-td-action">
-                        <div className="dir-table-actions">
-                          <button className="dir-btn-approve" onClick={() => runDirectorAction(item, 'Approve')}>Approve</button>
-                          <button className="dir-btn-reject" onClick={() => runDirectorAction(item, 'Reject')}>Reject</button>
-                          <button className="dir-btn-ghost" onClick={() => runDirectorAction(item, 'Need Clarification')}>Clarify</button>
-                        </div>
-                      </td>
-                    </tr>
+                    <React.Fragment key={item.id}>
+                      <tr
+                        className={`dir-table-row${isSelected ? ' dir-table-row--selected' : ''}`}
+                        style={{ '--card-accent': accent }}
+                        onClick={() => setSelectedId(isSelected ? null : item.id)}
+                      >
+                        <td className="dir-td-priority">
+                          <span className="dir-row-num">{index + 1}</span>
+                          <span className={`director-priority-badge director-priority-${prio.toLowerCase()}`}>{prio}</span>
+                        </td>
+                        <td className="dir-td-title">
+                          <strong className="dir-table-title">{item.title}</strong>
+                          {item.buyer_name && <span className="dir-table-buyer">{item.buyer_name}</span>}
+                        </td>
+                        <td className="dir-td-agent">
+                          <span className="dir-agent-chip" style={{ color: agentColours[role], borderColor: agentColours[role] + '44' }}>{role}</span>
+                        </td>
+                        <td className="dir-td-date">{item.date_added || '—'}</td>
+                        <td className="dir-td-amount">
+                          {item.quotation_amount
+                            ? <span className="dir-table-amount">₹{Number(item.quotation_amount).toLocaleString('en-IN')}</span>
+                            : <span className="dir-table-na">—</span>}
+                        </td>
+                        <td className="dir-td-wait">
+                          <span className={item.waiting_hours >= 24 ? 'dir-wait-overdue' : 'dir-wait-ok'}>
+                            {item.waiting_hours != null ? `${item.waiting_hours}h` : '—'}
+                          </span>
+                        </td>
+                        <td className="dir-td-action" onClick={(e) => e.stopPropagation()}>
+                          <div className="dir-table-actions">
+                            <button className="dir-btn-approve" onClick={() => runDirectorAction(item, 'Approve')}>Approve</button>
+                            <button className="dir-btn-reject" onClick={() => runDirectorAction(item, 'Reject')}>Reject</button>
+                            <button className="dir-btn-ghost" onClick={() => runDirectorAction(item, 'Need Clarification')}>Clarify</button>
+                          </div>
+                        </td>
+                      </tr>
+                      {isSelected && (
+                        <tr className="dir-detail-row">
+                          <td colSpan={7}>
+                            <div className="dir-detail-panel">
+                              <div className="dir-detail-grid">
+                                <div><span>Summary</span><p>{item.summary || item.description || item.impact || '—'}</p></div>
+                                <div><span>Risk Level</span><p>{item.risk_level || 'Monitoring'}</p></div>
+                                <div><span>Source</span><p>{item.source_executive || '—'}</p></div>
+                                <div><span>Status</span><p>{item.status || '—'}</p></div>
+                                {item.buyer_email && <div><span>Buyer Email</span><p>{item.buyer_email}</p></div>}
+                                {item.product && <div><span>Product</span><p>{item.product}{item.quantity ? ` · ${item.quantity}` : ''}</p></div>}
+                              </div>
+                              <div className="dir-detail-actions">
+                                <button className="dir-btn-approve" onClick={() => { runDirectorAction(item, 'Approve'); setSelectedId(null); }}>✓ Approve</button>
+                                <button className="dir-btn-reject" onClick={() => { runDirectorAction(item, 'Reject'); setSelectedId(null); }}>✗ Reject</button>
+                                <button className="dir-btn-ghost" onClick={() => runDirectorAction(item, 'Need Clarification')}>Clarify</button>
+                                <button className="dir-btn-ghost" onClick={() => runDirectorAction(item, 'Escalate')}>Escalate</button>
+                                <button className="dir-btn-ghost" onClick={() => setSelectedId(null)}>Close</button>
+                              </div>
+                            </div>
+                          </td>
+                        </tr>
+                      )}
+                    </React.Fragment>
                   );
                 })}
               </tbody>
@@ -8751,38 +8780,34 @@ function DirectorCommandCenter({ navigate, onBack, onOpenTasks }) {
         )}
       </section>
 
-      <div className="director-main-grid director-main-grid--agent-only">
-        <aside className="director-agent-feed" style={{ gridColumn: '1 / -1' }}>
-
-        <aside className="director-agent-feed">
-          <div className="director-queue-header">
-            <h2>Agent Activity</h2>
-            <span className="dir-live-dot" aria-label="Live" />
+      <aside className="director-agent-feed">
+        <div className="director-queue-header">
+          <h2>Agent Activity</h2>
+          <span className="dir-live-dot" aria-label="Live" />
+        </div>
+        {(directorData.agentActivityFeed || []).length === 0 ? (
+          <div className="director-feed-empty">
+            <p>Agents are active. Activity will appear here as decisions are routed.</p>
           </div>
-          {(directorData.agentActivityFeed || []).length === 0 ? (
-            <div className="director-feed-empty">
-              <p>Agents are active. Activity will appear here as decisions are routed.</p>
-            </div>
-          ) : (
-            <div>
-              {(directorData.agentActivityFeed || []).map((entry, index) => {
-                const role = Object.keys(agentColours).find((key) => (entry.agent || entry.role || '').toUpperCase().includes(key)) || 'CIO';
-                return (
-                  <div key={entry.id || index} className="director-agent-entry">
-                    <span className={`director-agent-dot agent-dot-${role.toLowerCase()}`} />
-                    <div>
-                      <span className="dir-agent-role" style={{ color: agentColours[role] }}>{role}</span>
-                      <strong>{entry.subject || entry.title || `${role} update`}</strong>
-                      <span>{entry.message || entry.subject || ''}</span>
-                      <time>{entry.time || entry.created_at || entry.timestamp || 'Now'}</time>
-                    </div>
+        ) : (
+          <div>
+            {(directorData.agentActivityFeed || []).map((entry, index) => {
+              const role = Object.keys(agentColours).find((key) => (entry.agent || entry.role || '').toUpperCase().includes(key)) || 'CIO';
+              return (
+                <div key={entry.id || index} className="director-agent-entry">
+                  <span className={`director-agent-dot agent-dot-${role.toLowerCase()}`} />
+                  <div>
+                    <span className="dir-agent-role" style={{ color: agentColours[role] }}>{role}</span>
+                    <strong>{entry.subject || entry.title || `${role} update`}</strong>
+                    <span>{entry.message || entry.subject || ''}</span>
+                    <time>{entry.time || entry.created_at || entry.timestamp || 'Now'}</time>
                   </div>
-                );
-              })}
-            </div>
-          )}
-        </aside>
-      </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </aside>
 
       <DirectorCommandConsole
         value={commandInput}
