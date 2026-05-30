@@ -10395,7 +10395,22 @@ const paymentTermRiskProfiles = {
   Escrow: ['Low', 'Funds are controlled by neutral escrow if terms are verified.', 'Verify escrow provider and release conditions.'],
   'Mixed Terms - Manual Review': ['High', 'Custom terms need manual commercial review.', 'CFO must document exact payment sequence.']
 };
-const pricingCostRowsSeed = [];
+const pricingCostRowsSeed = [
+  ['raw_material_cost', 'Raw Material Cost'],
+  ['packaging_cost', 'Packaging Cost'],
+  ['processing_cost', 'Processing Cost'],
+  ['labor_cost', 'Labour Cost'],
+  ['overhead_cost', 'Overhead'],
+  ['inland_logistics_cost', 'Inland Logistics'],
+  ['export_clearance_cost', 'Export Clearance'],
+  ['cha_charges_cost', 'CHA Charges'],
+  ['documentation_charges_cost', 'Documentation'],
+  ['port_charges_cost', 'Port / Terminal Charges'],
+  ['freight_cost', 'Freight'],
+  ['insurance_cost', 'Insurance'],
+  ['commission_cost', 'Commission'],
+  ['misc_cost', 'Misc / Contingency']
+];
 const pricingMarketFallbacks = {
   pepper: 708,
   cardamom: 2419.4,
