@@ -7,7 +7,7 @@ export default defineConfig({
   envPrefix: ['VITE_', 'NEXT_PUBLIC_'],
   build: {
     target: 'esnext',
-    minify: 'esbuild',
+    minify: true,
     cssMinify: true,
     rolldownOptions: {
       output: {
