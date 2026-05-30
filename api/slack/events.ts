@@ -742,12 +742,7 @@ export default async function handler(req: any, res: any) {
     return res.status(400).json({ ok: false, status: "invalid_payload", message: "Invalid Slack event payload." });
   }
 
-  const verification = verifySlackSignature(req, rawBody);
-  if (!verification.ok) {
-    console.error("[slack/events] signature verification failed", verification);
-    return res.status(401).json(verification);
-  }
-
+  // Handle URL verification BEFORE signature check — Slack sends this without a valid signature
   let payload: Record<string, any>;
   try {
     payload = rawBody ? JSON.parse(rawBody) : {};
@@ -756,6 +751,12 @@ export default async function handler(req: any, res: any) {
   }
 
   if (payload.type === "url_verification") return res.status(200).json({ challenge: payload.challenge });
+
+  const verification = verifySlackSignature(req, rawBody);
+  if (!verification.ok) {
+    console.error("[slack/events] signature verification failed", verification);
+    return res.status(401).json(verification);
+  }
 
   const event = payload.event || {};
   const rawText = String(event.text || "");
