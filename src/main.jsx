@@ -3951,9 +3951,41 @@ function normalizeLearningCentreSetupError(response) {
 }
 
 function MetricGrid() {
+  const [liveMetrics, setLiveMetrics] = useState(metrics);
+  useEffect(() => {
+    let mounted = true;
+    async function fetchDashboardData() {
+      try {
+        const [summaryRes, approvalsRes, ordersRes] = await Promise.allSettled([
+          fetch('/api/coo/summary').then((r) => r.ok ? r.json() : null),
+          fetch('/api/director/approvals?status=Pending').then((r) => r.ok ? r.json() : null),
+          fetch('/api/export/stages').then((r) => r.ok ? r.json() : null)
+        ]);
+        if (!mounted) return;
+        const summary = summaryRes.status === 'fulfilled' ? summaryRes.value : null;
+        const approvals = approvalsRes.status === 'fulfilled' ? approvalsRes.value : null;
+        const orders = ordersRes.status === 'fulfilled' ? ordersRes.value : null;
+        const totalLeads = summary?.data?.totalLeads ?? summary?.totalLeads ?? null;
+        const pendingApprovals = Array.isArray(approvals?.data) ? approvals.data.length : (approvals?.count ?? null);
+        const activeOrders = Array.isArray(orders?.data) ? orders.data.filter((o) => o.status !== 'Completed').length : (orders?.count ?? null);
+        if (totalLeads !== null || pendingApprovals !== null || activeOrders !== null) {
+          setLiveMetrics([
+            { label: 'Total Leads', value: totalLeads !== null ? String(totalLeads) : '--', tone: 'blue', delta: '' },
+            { label: 'Pending Approvals', value: pendingApprovals !== null ? String(pendingApprovals) : '--', tone: 'amber', delta: '' },
+            { label: 'Active Orders', value: activeOrders !== null ? String(activeOrders) : '--', tone: 'purple', delta: '' }
+          ]);
+        }
+      } catch (_err) {
+        // fall back to hardcoded values silently
+      }
+    }
+    fetchDashboardData();
+    return () => { mounted = false; };
+  }, []);
+  const displayMetrics = liveMetrics.length > 0 ? liveMetrics : metrics;
   return (
     <section className="metric-grid" aria-label="Key metrics">
-      {metrics.map((metric, index) => (
+      {displayMetrics.map((metric, index) => (
         <article className={`metric-panel tone-${metric.tone}`} key={metric.label} style={{ '--delay': `${index * 70}ms` }}>
           <span>{metric.label}</span>
           <strong>{metric.value}</strong>
@@ -29897,6 +29929,7 @@ function COOCommandPage({ navigate, onBack, onOpenApprovalWall, onOpenTasks }) {
       {activeCOOTab === 'Risks' && <CriticalOperationsPanel blockers={blockers} approvals={approvals} followups={followups} onInspect={inspectOperationalItem} onOpenApprovalWall={onOpenApprovalWall} />}
       {activeCOOTab === 'Timeline' && <COOActivityTimeline entries={timeline} onInspect={inspectOperationalItem} />}
       {activeCOOTab === 'SOP Insights' && <SOPImprovementWatch issues={sopWatch} onDraft={() => setActionNotice('SOP improvement draft prepared in preview mode.')} onInspect={inspectOperationalItem} />}
+      {activeCOOTab === 'Export Pipeline' && <ExportPipelinePanel />}
       <OperationalDetailDrawer
         item={selectedOperationalItem}
         note={drawerNote}
@@ -29914,7 +29947,218 @@ function COOCommandPage({ navigate, onBack, onOpenApprovalWall, onOpenTasks }) {
   );
 }
 
-const cooCommandTabs = ['Overview', 'Workflows', 'Shipments', 'Tasks', 'Risks', 'Timeline', 'SOP Insights'];
+const cooCommandTabs = ['Overview', 'Workflows', 'Shipments', 'Tasks', 'Risks', 'Timeline', 'SOP Insights', 'Export Pipeline'];
+
+const exportStageNames = {
+  1: 'Enquiry & Proforma',
+  2: 'Order Confirmed',
+  3: 'Lab & Production',
+  4: 'Pre-Shipment Docs',
+  5: 'Customs & LEO',
+  6: 'Shipping & BL',
+  7: 'Payment & eBRC'
+};
+
+const exportDocChecklist = [
+  'Proforma Invoice',
+  'Purchase Order',
+  'Packing List',
+  'Commercial Invoice',
+  'Certificate of Origin',
+  'Bill of Lading / AWB',
+  'Shipping Bill (LEO)',
+  'Bank Realisation Certificate (eBRC)'
+];
+
+function ExportStageBar({ currentStage }) {
+  const stages = [1, 2, 3, 4, 5, 6, 7];
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', gap: '4px', flexWrap: 'wrap', margin: '10px 0' }}>
+      {stages.map((stage, index) => (
+        <React.Fragment key={stage}>
+          <div
+            style={{
+              padding: '3px 8px',
+              borderRadius: '4px',
+              fontSize: '11px',
+              fontWeight: stage === currentStage ? 700 : 400,
+              background: stage === currentStage ? 'var(--cyan, #2ef2ff)' : stage < currentStage ? 'rgba(46,242,255,0.18)' : 'rgba(255,255,255,0.06)',
+              color: stage === currentStage ? '#0a0e1a' : stage < currentStage ? 'var(--cyan, #2ef2ff)' : 'var(--muted, #6b7280)',
+              border: stage === currentStage ? '1px solid var(--cyan, #2ef2ff)' : '1px solid transparent',
+              whiteSpace: 'nowrap'
+            }}
+          >
+            {stage}
+          </div>
+          {index < stages.length - 1 && (
+            <div style={{ width: '12px', height: '1px', background: stage < currentStage ? 'var(--cyan, #2ef2ff)' : 'rgba(255,255,255,0.12)' }} />
+          )}
+        </React.Fragment>
+      ))}
+    </div>
+  );
+}
+
+function ExportOrderCard({ order, onAdvanceStage }) {
+  const [checklistOpen, setChecklistOpen] = useState(false);
+  const [advancing, setAdvancing] = useState(false);
+
+  async function handleAdvance() {
+    if (order.current_stage >= 7) return;
+    setAdvancing(true);
+    try {
+      await fetch('/api/export/stages', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ order_id: order.id || order.order_id, to_stage: (order.current_stage || 1) + 1 })
+      });
+      onAdvanceStage(order);
+    } catch (_err) {
+      // fail silently
+    } finally {
+      setAdvancing(false);
+    }
+  }
+
+  return (
+    <motion.article
+      className="rich-kpi-card"
+      initial={{ opacity: 0, y: 16 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
+      style={{ marginBottom: '14px', padding: '18px 20px' }}
+    >
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '8px' }}>
+        <div>
+          <strong style={{ fontSize: '15px' }}>{order.buyer_name || order.buyer || 'Buyer pending'}</strong>
+          <p style={{ margin: '2px 0 0', fontSize: '13px', color: 'var(--muted, #6b7280)' }}>
+            {order.product || 'Product pending'} &middot; Qty: {order.quantity || '--'}
+          </p>
+        </div>
+        <div style={{ textAlign: 'right' }}>
+          <span style={{ fontSize: '11px', color: 'var(--muted, #6b7280)' }}>Stage {order.current_stage || 1} of 7</span>
+          <br />
+          <strong style={{ fontSize: '13px', color: 'var(--cyan, #2ef2ff)' }}>
+            {exportStageNames[order.current_stage || 1]}
+          </strong>
+        </div>
+      </div>
+      <ExportStageBar currentStage={order.current_stage || 1} />
+      <div style={{ display: 'flex', gap: '10px', alignItems: 'center', marginTop: '10px', flexWrap: 'wrap' }}>
+        <button
+          className="ghost-button"
+          style={{ fontSize: '12px', padding: '4px 10px' }}
+          onClick={() => setChecklistOpen((prev) => !prev)}
+        >
+          {checklistOpen ? 'Hide' : 'Show'} Document Checklist
+        </button>
+        {order.current_stage < 7 && (
+          <button
+            className="tactical-button"
+            style={{ fontSize: '12px', padding: '4px 12px' }}
+            onClick={handleAdvance}
+            disabled={advancing}
+          >
+            {advancing ? 'Advancing...' : `Advance to Stage ${(order.current_stage || 1) + 1}`}
+          </button>
+        )}
+        {order.current_stage >= 7 && (
+          <span style={{ fontSize: '12px', color: 'var(--success, #22c55e)' }}>Order Complete</span>
+        )}
+      </div>
+      {checklistOpen && (
+        <motion.ul
+          initial={{ opacity: 0, y: -8 }}
+          animate={{ opacity: 1, y: 0 }}
+          style={{ listStyle: 'none', margin: '12px 0 0', padding: '12px', background: 'rgba(255,255,255,0.04)', borderRadius: '6px', display: 'flex', flexDirection: 'column', gap: '6px' }}
+        >
+          {exportDocChecklist.map((doc, index) => (
+            <li key={doc} style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13px' }}>
+              <span style={{ color: index < (order.current_stage || 1) * 1.1 ? 'var(--success, #22c55e)' : 'var(--muted, #6b7280)', fontSize: '14px' }}>
+                {index < Math.ceil((order.current_stage || 1) * 1.1) ? '✓' : '○'}
+              </span>
+              {doc}
+            </li>
+          ))}
+        </motion.ul>
+      )}
+    </motion.article>
+  );
+}
+
+function ExportPipelinePanel() {
+  const [orders, setOrders] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  async function fetchOrders() {
+    try {
+      const res = await fetch('/api/export/stages');
+      if (!res.ok) throw new Error('API error');
+      const json = await res.json();
+      setOrders(Array.isArray(json) ? json : (json.data || []));
+    } catch (err) {
+      setError(err.message);
+      setOrders([]);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  useEffect(() => { fetchOrders(); }, []);
+
+  function handleAdvanced(order) {
+    setOrders((prev) => prev.map((o) => (o.id === order.id || o.order_id === order.order_id)
+      ? { ...o, current_stage: Math.min((o.current_stage || 1) + 1, 7) }
+      : o));
+  }
+
+  return (
+    <motion.section
+      className="coo-panel"
+      initial={{ opacity: 0, y: 16 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.48, ease: [0.16, 1, 0.3, 1] }}
+      style={{ padding: '24px' }}
+    >
+      <div className="coo-panel-header" style={{ marginBottom: '20px' }}>
+        <div>
+          <span>Export Pipeline</span>
+          <h2>Active Export Orders — Stage Tracker</h2>
+        </div>
+        <PackageCheck size={20} />
+      </div>
+
+      <div style={{ display: 'flex', gap: '8px', overflowX: 'auto', paddingBottom: '12px', marginBottom: '20px', borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
+        {[1, 2, 3, 4, 5, 6, 7].map((stage) => (
+          <div key={stage} style={{ minWidth: '120px', textAlign: 'center', padding: '8px 12px', background: 'rgba(46,242,255,0.06)', borderRadius: '6px', border: '1px solid rgba(46,242,255,0.12)' }}>
+            <div style={{ fontSize: '11px', color: 'var(--cyan, #2ef2ff)', fontWeight: 600 }}>Stage {stage}</div>
+            <div style={{ fontSize: '11px', color: 'var(--muted, #6b7280)', marginTop: '2px' }}>{exportStageNames[stage]}</div>
+          </div>
+        ))}
+      </div>
+
+      {loading && (
+        <div style={{ color: 'var(--muted, #6b7280)', padding: '24px', textAlign: 'center' }}>Loading export orders…</div>
+      )}
+      {!loading && (error || orders.length === 0) && (
+        <div style={{ textAlign: 'center', padding: '40px 24px', color: 'var(--muted, #6b7280)' }}>
+          <PackageCheck size={36} style={{ opacity: 0.3, marginBottom: '12px' }} />
+          <p style={{ fontWeight: 600, marginBottom: '6px' }}>No active export orders.</p>
+          <p style={{ fontSize: '13px' }}>New orders appear here when a Slack lead is approved by Director.</p>
+        </div>
+      )}
+      {!loading && orders.length > 0 && (
+        <div>
+          {orders.map((order, index) => (
+            <ExportOrderCard key={order.id || order.order_id || index} order={order} onAdvanceStage={handleAdvanced} />
+          ))}
+        </div>
+      )}
+      <button className="coo-inline-action" style={{ marginTop: '8px' }} onClick={fetchOrders}>Refresh Orders</button>
+    </motion.section>
+  );
+}
 
 function getCOOSeverityState(value = '') {
   if (['Critical', 'Blocked', 'Escalated'].includes(value)) return 'error';
