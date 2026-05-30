@@ -4,6 +4,37 @@ URL: https://supabase.com/dashboard/project/ogrmmhlaxfxrtpdzzwti/sql/new
 
 ---
 
+## STEP 0 — CFO Market Prices Table (Run This First — Unblocks Live Pricing)
+
+This table powers the CFO → Market Prices tab and makes every quote use your actual purchase price instead of a hardcoded estimate.
+
+```sql
+create table if not exists public.commodity_prices (
+  id uuid primary key default gen_random_uuid(),
+  tenant_id uuid not null,
+  product_key text not null,
+  product_label text,
+  price_inr_per_kg numeric not null,
+  source text,
+  note text,
+  updated_at timestamptz default now(),
+  created_at timestamptz default now()
+);
+
+create unique index if not exists commodity_prices_tenant_product_idx
+  on public.commodity_prices(tenant_id, product_key);
+
+alter table public.commodity_prices enable row level security;
+
+grant select, insert, update on public.commodity_prices to authenticated, service_role;
+
+notify pgrst, 'reload schema';
+```
+
+After running this: Go to **CFO → Market Prices tab** and enter today's actual purchase prices. Every quote from Slack or the Quotation page will use those prices immediately.
+
+---
+
 ## STEP 1 — Create Missing Core Tables
 
 These tables are referenced by the Slack lead handler but don't exist yet.

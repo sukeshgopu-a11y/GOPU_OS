@@ -11209,7 +11209,7 @@ function pricingOptionLabel(value) {
   return value;
 }
 
-const cfoWorkspaceTabs = ['Overview', 'Quotations', 'Cash', 'Receivables', 'Payables', 'Margins', 'Risks', 'Payment Vault', 'Reports'];
+const cfoWorkspaceTabs = ['Overview', 'Quotations', 'Market Prices', 'Cash', 'Receivables', 'Payables', 'Margins', 'Risks', 'Payment Vault', 'Reports'];
 
 function normalizeCfoVault(vault = {}) {
   return {
@@ -13050,11 +13050,204 @@ function normalizeCfoTableRows(rows, columns = []) {
   return safeCfoArray(rows).map((row) => normalizeCfoTableRow(row, columns));
 }
 
+const MARKET_PRICE_PRODUCTS = [
+  { key: 'chilli',    label: 'Red Chilli',      unit: 'kg', hs: '09042110', reference: 120,  mandi: 'Guntur Mandi' },
+  { key: 'turmeric',  label: 'Turmeric',         unit: 'kg', hs: '09103010', reference: 148,  mandi: 'Nizamabad Mandi' },
+  { key: 'pepper',    label: 'Black Pepper',     unit: 'kg', hs: '09041100', reference: 680,  mandi: 'NCDEX / Kochi' },
+  { key: 'cumin',     label: 'Cumin (Jeera)',    unit: 'kg', hs: '09093100', reference: 250,  mandi: 'Unjha Mandi' },
+  { key: 'coriander', label: 'Coriander Seed',  unit: 'kg', hs: '09092100', reference: 90,   mandi: 'Rajkot Mandi' },
+  { key: 'cardamom',  label: 'Cardamom',         unit: 'kg', hs: '09083110', reference: 2200, mandi: 'ICEX / Spice Board' },
+  { key: 'fenugreek', label: 'Fenugreek (Methi)',unit: 'kg', hs: '12129200', reference: 75,   mandi: 'Rajkot Mandi' },
+  { key: 'cinnamon',  label: 'Cinnamon',         unit: 'kg', hs: '09061000', reference: 320,  mandi: 'Kochi Market' },
+  { key: 'clove',     label: 'Clove',            unit: 'kg', hs: '09072000', reference: 820,  mandi: 'Kochi Market' },
+  { key: 'mustard',   label: 'Mustard Seed',     unit: 'kg', hs: '12074000', reference: 65,   mandi: 'Jaipur Mandi' },
+  { key: 'rice',      label: 'Rice',             unit: 'kg', hs: '10063000', reference: 68,   mandi: 'APEDA rate' },
+  { key: 'onion',     label: 'Onion',            unit: 'kg', hs: '07031000', reference: 20,   mandi: 'Lasalgaon Mandi' },
+  { key: 'garlic',    label: 'Garlic',           unit: 'kg', hs: '07032000', reference: 32,   mandi: 'MP Mandi' },
+];
+
+function CfoMarketPricesWorkspace() {
+  const [prices, setPrices] = React.useState({});
+  const [editing, setEditing] = React.useState(null);
+  const [editVal, setEditVal] = React.useState({ price: '', source: '', note: '' });
+  const [saving, setSaving] = React.useState(false);
+  const [msg, setMsg] = React.useState('');
+  const [loading, setLoading] = React.useState(true);
+
+  React.useEffect(() => {
+    fetch('/api/prices/market')
+      .then(r => r.json())
+      .then(d => { if (d.ok) setPrices(d.prices || {}); })
+      .catch(() => {})
+      .finally(() => setLoading(false));
+  }, []);
+
+  function startEdit(product) {
+    const current = prices[product.key];
+    setEditing(product.key);
+    setEditVal({
+      price: current?.price_inr_per_kg || product.reference,
+      source: current?.source || product.mandi,
+      note: current?.note || '',
+    });
+    setMsg('');
+  }
+
+  async function savePrice(product) {
+    setSaving(true);
+    setMsg('');
+    try {
+      const res = await fetch('/api/prices/market', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          product_key: product.key,
+          product_label: product.label,
+          price_inr_per_kg: Number(editVal.price),
+          source: editVal.source,
+          note: editVal.note,
+        }),
+      });
+      const data = await res.json();
+      if (data.ok) {
+        setPrices(prev => ({
+          ...prev,
+          [product.key]: {
+            ...prev[product.key],
+            price_inr_per_kg: Number(editVal.price),
+            source: editVal.source,
+            note: editVal.note,
+            updated_at: new Date().toISOString(),
+            stale: false,
+            is_fallback: false,
+          },
+        }));
+        setMsg(`✅ ${product.label} updated to ₹${editVal.price}/kg`);
+        setEditing(null);
+      } else {
+        setMsg(`❌ ${data.message}`);
+      }
+    } catch (e) {
+      setMsg('❌ Could not save — check connection');
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  return (
+    <section className="cfo-market-prices-workspace" style={{ padding: '24px' }}>
+      <div style={{ marginBottom: 20 }}>
+        <h2 style={{ fontSize: 18, fontWeight: 700, color: '#f1f5f9', marginBottom: 6 }}>Market Prices — Raw Material Cost</h2>
+        <p style={{ fontSize: 13, color: '#94a3b8', maxWidth: 620 }}>
+          These prices are used by the CFO pricing engine for every quote — from Slack leads, quotation page, and export pipeline.
+          Update with your <strong>actual purchase price</strong> from today's mandi or supplier. Stale prices (&gt;7 days) are flagged in orange.
+        </p>
+      </div>
+      {msg && <div style={{ marginBottom: 16, padding: '10px 14px', borderRadius: 8, background: msg.startsWith('✅') ? '#14532d' : '#7f1d1d', color: '#f1f5f9', fontSize: 13 }}>{msg}</div>}
+      {loading ? (
+        <div style={{ color: '#64748b', fontSize: 14 }}>Loading prices…</div>
+      ) : (
+        <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
+          <thead>
+            <tr style={{ borderBottom: '1px solid #1e293b', color: '#64748b', textAlign: 'left' }}>
+              <th style={{ padding: '8px 12px', fontWeight: 600 }}>Product</th>
+              <th style={{ padding: '8px 12px', fontWeight: 600 }}>HS Code</th>
+              <th style={{ padding: '8px 12px', fontWeight: 600 }}>Price (₹/kg)</th>
+              <th style={{ padding: '8px 12px', fontWeight: 600 }}>Source</th>
+              <th style={{ padding: '8px 12px', fontWeight: 600 }}>Updated</th>
+              <th style={{ padding: '8px 12px', fontWeight: 600 }}>Status</th>
+              <th style={{ padding: '8px 12px', fontWeight: 600 }}>Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            {MARKET_PRICE_PRODUCTS.map(product => {
+              const p = prices[product.key] || {};
+              const isStale = p.stale !== false;
+              const isFallback = p.is_fallback !== false;
+              const daysOld = p.days_old;
+              const isEditing = editing === product.key;
+              return (
+                <tr key={product.key} style={{ borderBottom: '1px solid #0f172a', background: isEditing ? '#1e293b' : 'transparent' }}>
+                  <td style={{ padding: '10px 12px', color: '#f1f5f9', fontWeight: 600 }}>{product.label}</td>
+                  <td style={{ padding: '10px 12px', color: '#64748b', fontFamily: 'monospace' }}>{product.hs}</td>
+                  <td style={{ padding: '10px 12px' }}>
+                    {isEditing ? (
+                      <input
+                        type="number"
+                        value={editVal.price}
+                        onChange={e => setEditVal(v => ({ ...v, price: e.target.value }))}
+                        style={{ width: 90, padding: '4px 8px', borderRadius: 4, background: '#0f172a', border: '1px solid #334155', color: '#f1f5f9', fontSize: 13 }}
+                      />
+                    ) : (
+                      <span style={{ color: isStale ? '#f59e0b' : '#22c55e', fontWeight: 700 }}>
+                        ₹{p.price_inr_per_kg || product.reference}
+                      </span>
+                    )}
+                  </td>
+                  <td style={{ padding: '10px 12px', color: '#94a3b8' }}>
+                    {isEditing ? (
+                      <input
+                        type="text"
+                        value={editVal.source}
+                        onChange={e => setEditVal(v => ({ ...v, source: e.target.value }))}
+                        placeholder="e.g. Guntur Mandi today"
+                        style={{ width: 180, padding: '4px 8px', borderRadius: 4, background: '#0f172a', border: '1px solid #334155', color: '#f1f5f9', fontSize: 13 }}
+                      />
+                    ) : (
+                      p.source || product.mandi
+                    )}
+                  </td>
+                  <td style={{ padding: '10px 12px', color: '#64748b', fontSize: 12 }}>
+                    {p.updated_at
+                      ? `${daysOld === 0 ? 'Today' : daysOld === 1 ? 'Yesterday' : `${daysOld}d ago`}`
+                      : <span style={{ color: '#ef4444' }}>Never set</span>}
+                  </td>
+                  <td style={{ padding: '10px 12px' }}>
+                    {isFallback
+                      ? <span style={{ color: '#ef4444', fontSize: 11, fontWeight: 600 }}>⚠ REFERENCE ONLY</span>
+                      : isStale
+                        ? <span style={{ color: '#f59e0b', fontSize: 11, fontWeight: 600 }}>⚠ STALE ({daysOld}d)</span>
+                        : <span style={{ color: '#22c55e', fontSize: 11, fontWeight: 600 }}>✓ LIVE</span>}
+                  </td>
+                  <td style={{ padding: '10px 12px' }}>
+                    {isEditing ? (
+                      <div style={{ display: 'flex', gap: 6 }}>
+                        <button
+                          onClick={() => savePrice(product)}
+                          disabled={saving}
+                          style={{ padding: '4px 12px', borderRadius: 4, background: '#22c55e', color: '#000', border: 'none', fontWeight: 700, cursor: 'pointer', fontSize: 12 }}
+                        >{saving ? '…' : 'Save'}</button>
+                        <button
+                          onClick={() => setEditing(null)}
+                          style={{ padding: '4px 10px', borderRadius: 4, background: '#334155', color: '#f1f5f9', border: 'none', cursor: 'pointer', fontSize: 12 }}
+                        >Cancel</button>
+                      </div>
+                    ) : (
+                      <button
+                        onClick={() => startEdit(product)}
+                        style={{ padding: '4px 12px', borderRadius: 4, background: '#1e293b', color: '#38bdf8', border: '1px solid #334155', cursor: 'pointer', fontSize: 12, fontWeight: 600 }}
+                      >Update Price</button>
+                    )}
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      )}
+      <div style={{ marginTop: 20, padding: '12px 16px', borderRadius: 8, background: '#0f172a', border: '1px solid #1e293b', fontSize: 12, color: '#64748b' }}>
+        <strong style={{ color: '#94a3b8' }}>How to use:</strong> Enter today's actual purchase price from your mandi or supplier. Type the source (e.g. "Guntur Mandi 30-May", "Supplier ABC quote"). All quotes generated from Slack or the Quotations tab will use this price. Green = live (≤7 days). Orange = stale. Red = never set (using reference estimate).
+      </div>
+    </section>
+  );
+}
+
 function CfoTabWorkspace({ tab, data, reportOutput, onOpenPricing, onOpenPaymentVault, onGenerateReport, onGenerateFounderSummary, onInitiatePayment, onSendReportSlack }) {
   if (data.loading) {
     return <section className="pricing-panel cfo-loading-panel"><MetricSkeletonGrid /></section>;
   }
   if (tab === 'Overview') return <CfoOverviewWorkspace data={data} onOpenPricing={onOpenPricing} onOpenPaymentVault={onOpenPaymentVault} onGenerateFounderSummary={onGenerateFounderSummary} />;
+  if (tab === 'Market Prices') return <CfoMarketPricesWorkspace />;
   if (tab === 'Cash') return <CfoCashWorkspace data={data} />;
   if (tab === 'Receivables') return <CfoReceivablesWorkspace data={data} />;
   if (tab === 'Payables') return <CfoPayablesWorkspace data={data} onInitiatePayment={onInitiatePayment} />;

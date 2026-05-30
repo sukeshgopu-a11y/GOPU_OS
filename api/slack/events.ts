@@ -488,7 +488,24 @@ export async function upsertSlackStatus(status: "live" | "error", details: Recor
 export async function processLead(event: Record<string, any>, text: string, options: Record<string, any> = {}) {
   const client = getSupabaseClient();
   const lead = parseSlackLead(text, event);
-  const pricing = runPricingEngine(lead);
+
+  // Fetch live market prices from Supabase — gives accurate raw material cost
+  let liveMarketPrices: Record<string, any> | null = null;
+  if (client) {
+    const { data } = await client
+      .from("commodity_prices")
+      .select("product_key, price_inr_per_kg, source, updated_at")
+      .eq("tenant_id", demoTenantId);
+    if (data?.length) {
+      liveMarketPrices = {};
+      for (const row of data) {
+        const daysOld = Math.floor((Date.now() - new Date(row.updated_at).getTime()) / 86400000);
+        liveMarketPrices[row.product_key] = { ...row, stale: daysOld > 7 };
+      }
+    }
+  }
+
+  const pricing = runPricingEngine(lead, liveMarketPrices);
   const amount = formatMoney(pricing.recommendedTotalPrice, pricing.currency);
   const issues: string[] = [];
 
@@ -716,6 +733,9 @@ export function buildReply(result: any) {
     `• Per ${lead.unit.toUpperCase()}: *${pricePerUnit}*`,
     `• Margin: ${pricing.achievedMarginPercent}%`,
     `• Delivery: ${pricing.seaLeadTime}`,
+    pricing.priceSource?.stale
+      ? `• ⚠️ Raw material: ₹${pricing.rawMaterialPriceInr}/kg (${pricing.priceSource.source}) — _update in CFO → Market Prices_`
+      : `• ✅ Raw material: ₹${pricing.rawMaterialPriceInr}/kg (${pricing.priceSource?.source})`,
     ``,
     `📋 *Export Pipeline — Stage 1 of 7: Proforma Invoice*`,
     `• COO: ${cooStatus}`,

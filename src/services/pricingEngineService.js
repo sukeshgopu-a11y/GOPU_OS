@@ -25,31 +25,52 @@ const COST_SEED = [
   ['misc_cost', 'Miscellaneous']
 ];
 
+// Reference prices (INR/kg) — FALLBACK ONLY
+// CFO must update actual purchase prices via CFO dashboard → Market Prices
+const PRICE_REFERENCE = {
+  pepper:    { price: 680,  source: 'NCDEX reference',           stale: true },
+  cardamom:  { price: 2200, source: 'ICEX reference',            stale: true },
+  cinnamon:  { price: 320,  source: 'Kochi market reference',    stale: true },
+  clove:     { price: 820,  source: 'Kochi market reference',    stale: true },
+  coriander: { price: 90,   source: 'Rajkot Mandi reference',    stale: true },
+  cumin:     { price: 250,  source: 'Unjha Mandi reference',     stale: true },
+  turmeric:  { price: 148,  source: 'Nizamabad Mandi reference', stale: true },
+  chilli:    { price: 120,  source: 'Guntur Mandi reference',    stale: true },
+  rice:      { price: 68,   source: 'APEDA reference',           stale: true },
+  onion:     { price: 20,   source: 'Lasalgaon Mandi reference', stale: true },
+  garlic:    { price: 32,   source: 'MP Mandi reference',        stale: true },
+  fenugreek: { price: 75,   source: 'Rajkot Mandi reference',    stale: true },
+  mustard:   { price: 65,   source: 'Jaipur Mandi reference',    stale: true },
+  default:   { price: 115,  source: 'Generic estimate',          stale: true },
+};
+
 const COMMERCIAL_PRESETS = {
-  pepper:    { baseInrPerKg: 708,    packagingInrPerKg: 10.5, processingInrPerKg: 15,   laborInrPerKg: 4.8, overheadInrPerKg: 6.5,  packing: '25 KG moisture-protected bags',        category: 'Spice Board product' },
-  cardamom:  { baseInrPerKg: 2419.4, packagingInrPerKg: 14,   processingInrPerKg: 22,   laborInrPerKg: 6.5, overheadInrPerKg: 10,   packing: 'Vacuum / premium cartons',             category: 'Spice Board product' },
-  cinnamon:  { baseInrPerKg: 320,    packagingInrPerKg: 9,    processingInrPerKg: 12,   laborInrPerKg: 4,   overheadInrPerKg: 6,    packing: '25 KG PP bags',                        category: 'Spice Board product' },
-  clove:     { baseInrPerKg: 810,    packagingInrPerKg: 11,   processingInrPerKg: 16,   laborInrPerKg: 5,   overheadInrPerKg: 7.5,  packing: '25 KG moisture-protected bags',        category: 'Spice Board product' },
-  coriander: { baseInrPerKg: 85,     packagingInrPerKg: 7,    processingInrPerKg: 9,    laborInrPerKg: 3,   overheadInrPerKg: 4.5,  packing: '25/50 KG PP bags',                     category: 'Spice Board product' },
-  cumin:     { baseInrPerKg: 230,    packagingInrPerKg: 8,    processingInrPerKg: 11,   laborInrPerKg: 3.5, overheadInrPerKg: 5,    packing: '25 KG PP bags',                        category: 'Spice Board product' },
-  turmeric:  { baseInrPerKg: 132.22, packagingInrPerKg: 8.5,  processingInrPerKg: 12,   laborInrPerKg: 3.8, overheadInrPerKg: 5.5,  packing: '25 KG PP bags or retail master cartons', category: 'Spice Board / APEDA product' },
-  chilli:    { baseInrPerKg: 180,    packagingInrPerKg: 9.5,  processingInrPerKg: 13.5, laborInrPerKg: 4.2, overheadInrPerKg: 6,    packing: '10 KG cartons or 25 KG PP bags',       category: 'Spice Board product' },
-  rice:      { baseInrPerKg: 68,     packagingInrPerKg: 6,    processingInrPerKg: 7,    laborInrPerKg: 2.5, overheadInrPerKg: 4,    packing: '25/50 KG woven export bags',           category: 'APEDA product' },
-  onion:     { baseInrPerKg: 25,     packagingInrPerKg: 4,    processingInrPerKg: 5,    laborInrPerKg: 2,   overheadInrPerKg: 3,    packing: '25/50 KG mesh bags',                   category: 'APEDA product' },
-  garlic:    { baseInrPerKg: 30,     packagingInrPerKg: 4.5,  processingInrPerKg: 5.5,  laborInrPerKg: 2.2, overheadInrPerKg: 3.5,  packing: '10/25 KG mesh bags',                   category: 'APEDA product' },
-  default:   { baseInrPerKg: 115,    packagingInrPerKg: 8,    processingInrPerKg: 9,    laborInrPerKg: 3,   overheadInrPerKg: 4.5,  packing: 'Buyer-specific export packing',         category: 'Export product' }
+  pepper:    { packagingInrPerKg: 10.5, processingInrPerKg: 15,   laborInrPerKg: 4.8, overheadInrPerKg: 6.5,  packing: '25 KG moisture-protected bags',           category: 'Spice Board product' },
+  cardamom:  { packagingInrPerKg: 14,   processingInrPerKg: 22,   laborInrPerKg: 6.5, overheadInrPerKg: 10,   packing: 'Vacuum / premium cartons',                category: 'Spice Board product' },
+  cinnamon:  { packagingInrPerKg: 9,    processingInrPerKg: 12,   laborInrPerKg: 4,   overheadInrPerKg: 6,    packing: '25 KG PP bags',                           category: 'Spice Board product' },
+  clove:     { packagingInrPerKg: 11,   processingInrPerKg: 16,   laborInrPerKg: 5,   overheadInrPerKg: 7.5,  packing: '25 KG moisture-protected bags',           category: 'Spice Board product' },
+  coriander: { packagingInrPerKg: 7,    processingInrPerKg: 9,    laborInrPerKg: 3,   overheadInrPerKg: 4.5,  packing: '25/50 KG PP bags',                        category: 'Spice Board product' },
+  cumin:     { packagingInrPerKg: 8,    processingInrPerKg: 11,   laborInrPerKg: 3.5, overheadInrPerKg: 5,    packing: '25 KG PP bags',                           category: 'Spice Board product' },
+  turmeric:  { packagingInrPerKg: 8.5,  processingInrPerKg: 12,   laborInrPerKg: 3.8, overheadInrPerKg: 5.5,  packing: '25 KG PP bags or retail master cartons',  category: 'Spice Board / APEDA product' },
+  chilli:    { packagingInrPerKg: 9.5,  processingInrPerKg: 13.5, laborInrPerKg: 4.2, overheadInrPerKg: 6,    packing: '10 KG cartons or 25 KG PP bags',          category: 'Spice Board product' },
+  rice:      { packagingInrPerKg: 6,    processingInrPerKg: 7,    laborInrPerKg: 2.5, overheadInrPerKg: 4,    packing: '25/50 KG woven export bags',              category: 'APEDA product' },
+  onion:     { packagingInrPerKg: 4,    processingInrPerKg: 5,    laborInrPerKg: 2,   overheadInrPerKg: 3,    packing: '25/50 KG mesh bags',                      category: 'APEDA product' },
+  garlic:    { packagingInrPerKg: 4.5,  processingInrPerKg: 5.5,  laborInrPerKg: 2.2, overheadInrPerKg: 3.5,  packing: '10/25 KG mesh bags',                      category: 'APEDA product' },
+  fenugreek: { packagingInrPerKg: 7.5,  processingInrPerKg: 9,    laborInrPerKg: 3.1, overheadInrPerKg: 4.5,  packing: '25/50 KG PP bags',                        category: 'Spice Board product' },
+  mustard:   { packagingInrPerKg: 7,    processingInrPerKg: 8.5,  laborInrPerKg: 3,   overheadInrPerKg: 4.2,  packing: '25/50 KG PP bags',                        category: 'Seed spice / oilseed' },
+  default:   { packagingInrPerKg: 8,    processingInrPerKg: 9,    laborInrPerKg: 3,   overheadInrPerKg: 4.5,  packing: 'Buyer-specific export packing',            category: 'Export product' },
 };
 
 const FREIGHT_PROFILES = {
-  Australia:        { seaInrPerKg: 15,   airInrPerKg: 245, complexity: 1.45, lead: '18–32 days by sea' },
-  Canada:           { seaInrPerKg: 17,   airInrPerKg: 260, complexity: 1.55, lead: '25–42 days by sea' },
-  Germany:          { seaInrPerKg: 14,   airInrPerKg: 230, complexity: 1.38, lead: '22–36 days by sea' },
-  Japan:            { seaInrPerKg: 12,   airInrPerKg: 220, complexity: 1.28, lead: '18–30 days by sea' },
-  'Saudi Arabia':   { seaInrPerKg: 7.5,  airInrPerKg: 165, complexity: 1.1,  lead: '10–20 days by sea' },
-  Singapore:        { seaInrPerKg: 8.5,  airInrPerKg: 155, complexity: 1.05, lead: '8–18 days by sea' },
-  'United Arab Emirates': { seaInrPerKg: 6.5, airInrPerKg: 150, complexity: 1, lead: '7–16 days by sea' },
-  'United Kingdom': { seaInrPerKg: 15.5, airInrPerKg: 245, complexity: 1.48, lead: '24–40 days by sea' },
-  'United States':  { seaInrPerKg: 18,   airInrPerKg: 275, complexity: 1.60, lead: '28–45 days by sea' },
+  Australia:              { seaInrPerKg: 15,   airInrPerKg: 245, complexity: 1.45, lead: '18–32 days by sea' },
+  Canada:                 { seaInrPerKg: 17,   airInrPerKg: 260, complexity: 1.55, lead: '25–42 days by sea' },
+  Germany:                { seaInrPerKg: 14,   airInrPerKg: 230, complexity: 1.38, lead: '22–36 days by sea' },
+  Japan:                  { seaInrPerKg: 12,   airInrPerKg: 220, complexity: 1.28, lead: '18–30 days by sea' },
+  'Saudi Arabia':         { seaInrPerKg: 7.5,  airInrPerKg: 165, complexity: 1.1,  lead: '10–20 days by sea' },
+  Singapore:              { seaInrPerKg: 8.5,  airInrPerKg: 155, complexity: 1.05, lead: '8–18 days by sea' },
+  'United Arab Emirates': { seaInrPerKg: 6.5,  airInrPerKg: 150, complexity: 1,    lead: '7–16 days by sea' },
+  'United Kingdom':       { seaInrPerKg: 15.5, airInrPerKg: 245, complexity: 1.48, lead: '24–40 days by sea' },
+  'United States':        { seaInrPerKg: 18,   airInrPerKg: 275, complexity: 1.60, lead: '28–45 days by sea' },
 };
 
 export function moneyNumber(v) {
@@ -84,6 +105,8 @@ function productKey(name) {
   if (n.includes('cumin') || n.includes('jeera')) return 'cumin';
   if (n.includes('turmeric') || n.includes('haldi')) return 'turmeric';
   if (n.includes('chilli') || n.includes('chili') || n.includes('red chilli')) return 'chilli';
+  if (n.includes('fenugreek') || n.includes('methi')) return 'fenugreek';
+  if (n.includes('mustard')) return 'mustard';
   if (n.includes('rice') || n.includes('basmati')) return 'rice';
   if (n.includes('onion')) return 'onion';
   if (n.includes('garlic')) return 'garlic';
@@ -122,10 +145,12 @@ function incotermKeys(incoterm) {
 /**
  * Run the pricing engine for a lead and return a full quote result.
  *
- * @param {object} lead - { product, quantity, unit_of_measure?, destination_country, incoterm?, shipping_mode?, currency?, exchange_rate?, target_margin?, min_margin? }
+ * @param {object} lead
+ * @param {object} [liveMarketPrices] - Optional: pass result from GET /api/prices/market
+ *   When provided, uses live prices. Without it, falls back to reference prices with stale warning.
  * @returns {object} pricingResult
  */
-export function runPricingEngine(lead) {
+export function runPricingEngine(lead, liveMarketPrices = null) {
   const product = lead.product || lead.product_name || 'Unknown';
   const incoterm = (lead.incoterm || 'FOB').toUpperCase();
   const country = lead.destination_country || '';
@@ -135,8 +160,9 @@ export function runPricingEngine(lead) {
   const targetMargin = clampPercent(lead.target_margin || lead.target_margin_percent || TARGET_MARGIN_DEFAULT);
   const minMargin = clampPercent(lead.min_margin || lead.minimum_margin_percent || MINIMUM_MARGIN_DEFAULT);
 
-  const qty = parsedQuantity(lead.quantity, lead.unit_of_measure || 'mt');
+  const qty = parsedQuantity(lead.quantity, lead.unit_of_measure || lead.unit || 'mt');
   const kg = Math.max(qty.kg, 1);
+  const pKey = productKey(product);
   const preset = getPreset(product);
   const freight = getFreightProfile(country);
   const included = incotermKeys(incoterm);
@@ -144,24 +170,42 @@ export function runPricingEngine(lead) {
   const modeMultiplier = isAir ? 1.28 : 1;
   const toQuote = (inr) => roundMoney(convertCurrency(inr, 'INR', quoteCurrency, exRate));
 
+  // Raw material price resolution — live CFO price takes priority over reference
+  const livePrice = liveMarketPrices?.[pKey] || liveMarketPrices?.['default'];
+  const fallbackRef = PRICE_REFERENCE[pKey] || PRICE_REFERENCE.default;
+  const rawMaterialInrPerKg = livePrice?.price_inr_per_kg || fallbackRef.price;
+  const priceSource = livePrice
+    ? {
+        source: livePrice.source || 'CFO market price',
+        updated_at: livePrice.updated_at,
+        stale: livePrice.stale || false,
+        is_live: true,
+      }
+    : {
+        source: fallbackRef.source,
+        updated_at: null,
+        stale: true,
+        is_live: false,
+        warning: 'Reference price only — update actual purchase price in CFO → Market Prices.',
+      };
+
   const estimates = {
-    raw_material_cost:          { amount: toQuote(preset.baseInrPerKg),           basis: 'PER_KG' },
-    packaging_cost:             { amount: toQuote(preset.packagingInrPerKg),       basis: 'PER_KG' },
-    processing_cost:            { amount: toQuote(preset.processingInrPerKg),      basis: 'PER_KG' },
-    labor_cost:                 { amount: toQuote(preset.laborInrPerKg),           basis: 'PER_KG' },
-    overhead_cost:              { amount: toQuote(preset.overheadInrPerKg),        basis: 'PER_KG' },
-    inland_logistics_cost:      { amount: toQuote(roundMoney((52000 + kg * 1.65) * freight.complexity * (isAir ? 0.72 : 1))), basis: 'PER_ORDER' },
-    export_clearance_cost:      { amount: toQuote(roundMoney(18500 * freight.complexity)), basis: 'PER_ORDER' },
-    cha_charges_cost:           { amount: toQuote(roundMoney(13500 * freight.complexity)), basis: 'PER_ORDER' },
-    documentation_charges_cost: { amount: toQuote(roundMoney(6500 * freight.complexity)),  basis: 'PER_ORDER' },
-    port_charges_cost:          { amount: toQuote(roundMoney((isAir ? 16500 : 36500) * freight.complexity)), basis: 'PER_ORDER' },
+    raw_material_cost:          { amount: toQuote(rawMaterialInrPerKg),                                                                    basis: 'PER_KG' },
+    packaging_cost:             { amount: toQuote(preset.packagingInrPerKg),                                                               basis: 'PER_KG' },
+    processing_cost:            { amount: toQuote(preset.processingInrPerKg),                                                              basis: 'PER_KG' },
+    labor_cost:                 { amount: toQuote(preset.laborInrPerKg),                                                                   basis: 'PER_KG' },
+    overhead_cost:              { amount: toQuote(preset.overheadInrPerKg),                                                                basis: 'PER_KG' },
+    inland_logistics_cost:      { amount: toQuote(roundMoney((52000 + kg * 1.65) * freight.complexity * (isAir ? 0.72 : 1))),             basis: 'PER_ORDER' },
+    export_clearance_cost:      { amount: toQuote(roundMoney(18500 * freight.complexity)),                                                 basis: 'PER_ORDER' },
+    cha_charges_cost:           { amount: toQuote(roundMoney(13500 * freight.complexity)),                                                 basis: 'PER_ORDER' },
+    documentation_charges_cost: { amount: toQuote(roundMoney(6500 * freight.complexity)),                                                  basis: 'PER_ORDER' },
+    port_charges_cost:          { amount: toQuote(roundMoney((isAir ? 16500 : 36500) * freight.complexity)),                               basis: 'PER_ORDER' },
     freight_cost:               { amount: toQuote(roundMoney(kg * (isAir ? freight.airInrPerKg : freight.seaInrPerKg) * modeMultiplier)), basis: 'PER_ORDER' },
     insurance_cost:             { amount: 0.35, basis: 'PERCENT_INVOICE_VALUE' },
     commission_cost:            { amount: 2.5,  basis: 'PERCENT_INVOICE_VALUE' },
-    misc_cost:                  { amount: toQuote(roundMoney(Math.max(8500, kg * 0.75))), basis: 'PER_ORDER' }
+    misc_cost:                  { amount: toQuote(roundMoney(Math.max(8500, kg * 0.75))),                                                  basis: 'PER_ORDER' },
   };
 
-  // Build cost lines
   const lines = COST_SEED.map(([key, label]) => {
     const est = estimates[key];
     const isIncluded = included.has(key);
@@ -172,10 +216,7 @@ export function runPricingEngine(lead) {
     return { key, label, amount: est.amount, basis: est.basis, included: isIncluded, lineTotal };
   });
 
-  // Non-percent subtotal
   const subtotal = lines.filter(l => l.included && l.basis !== 'PERCENT_INVOICE_VALUE').reduce((s, l) => s + l.lineTotal, 0);
-
-  // Percent lines
   lines.forEach(l => {
     if (l.included && l.basis === 'PERCENT_INVOICE_VALUE') {
       l.lineTotal = roundMoney(subtotal * l.amount / 100);
@@ -201,6 +242,8 @@ export function runPricingEngine(lead) {
     seaLeadTime: freight.lead,
     packingSuggestion: preset.packing,
     productCategory: preset.category,
+    rawMaterialPriceInr: rawMaterialInrPerKg,
+    priceSource,
     lines,
     totalCost,
     costPerUnit: roundMoney(totalCost / qtyValue),
@@ -213,6 +256,6 @@ export function runPricingEngine(lead) {
     recommendedTotalPrice: recommended,
     recommendedPricePerUnit: roundMoney(recommended / qtyValue),
     profitAmount: profit,
-    achievedMarginPercent: recommended > 0 ? roundMoney((profit / recommended) * 100) : 0
+    achievedMarginPercent: recommended > 0 ? roundMoney((profit / recommended) * 100) : 0,
   };
 }
