@@ -209,7 +209,7 @@ function LearningIcon() {
     </svg>
   );
 }
-import { backendStatus, supabaseConfigStatus } from './lib/supabaseClient';
+import { backendStatus, supabaseConfigStatus, supabase, isSupabaseConfigured } from './lib/supabaseClient';
 import { ctoLabels } from '../GOPU_OS/cto/labels.js';
 import {
   DEFAULT_CMO_TIMEZONE,
@@ -2848,7 +2848,16 @@ function App() {
   }, [route]);
 
   useEffect(() => {
-    setAuthState({ ready: true, session: getLocalAuthSession() });
+    (async () => {
+      if (isSupabaseConfigured && supabase) {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session) {
+          setAuthState({ ready: true, session });
+          return;
+        }
+      }
+      setAuthState({ ready: true, session: getLocalAuthSession() });
+    })();
   }, []);
 
   useEffect(() => {
@@ -3104,6 +3113,9 @@ function App() {
   return withSessionWarning(
     <>
       <ExecutiveCommandDeck navigate={navigate} showSearch={showSearch} setShowSearch={setShowSearch} setShowShortcuts={setShowShortcuts} session={authState.session} onLogout={async () => {
+        if (isSupabaseConfigured && supabase) {
+          await supabase.auth.signOut();
+        }
         window.sessionStorage.removeItem('selectedOS');
         window.sessionStorage.removeItem('executiveSessionState');
         window.sessionStorage.removeItem('founderSessionPin');
@@ -3261,22 +3273,52 @@ function ExportOSLoginPage({ osId, onBack, onSuccess }) {
     const nextErrors = {};
     const identity = normalizeLoginEmail(values.identity);
     if (!identity) nextErrors.identity = 'Email is required.';
-    else if (identity !== LOCAL_AUTH_EMAIL) nextErrors.identity = `Use ${LOCAL_AUTH_EMAIL} for local test access.`;
     if (!values.password.trim()) nextErrors.password = 'Password is required.';
-    else if (values.password !== LOCAL_AUTH_PASSWORD) nextErrors.password = 'Invalid local test password.';
     setErrors(nextErrors);
-
-    if (Object.keys(nextErrors).length === 0) {
-      setAuthMessage('Creating local test session...');
-      setIsSubmitting(true);
-      setLocalAuthSession(osId);
-      setIsSubmitting(false);
-      setAuthMessage('Local test session created');
-      onSuccess();
+    if (Object.keys(nextErrors).length > 0) {
+      setAuthMessage('Please fill in all fields.');
       return;
     }
 
-    setAuthMessage('Invalid local test credentials');
+    setIsSubmitting(true);
+
+    // Try real Supabase auth first
+    if (isSupabaseConfigured && supabase) {
+      setAuthMessage('Authenticating with Supabase...');
+      const { data, error } = await supabase.auth.signInWithPassword({ email: identity, password: values.password });
+      if (data?.session) {
+        setAuthMessage('Supabase session created');
+        setIsSubmitting(false);
+        onSuccess(data.session);
+        return;
+      }
+      if (error) {
+        const isWrongPassword = error.message?.toLowerCase().includes('invalid') || error.status === 400;
+        setErrors({ password: isWrongPassword ? 'Invalid email or password.' : error.message });
+        setAuthMessage('Authentication failed');
+        setIsSubmitting(false);
+        return;
+      }
+    }
+
+    // Fallback: local demo login
+    if (identity !== LOCAL_AUTH_EMAIL) {
+      setErrors({ identity: `Use ${LOCAL_AUTH_EMAIL} for local test access.` });
+      setAuthMessage(isSupabaseConfigured ? 'Authentication failed' : 'Supabase not configured — use local test account');
+      setIsSubmitting(false);
+      return;
+    }
+    if (values.password !== LOCAL_AUTH_PASSWORD) {
+      setErrors({ password: 'Invalid local test password.' });
+      setAuthMessage('Invalid local test credentials');
+      setIsSubmitting(false);
+      return;
+    }
+    setAuthMessage('Creating local test session...');
+    setLocalAuthSession(osId);
+    setIsSubmitting(false);
+    setAuthMessage('Local test session created');
+    onSuccess();
   }
 
   return (
@@ -14925,7 +14967,7 @@ function InvoiceBuilder({ navigate, invoiceId, onBack, onOpenTasks }) {
         <aside className="invoice-control-stack">
           <ValidationChecklist validation={validation} navigate={navigate} />
           <ApprovalRoutingPanel invoice={invoice} blockers={blockers} navigate={navigate} onValidate={validateInvoice} onCreateApproval={routeInvoiceApproval} />
-          <InvoicePDFActions canRelease={canRelease} blockers={blockers} onDraft={() => addAudit('PDF draft generated', 'PDF Draft Ready', 'Draft PDF preview prepared.')} onEmail={prepareEmail} />
+          <InvoicePDFActions canRelease={canRelease} blockers={blockers} invoice={invoice} onDraft={() => addAudit('PDF draft generated', 'PDF Draft Ready', 'Draft PDF preview prepared.')} onEmail={prepareEmail} />
           <InvoiceEmailDraftPreview invoice={invoice} visible={emailPrepared} />
         </aside>
       </section>
@@ -15105,8 +15147,34 @@ function ApprovalRoutingPanel({ invoice, blockers, navigate, onValidate, onCreat
   return <section className="invoice-side-panel"><div className="approval-section-header"><div><span>Approval Routing</span><h2>{invoice.status}</h2></div><Workflow size={18} /></div><div className="approval-memory-list">{['Draft Created', 'Company Data Check', 'LUT Data Check', 'Buyer Data Check', 'Product / HSN Check', 'Pricing / CFO Check', 'COO Operations Check', 'Director Command Center', 'Approved for Release', 'Final PDF Available', 'Buyer Email Draft Prepared'].map((step) => <span key={step}>{step}</span>)}</div><button className="ghost-button" onClick={onValidate}>Run Validation</button><button className="ghost-button" onClick={() => navigate('/export-os/pricing-engine')}>Open Pricing Engine</button><button className="tactical-button" onClick={onCreateApproval}>Request Founder Approval</button>{blockers.length > 0 && <p className="pricing-note">Final release blocked until critical validation failures are fixed.</p>}</section>;
 }
 
-function InvoicePDFActions({ canRelease, blockers, onDraft, onEmail }) {
-  return <section className="invoice-side-panel"><div className="approval-section-header"><div><span>PDF Actions</span><h2>{canRelease ? 'Final PDF Available' : 'Draft only'}</h2></div><FileText size={18} /></div><button className="ghost-button" onClick={onDraft}>Download Draft PDF</button><button className="ghost-button" disabled={!canRelease}>Generate Final PDF</button><button className="ghost-button" disabled={!canRelease} onClick={onEmail}>Prepare Buyer Email</button>{!canRelease && <small>Final PDF and buyer email release are disabled until validation passes and approval status is Approved for Release.</small>}</section>;
+function InvoicePDFActions({ canRelease, blockers, invoice, onDraft, onEmail }) {
+  const [sendStatus, setSendStatus] = useState(null);
+
+  async function sendToClient() {
+    setSendStatus('Sending...');
+    try {
+      const res = await fetch('/api/lead-email/notify', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(invoice)
+      });
+      setSendStatus(res.ok ? 'Sent to client.' : `Failed: ${res.status}`);
+    } catch (err) {
+      setSendStatus(`Error: ${err.message}`);
+    }
+  }
+
+  return (
+    <section className="invoice-side-panel">
+      <div className="approval-section-header"><div><span>PDF Actions</span><h2>{canRelease ? 'Final PDF Available' : 'Draft only'}</h2></div><FileText size={18} /></div>
+      <button className="ghost-button" onClick={() => { onDraft(); window.print(); }}>Download PDF</button>
+      <button className="ghost-button" disabled={!canRelease}>Generate Final PDF</button>
+      <button className="ghost-button" disabled={!canRelease} onClick={onEmail}>Prepare Buyer Email</button>
+      <button className="ghost-button" disabled={!canRelease} onClick={sendToClient}>Send to Client</button>
+      {sendStatus && <small>{sendStatus}</small>}
+      {!canRelease && <small>Final PDF and buyer email release are disabled until validation passes and approval status is Approved for Release.</small>}
+    </section>
+  );
 }
 
 function InvoiceEmailDraftPreview({ invoice, visible }) {
