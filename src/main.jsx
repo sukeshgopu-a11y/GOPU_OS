@@ -20,6 +20,7 @@ import {
   CheckCircle2,
   ChevronRight,
   CircleDollarSign,
+  Clock,
   ClipboardCheck,
   ClipboardList,
   Command,
@@ -8621,28 +8622,33 @@ function DirectorCommandCenter({ navigate, onBack, onOpenTasks }) {
   const isLive = message.toLowerCase().includes('live') || message.toLowerCase().includes('synced');
   const actionOptions = ['Approve', 'Reject', 'Clarify', 'Escalate', 'Assign CIO', 'Assign CFO', 'Assign COO', 'Assign CMO', 'Assign CTO'];
 
+  const priorityAccent = { Critical: '#ff5a5a', High: '#f59e0b', Medium: '#2ef2ff', Low: '#2ef2ff' };
+  const statTiles = [
+    { label: 'Pending Decisions', value: items.length, icon: <Activity size={20} />, accent: '#2ef2ff' },
+    { label: 'Critical', value: items.filter((item) => item.priority === 'Critical').length, icon: <AlertTriangle size={20} />, accent: '#ff5a5a' },
+    { label: 'Waiting >24h', value: items.filter((item) => item.waiting_hours >= 24).length, icon: <Clock size={20} />, accent: '#f59e0b' },
+    { label: 'Agent Messages', value: directorData.agentActivityFeed?.length || 0, icon: <Zap size={20} />, accent: '#818cf8' },
+    { label: 'System Health', value: backendStatus.mode === 'Connected' ? 'Live' : 'Offline', icon: <ShieldCheck size={20} />, accent: backendStatus.mode === 'Connected' ? '#22c55e' : '#ff5a5a', live: backendStatus.mode === 'Connected' },
+  ];
+
   return (
     <div className="director-command-page">
-      <header className="director-page-header">
+      <header className="director-glow-header">
+        <div className="director-glow-orb" aria-hidden="true" />
         <button className="director-back-link" onClick={onBack}><ArrowLeft size={15} /> Back</button>
-        <div>
+        <div className="director-glow-title">
           <h1>Director Command</h1>
           <p>All agents report here. You make the final call.</p>
         </div>
         <button className="tactical-button" onClick={onOpenTasks}>Open Tasks</button>
       </header>
 
-      <div className="director-status-bar">
-        {[
-          { label: 'Pending Decisions', value: items.length },
-          { label: 'Critical', value: items.filter((item) => item.priority === 'Critical').length },
-          { label: 'Waiting >24h', value: items.filter((item) => item.waiting_hours >= 24).length },
-          { label: 'Agent Messages', value: directorData.agentActivityFeed?.length || 0 },
-          { label: 'System Health', value: backendStatus.mode === 'Connected' ? 'Live' : 'Offline', highlight: backendStatus.mode === 'Connected' }
-        ].map((chip) => (
-          <div key={chip.label} className={`director-stat-chip${chip.highlight ? ' director-stat-chip--live' : ''}`}>
-            <strong>{chip.value}</strong>
-            <span>{chip.label}</span>
+      <div className="director-stat-tiles">
+        {statTiles.map((tile) => (
+          <div key={tile.label} className={`director-stat-tile${tile.live ? ' director-stat-tile--live' : ''}`} style={{ '--tile-accent': tile.accent }}>
+            <span className="director-stat-icon">{tile.icon}</span>
+            <strong className="director-stat-value">{tile.value}</strong>
+            <span className="director-stat-label">{tile.label}</span>
           </div>
         ))}
       </div>
@@ -8672,38 +8678,39 @@ function DirectorCommandCenter({ navigate, onBack, onOpenTasks }) {
             </div>
           ) : (
             <div>
-              {visibleDecisions.map((item, index) => (
-                <div key={item.id} className="director-decision-card">
-                  <span className="director-row-number">{index + 1}</span>
-                  <div className="director-decision-body">
-                    <div className="director-decision-title-row">
-                      <span className={`director-priority-badge director-priority-${String(item.priority || 'Medium').toLowerCase()}`}>{item.priority || 'Medium'}</span>
-                      <strong>{item.title}</strong>
-                      {item.source_executive && <em>{item.source_executive}</em>}
+              {visibleDecisions.map((item) => {
+                const prio = String(item.priority || 'Medium');
+                const accent = priorityAccent[prio] || '#2ef2ff';
+                return (
+                  <div key={item.id} className="director-decision-card" style={{ '--card-accent': accent }}>
+                    <span className="dir-card-accent-bar" aria-hidden="true" />
+                    <div className="director-decision-body">
+                      <div className="director-decision-title-row">
+                        <span className={`director-priority-badge director-priority-${prio.toLowerCase()}`}>{prio}</span>
+                        <strong>{item.title}</strong>
+                        {item.source_executive && <em className="dir-source-badge">{item.source_executive}</em>}
+                      </div>
+                      {(item.buyer_name || item.quotation_amount) && (
+                        <div className="dir-card-buyer-row">
+                          {item.buyer_name && <span className="dir-buyer-name">{item.buyer_name}</span>}
+                          {item.quotation_amount && <span className="dir-amount">₹{Number(item.quotation_amount).toLocaleString('en-IN')}</span>}
+                        </div>
+                      )}
+                      <p className="dir-card-summary">{item.summary || item.description || item.impact || 'Decision context is waiting for executive sync.'}</p>
+                      <div className="director-decision-meta">
+                        <span>{item.waiting_hours != null ? `${item.waiting_hours}h waiting` : 'Pending'}</span>
+                        <span>Risk: {item.risk_level || 'Monitoring'}</span>
+                      </div>
                     </div>
-                    <p>{item.summary || item.description || item.impact || 'Decision context is waiting for executive sync.'}</p>
-                    <div className="director-decision-meta">
-                      <span>{item.waiting_hours != null ? `${item.waiting_hours}h waiting` : 'Waiting time not recorded'}</span>
-                      <span>Risk: {item.risk_level || 'Monitoring'}</span>
+                    <div className="dir-card-actions">
+                      <button className="dir-btn-approve" onClick={() => runDirectorAction(item, 'Approve')}>Approve</button>
+                      <button className="dir-btn-reject" onClick={() => runDirectorAction(item, 'Reject')}>Reject</button>
+                      <button className="dir-btn-ghost" onClick={() => runDirectorAction(item, 'Need Clarification')}>Clarify</button>
+                      <button className="dir-btn-ghost" onClick={() => runDirectorAction(item, 'Escalate')}>Escalate</button>
                     </div>
                   </div>
-                  <div className="director-decision-action">
-                    <select
-                      aria-label={`Action for ${item.title}`}
-                      defaultValue=""
-                      onChange={(event) => {
-                        if (!event.target.value) return;
-                        const nextAction = event.target.value === 'Clarify' ? 'Need Clarification' : event.target.value;
-                        runDirectorAction(item, nextAction);
-                        event.target.value = '';
-                      }}
-                    >
-                      <option value="" disabled>Action</option>
-                      {['Approve', 'Reject', 'Clarify', 'Escalate', 'Assign COO', 'Assign CFO', 'Assign CTO', 'Assign CMO', 'Assign CIO'].map((option) => <option key={option} value={option}>{option}</option>)}
-                    </select>
-                  </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </section>
@@ -8711,9 +8718,12 @@ function DirectorCommandCenter({ navigate, onBack, onOpenTasks }) {
         <aside className="director-agent-feed">
           <div className="director-queue-header">
             <h2>Agent Activity</h2>
+            <span className="dir-live-dot" aria-label="Live" />
           </div>
           {(directorData.agentActivityFeed || []).length === 0 ? (
-            <p className="director-feed-empty">Agents are active. Activity will appear here as decisions are made.</p>
+            <div className="director-feed-empty">
+              <p>Agents are active. Activity will appear here as decisions are routed.</p>
+            </div>
           ) : (
             <div>
               {(directorData.agentActivityFeed || []).map((entry, index) => {
@@ -8722,6 +8732,7 @@ function DirectorCommandCenter({ navigate, onBack, onOpenTasks }) {
                   <div key={entry.id || index} className="director-agent-entry">
                     <span className={`director-agent-dot agent-dot-${role.toLowerCase()}`} />
                     <div>
+                      <span className="dir-agent-role" style={{ color: agentColours[role] }}>{role}</span>
                       <strong>{entry.subject || entry.title || `${role} update`}</strong>
                       <span>{entry.message || entry.subject || ''}</span>
                       <time>{entry.time || entry.created_at || entry.timestamp || 'Now'}</time>
