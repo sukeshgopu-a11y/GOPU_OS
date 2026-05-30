@@ -354,6 +354,87 @@ export default async function handler(req: any, res: any) {
         await writeAudit(activeClient, "vercel_cron_publish_triggered", "failed", `Publishing engine failed safely: ${msg}`, { tenant_id: selectedSetting.tenant_id });
       }
 
+      // --- Daily Spice Export Post (real social posting) ---
+      if (!dryRun) {
+        const DAILY_TOPICS: Record<string, string> = {
+          Monday: "Red Chilli export quality — Guntur mandi prices today",
+          Tuesday: "Turmeric export — Nizamabad mandi update",
+          Wednesday: "Black Pepper from Kerala — export grade quality",
+          Thursday: "Cumin Seeds — Unjha mandi prices & export grade",
+          Friday: "Spice export tips — documentation checklist",
+          Saturday: "Weekend market update — spice prices from India",
+          Sunday: "Export success story — GOPU Exports quality commitment"
+        };
+        const HASHTAGS = "#SpiceExport #IndiaExports #APEDA #SpicesOfIndia #ExportFromIndia #B2BTrade";
+        const todayName = nowUtc.setZone("Asia/Kolkata").weekdayLong;
+        const topicLine = DAILY_TOPICS[todayName] || DAILY_TOPICS["Monday"];
+        const dailyContent = `${topicLine}\n\nGOPU Exports delivers premium quality Indian spices to global buyers. Contact us for competitive export pricing, APEDA-certified shipments, and consistent supply chain reliability.\n\n${HASHTAGS}`;
+
+        const baseUrl = env("NEXT_PUBLIC_APP_URL") || env("VERCEL_URL") ? `https://${env("VERCEL_URL")}` : "http://localhost:3000";
+        const socialPlatforms = ["facebook", "instagram", "linkedin"];
+        const spicePostResults: Array<{ platform: string; ok: boolean; post_id?: string; url?: string; error?: string }> = [];
+
+        for (const platform of socialPlatforms) {
+          try {
+            const publishRes = await fetch(`${baseUrl}/api/cmo/social/publish`, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ platform, content: dailyContent }),
+              signal: AbortSignal.timeout(10000)
+            });
+            const publishData = await publishRes.json().catch(() => ({ ok: false, error: "Invalid JSON response" }));
+            spicePostResults.push({ platform, ...publishData });
+
+            await activeClient.from("agent_decisions").insert({
+              agent: "CMO",
+              decision_type: "social_post",
+              platform,
+              status: publishData.ok ? "success" : "failed",
+              notes: publishData.ok
+                ? `Daily spice post published to ${platform}: ${publishData.url || ""}`
+                : `Daily spice post failed on ${platform}: ${publishData.error || "unknown"}`,
+              metadata: {
+                post_id: publishData.post_id,
+                url: publishData.url,
+                error: publishData.error,
+                topic: topicLine,
+                day: todayName,
+                content_preview: dailyContent.slice(0, 100),
+                timestamp: new Date().toISOString()
+              }
+            }).catch(() => null);
+
+            console.log(`[cron] Daily spice post — ${platform}:`, publishData.ok ? `ok (${publishData.url})` : `failed (${publishData.error})`);
+          } catch (spicePostError) {
+            const errMsg = spicePostError instanceof Error ? spicePostError.message : "Unknown error";
+            spicePostResults.push({ platform, ok: false, error: errMsg });
+            await activeClient.from("agent_decisions").insert({
+              agent: "CMO",
+              decision_type: "social_post",
+              platform,
+              status: "failed",
+              notes: `Daily spice post threw exception on ${platform}: ${errMsg}`,
+              metadata: { error: errMsg, topic: topicLine, day: todayName, timestamp: new Date().toISOString() }
+            }).catch(() => null);
+            console.error(`[cron] Daily spice post exception — ${platform}:`, errMsg);
+          }
+        }
+
+        const spiceSucceeded = spicePostResults.filter((r) => r.ok);
+        const spiceFailed = spicePostResults.filter((r) => !r.ok);
+        await writeAudit(activeClient, "vercel_cron_daily_spice_post", spiceSucceeded.length > 0 ? "success" : "failed",
+          `Daily spice post: ${spiceSucceeded.length} succeeded, ${spiceFailed.length} failed/skipped. Topic: ${topicLine}`,
+          {
+            tenant_id: selectedSetting.tenant_id,
+            topic: topicLine,
+            day: todayName,
+            succeeded: spiceSucceeded.map((r) => r.platform),
+            failed: spiceFailed.map((r) => ({ platform: r.platform, error: r.error }))
+          }
+        );
+      }
+      // --- End Daily Spice Export Post ---
+
       // Send Slack summary of what was posted
       const webhookUrl = env("SLACK_WEBHOOK_URL");
       if (webhookUrl && publishSummary) {
