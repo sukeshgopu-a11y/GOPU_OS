@@ -50,7 +50,7 @@ export default async function handler(req: any, res: any) {
   const metadata = data?.metadata || {};
   const expiresAt = metadata.expires_at || metadata.token_expires_at || null;
   const expired = expiresAt ? new Date(expiresAt) <= new Date() : false;
-  const connected = Boolean((metadata.access_token || env("LINKEDIN_ACCESS_TOKEN")) && !expired);
+  const connected = Boolean(metadata.access_token && !expired);
   const scopes = String(metadata.scope || "")
     .split(/[,\s]+/)
     .map((scope) => scope.trim())
@@ -63,6 +63,7 @@ export default async function handler(req: any, res: any) {
     account_email: metadata.linkedin_email || null,
     expires_at: expiresAt,
     scopes,
-    missing_env: missing
+    missing_env: missing,
+    status: connected ? "connected" : env("LINKEDIN_ACCESS_TOKEN") ? "env_token_present_not_oauth_connected" : "not_connected"
   });
 }
