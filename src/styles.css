@@ -34641,3 +34641,27 @@ td, th { max-width: 0; }
 .invoice-items-table td, .invoice-items-table th { max-width: none; }
 .notif-table td, .notif-table th { max-width: none; }
 
+/* Director queue must not inherit the global table squeeze above. */
+.dir-decision-table td,
+.dir-decision-table th {
+  max-width: none !important;
+  box-sizing: border-box;
+}
+
+@media (max-width: 900px) {
+  .dir-decision-table .dir-table-row td {
+    width: auto !important;
+    min-width: 0 !important;
+    max-width: none !important;
+    padding: 0 !important;
+  }
+
+  .dir-decision-table .dir-td-title,
+  .dir-decision-table .dir-td-priority,
+  .dir-decision-table .dir-td-agent,
+  .dir-decision-table .dir-td-date,
+  .dir-decision-table .dir-td-amount,
+  .dir-decision-table .dir-td-wait {
+    width: 100% !important;
+  }
+}
