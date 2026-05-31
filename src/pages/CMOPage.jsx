@@ -13,7 +13,7 @@ import {
 } from 'lucide-react';
 import { supabase, isSupabaseConfigured, backendStatus } from '../lib/supabaseClient';
 import { demoTenantId } from '../services/companyService.js';
-import { createApprovalRequest } from '../services/approvalService.js';
+import { createApprovalRequest as createCmoApprovalRequest } from '../services/approvalService.js';
 import { DEFAULT_CMO_TIMEZONE, CMO_PLATFORM_DEFAULT_SLOTS, CMO_TIMEZONE_OPTIONS, formatInCmoTimezone, getCmoDateRangeUtc, getCmoLocalIsoDate, getCmoNowUtc, getCmoRollingRangeStartUtc, getCmoTimezoneLabel, getCmoTimezoneOption, getNextPlatformSlot, getSelectedCmoTimezone, isUtcOnOrAfter, isUtcOnOrBefore } from '../lib/cmoTimezone.js';
 import { generateDailyGrowthRunbook, generateCMOReport, generateFounderMarketingSummary, createMarketingCampaignDraft, cleanupLatestStep6TestContentPackage, createStep6TestContentPackage, getAIBudgetAnalysis, getAICampaignForecasts, getAICmoOperatingSystem, getAIGrowthInsights, getAILeadScores, getAIRecommendations, getAIScheduleOptimizations, getBrandRisks, getBuyerOutreach, getCMOSummary, getCampaigns, getContentApprovalQueue, getCompetitorReviews, getContentMemoryArchive, getCmoTimezonePreference, getCmoAutomationFlow, getCmoLearningCentreDashboard, getMarketingCampaignControlCenter, getCmoProviderConnectionStatus, saveCmoPostingSettings, saveCmoTimezonePreference, getContentCalendar, getContentPerformance, getCrossExecutiveContentIdeas, getFacebookPipeline, getGrowthOptimizationInsights, getGrowthTargets, getInstagramPipeline, getLinkedInPipeline, getContentToolchain, getDigitalMarketingOptimization, getGlobalTargetingStrategy, getOpenAIContentBrain, getOpenAIContentMemory, getTenglishVoiceRules, getThumbnailDirections, getVideoScriptStyles, getSocialGrowthAnalytics, getSocialGrowthMetrics, getYouTubePlans, updateFounderContentDecision } from '../services/cmoService.js';
 import { ExportOSShell } from '../shared/routeShell.jsx';
@@ -195,7 +195,7 @@ function CMOCommandPage({ view = 'command', navigate, onBack }) {
   }
 
   async function routeBrandRiskToApproval(item) {
-    await createApprovalRequest({
+    await createCmoApprovalRequest({
       tenant_id: demoTenantId,
       request_type: 'Brand Claim Review',
       title: `${item[0]} claim requires founder approval`,
@@ -293,7 +293,7 @@ function CMOCommandPage({ view = 'command', navigate, onBack }) {
               onViewPublished={() => setActiveTab('Published Posts')}
               onSendSlack={sendCmoStatusSummary}
               onContentDecision={handleContentDecision}
-              onCreateApprovalRequest={createApprovalRequest}
+              onCreateApprovalRequest={createCmoApprovalRequest}
             />
           </main>
         </>
@@ -4650,4 +4650,3 @@ function ContentIntelligenceMemory() {
 }
 
 export default CMOCommandPage;
-

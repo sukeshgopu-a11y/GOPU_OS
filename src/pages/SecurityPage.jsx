@@ -25,6 +25,12 @@ import { demoTenantId } from '../services/companyService.js';
 import { createAuditLog, listAuditLogs } from '../services/auditService.js';
 import { createSecurityAuditEvent, loadSecurityDashboard } from '../services/securityService.js';
 
+function formatDisplayDate(dateValue) {
+  const date = dateValue instanceof Date ? dateValue : new Date(dateValue);
+  if (Number.isNaN(date.getTime())) return 'Live feed';
+  return date.toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' });
+}
+
 function getSecurityState(status) {
   if (status === 'Critical' || status === 'Access Revoked' || status === 'Suspended') return 'error';
   if (status === 'Attention' || status === 'Review Required' || status === 'Pending Invite') return 'attention';
