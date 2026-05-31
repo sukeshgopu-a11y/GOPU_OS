@@ -17,6 +17,26 @@ function envMissing() {
     .filter((name) => !env(name));
 }
 
+function envInvalid() {
+  const invalid: string[] = [];
+  const clientId = env("LINKEDIN_CLIENT_ID");
+  const clientSecret = env("LINKEDIN_CLIENT_SECRET");
+  const redirectUri = env("LINKEDIN_REDIRECT_URI");
+
+  if (clientId && (clientId.includes("=") || /^LINKEDIN_/i.test(clientId) || clientId.length < 5)) invalid.push("LINKEDIN_CLIENT_ID");
+  if (clientSecret && (clientSecret.includes("=") || /^LINKEDIN_/i.test(clientSecret) || clientSecret.length < 8)) invalid.push("LINKEDIN_CLIENT_SECRET");
+  if (redirectUri) {
+    try {
+      const parsed = new URL(redirectUri);
+      if (!/^https?:$/.test(parsed.protocol)) invalid.push("LINKEDIN_REDIRECT_URI");
+    } catch {
+      invalid.push("LINKEDIN_REDIRECT_URI");
+    }
+  }
+
+  return [...new Set(invalid)];
+}
+
 export default async function handler(req: any, res: any) {
   if (req.method !== "GET") {
     res.setHeader("Allow", "GET");
@@ -25,15 +45,18 @@ export default async function handler(req: any, res: any) {
 
   const client = getSupabaseClient();
   const missing = envMissing();
+  const invalid = envInvalid();
   if (!client) {
     return res.status(200).json({
       ok: true,
-      connected: Boolean(env("LINKEDIN_ACCESS_TOKEN")),
+      connected: false,
       account_name: null,
       account_email: null,
       expires_at: null,
       scopes: [],
-      missing_env: missing
+      missing_env: missing,
+      invalid_env: invalid,
+      status: "supabase_not_configured"
     });
   }
 
@@ -44,7 +67,7 @@ export default async function handler(req: any, res: any) {
     .maybeSingle();
 
   if (error) {
-    return res.status(200).json({ ok: false, connected: false, status: "status_read_failed", message: error.message, missing_env: missing });
+    return res.status(200).json({ ok: false, connected: false, status: "status_read_failed", message: error.message, missing_env: missing, invalid_env: invalid });
   }
 
   const metadata = data?.metadata || {};
@@ -64,6 +87,7 @@ export default async function handler(req: any, res: any) {
     expires_at: expiresAt,
     scopes,
     missing_env: missing,
+    invalid_env: invalid,
     status: connected ? "connected" : env("LINKEDIN_ACCESS_TOKEN") ? "env_token_present_not_oauth_connected" : "not_connected"
   });
 }

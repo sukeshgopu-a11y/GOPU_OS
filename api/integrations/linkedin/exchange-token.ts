@@ -26,6 +26,24 @@ function missingEnv() {
     .filter((name) => !env(name));
 }
 
+function invalidEnv() {
+  const invalid: string[] = [];
+  const clientId = env("LINKEDIN_CLIENT_ID");
+  const clientSecret = env("LINKEDIN_CLIENT_SECRET");
+  const redirectUri = env("LINKEDIN_REDIRECT_URI");
+
+  if (clientId.includes("=") || /^LINKEDIN_/i.test(clientId) || clientId.length < 5) invalid.push("LINKEDIN_CLIENT_ID");
+  if (clientSecret.includes("=") || /^LINKEDIN_/i.test(clientSecret) || clientSecret.length < 8) invalid.push("LINKEDIN_CLIENT_SECRET");
+  try {
+    const parsed = new URL(redirectUri);
+    if (!/^https?:$/.test(parsed.protocol)) invalid.push("LINKEDIN_REDIRECT_URI");
+  } catch {
+    invalid.push("LINKEDIN_REDIRECT_URI");
+  }
+
+  return [...new Set(invalid)];
+}
+
 async function fetchLinkedInProfile(accessToken: string) {
   try {
     const response = await fetch("https://api.linkedin.com/v2/userinfo", {
@@ -104,6 +122,15 @@ export default async function handler(req: any, res: any) {
     const missing = missingEnv();
     if (missing.length) {
       return res.status(200).json({ ok: false, status: "missing_env", missing });
+    }
+    const invalid = invalidEnv();
+    if (invalid.length) {
+      return res.status(200).json({
+        ok: false,
+        status: "invalid_env",
+        invalid,
+        message: "LinkedIn OAuth environment values are blank, malformed, or placeholders. Add the real LinkedIn app values and generate a fresh authorization code."
+      });
     }
 
     const params = new URLSearchParams({
