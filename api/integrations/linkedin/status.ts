@@ -39,7 +39,7 @@ export default async function handler(req: any, res: any) {
 
   const { data, error } = await client
     .from("platform_integrations")
-    .select("config,metadata,connection_status,access_token_present,verified_at")
+    .select("status,metadata,last_checked_at")
     .eq("platform_key", "linkedin_personal")
     .maybeSingle();
 
@@ -47,12 +47,11 @@ export default async function handler(req: any, res: any) {
     return res.status(200).json({ ok: false, connected: false, status: "status_read_failed", message: error.message, missing_env: missing });
   }
 
-  const config = data?.config || {};
   const metadata = data?.metadata || {};
-  const expiresAt = config.expires_at || metadata.token_expires_at || null;
+  const expiresAt = metadata.expires_at || metadata.token_expires_at || null;
   const expired = expiresAt ? new Date(expiresAt) <= new Date() : false;
-  const connected = Boolean((data?.access_token_present || config.access_token || env("LINKEDIN_ACCESS_TOKEN")) && !expired);
-  const scopes = String(config.scope || metadata.scope || "")
+  const connected = Boolean((metadata.access_token || env("LINKEDIN_ACCESS_TOKEN")) && !expired);
+  const scopes = String(metadata.scope || "")
     .split(/[,\s]+/)
     .map((scope) => scope.trim())
     .filter(Boolean);

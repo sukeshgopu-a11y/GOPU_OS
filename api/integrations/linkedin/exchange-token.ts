@@ -49,30 +49,27 @@ async function saveAccessToken(accessToken: string, expiresIn: number | null, sc
   const expiresAt = expiresIn ? new Date(now.getTime() + Number(expiresIn) * 1000).toISOString() : null;
   const { data: existing } = await client
     .from("platform_integrations")
-    .select("config,metadata")
+    .select("metadata")
     .eq("platform_key", "linkedin_personal")
     .maybeSingle();
 
   const linkedinUserId = String(profile.sub || profile.id || "").trim();
   const linkedinName = String(profile.name || [profile.given_name, profile.family_name].filter(Boolean).join(" ") || "").trim();
   const linkedinEmail = String(profile.email || "").trim();
-  const config = {
-    ...(existing?.config || {}),
+  const existingMetadata = existing?.metadata || {};
+  const metadata = {
+    ...existingMetadata,
+    required_scope: "w_member_social",
     access_token: accessToken,
     token_type: "Bearer",
     expires_in: expiresIn,
     expires_at: expiresAt,
-    scope
-  };
-  const metadata = {
-    ...(existing?.metadata || {}),
-    required_scope: "w_member_social",
     token_saved_at: now.toISOString(),
     token_expires_at: expiresAt,
     scope,
-    linkedin_user_id: linkedinUserId || existing?.metadata?.linkedin_user_id || "",
-    linkedin_name: linkedinName || existing?.metadata?.linkedin_name || "",
-    linkedin_email: linkedinEmail || existing?.metadata?.linkedin_email || "",
+    linkedin_user_id: linkedinUserId || existingMetadata.linkedin_user_id || "",
+    linkedin_name: linkedinName || existingMetadata.linkedin_name || "",
+    linkedin_email: linkedinEmail || existingMetadata.linkedin_email || "",
     connected_at: now.toISOString()
   };
 
@@ -85,12 +82,7 @@ async function saveAccessToken(accessToken: string, expiresIn: number | null, sc
     provider: "linkedin_personal",
     status: "live",
     runtime: "cmo_publishing",
-    connection_status: "connected",
-    access_token_present: true,
-    configured_at: now.toISOString(),
-    verified_at: now.toISOString(),
     last_checked_at: now.toISOString(),
-    config,
     metadata,
     updated_at: now.toISOString()
   }, { onConflict: "platform_key" });

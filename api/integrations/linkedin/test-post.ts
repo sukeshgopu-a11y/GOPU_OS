@@ -43,11 +43,11 @@ async function hasApproval(client: any, payload: any) {
 async function readStoredToken(client: any) {
   const { data, error } = await client
     .from("platform_integrations")
-    .select("config")
+    .select("metadata")
     .eq("platform_key", "linkedin_personal")
     .maybeSingle();
   if (error) return "";
-  return String(data?.config?.access_token || env("LINKEDIN_ACCESS_TOKEN") || "").trim();
+  return String(data?.metadata?.access_token || env("LINKEDIN_ACCESS_TOKEN") || "").trim();
 }
 
 export default async function handler(req: any, res: any) {
