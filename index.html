@@ -32,6 +32,23 @@
       </div>
     </div>
     <div id="root"></div>
+    <script>
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.getRegistrations()
+          .then(function(registrations) {
+            registrations.forEach(function(registration) { registration.unregister(); });
+          })
+          .catch(function() {});
+      }
+      if (window.caches) {
+        caches.keys()
+          .then(function(keys) {
+            keys.filter(function(key) { return /workbox|gopu|precache|vite/i.test(key); })
+              .forEach(function(key) { caches.delete(key); });
+          })
+          .catch(function() {});
+      }
+    </script>
     <script type="module" src="/src/main.jsx"></script>
     <script>
       window.addEventListener('beforeprint', function() {

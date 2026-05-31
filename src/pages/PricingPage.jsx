@@ -20,6 +20,35 @@ import { createAuditLog, listAuditLogs } from '../services/auditService.js';
 import { ExportOSShell, Breadcrumb, StatusBadge, TrendIndicator, EmptyState, SkeletonBlock, SkeletonCard, SkeletonTable, SkeletonKpiBar, MetricSkeletonGrid, HBarChart, SortableTableHeader, StatusPulse, PriorityBadge, SeverityBadge, Panel, StatusPill, StateChip, SignalList, MiniBars, BulkActionBar, FilterBar, VirtualList, useSortable } from '../main.jsx';
 
 
+function formatDisplayDate(dateValue) {
+  const date = dateValue instanceof Date ? dateValue : new Date(dateValue);
+  if (Number.isNaN(date.getTime())) return 'Live feed';
+  return date.toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' });
+}
+
+const pricingForexFallbackRates = [
+  { pair: 'USD/INR', rate: 83.25, change: 'Manual', direction: 'flat' },
+  { pair: 'EUR/INR', rate: 89.75, change: 'Manual', direction: 'flat' },
+  { pair: 'AED/INR', rate: 22.67, change: 'Manual', direction: 'flat' },
+  { pair: 'AUD/INR', rate: 55.10, change: 'Manual', direction: 'flat' },
+  { pair: 'GBP/INR', rate: 104.60, change: 'Manual', direction: 'flat' }
+];
+
+function useLiveForexRates() {
+  const [rates] = useState(pricingForexFallbackRates);
+  const [status] = useState('Manual FX fallback active');
+  return { rates, status };
+}
+
+const pricingAuditEvents = [
+  ['08:55', 'Lead intake created', 'Sales Intake', 'Draft'],
+  ['09:15', 'COO route completed', 'COO Command', 'Monitoring'],
+  ['09:35', 'Pricing calculation generated', 'Pricing Engine', 'Draft Prepared'],
+  ['09:50', 'CFO review completed', 'CFO Command', 'Approval Pending'],
+  ['10:05', 'Founder approval pending', 'Founder Office', 'Founder Review Required'],
+  ['10:25', 'Revision requested', 'Founder Office', 'Revision Requested']
+].map(([time, event, actor, status], index) => ({ id: `pricing-audit-${index}`, time, event, actor, status }));
+
 const otherPricingOption = 'Others';
 const apedaScheduledProductCategories = [
   'Alcoholic Beverages',

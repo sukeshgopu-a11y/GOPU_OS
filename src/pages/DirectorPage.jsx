@@ -3,7 +3,7 @@ import { AnimatePresence, motion } from 'framer-motion';
 import {
   Activity, AlertTriangle, ArrowLeft, ArrowUpRight, Archive, BarChart3, Bell,
   Bookmark, Bot, Boxes, BrainCircuit, Building2, Calculator, CalendarDays,
-  CalendarClock, CheckCircle2, ChevronRight, CircleDollarSign, ClipboardCheck,
+  CalendarClock, CheckCircle2, ChevronRight, CircleDollarSign, Clock, ClipboardCheck,
   ClipboardList, Command, Database, Eye, ExternalLink, FileCheck2, FileBarChart,
   FileText, Factory, Fingerprint, Gauge, Gem, Keyboard, KeyRound, LockKeyhole,
   LayoutDashboard, Mail, Menu, Network, PackageCheck, Palette, Plug, Printer,
@@ -20,6 +20,8 @@ import { addTaskComment, createTaskFromWorkflow, getTasks, updateTaskStatus as u
 import { createAuditLog, listAuditLogs } from '../services/auditService.js';
 // Shared components from main.jsx (resolved at runtime — main chunk loads first)
 import { ExportOSShell, Breadcrumb, StatusBadge, TrendIndicator, EmptyState, SkeletonBlock, SkeletonCard, SkeletonTable, SkeletonKpiBar, MetricSkeletonGrid, HBarChart, SortableTableHeader, StatusPulse, PriorityBadge, SeverityBadge, Panel, StatusPill, StateChip, SignalList, MiniBars, BulkActionBar, FilterBar, VirtualList, useSortable } from '../main.jsx';
+
+const approvalWallRequests = [];
 
 function DirectorCommandCenter({ navigate, onBack, onOpenTasks }) {
   const [items, setItems] = useState([]);

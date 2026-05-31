@@ -19,6 +19,8 @@ import { getPaymentVaultRenewals } from '../services/renewalService.js';
 // Shared components from main.jsx (resolved at runtime — main chunk loads first)
 import { ExportOSShell, Breadcrumb, StatusBadge, TrendIndicator, EmptyState, SkeletonBlock, SkeletonCard, SkeletonTable, SkeletonKpiBar, MetricSkeletonGrid, HBarChart, SortableTableHeader, StatusPulse, PriorityBadge, SeverityBadge, Panel, StatusPill, StateChip, SignalList, MiniBars, BulkActionBar, FilterBar, VirtualList, useSortable } from '../main.jsx';
 
+const ctoDefaultLoginEmail = 'sukeshreddy4.g@gmail.com';
+
 function IntegrationsVault({ onBack }) {
   const [savedSecrets, setSavedSecrets] = useState(() => readCtoSavedSecrets());
   const [serviceOverrides, setServiceOverrides] = useState({});
