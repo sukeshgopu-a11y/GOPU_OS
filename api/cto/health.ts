@@ -38,7 +38,7 @@ export default async function handler(req: any, res: any) {
     openai: !!env("OPENAI_API_KEY"),
     resend: !!env("RESEND_API_KEY"),
     slack: !!env("SLACK_BOT_TOKEN"),
-    meta: !!env("META_ACCESS_TOKEN"),
+    meta: !!(env("META_PAGE_ACCESS_TOKEN") || env("META_ACCESS_TOKEN")),
     linkedin: !!env("LINKEDIN_ACCESS_TOKEN"),
     twilio: !!env("TWILIO_ACCOUNT_SID"),
     data_gov: !!env("DATA_GOV_API_KEY"),

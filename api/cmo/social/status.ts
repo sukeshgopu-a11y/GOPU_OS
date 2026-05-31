@@ -18,11 +18,13 @@ export default async function handler(req: any, res: any) {
   const platforms: PlatformStatus[] = [];
 
   // Facebook
-  const fbToken = env("META_ACCESS_TOKEN");
-  const fbPageId = env("FACEBOOK_PAGE_ID");
+  const fbToken = env("META_PAGE_ACCESS_TOKEN") || env("META_ACCESS_TOKEN");
+  const fbPageId = env("META_PAGE_ID") || env("FACEBOOK_PAGE_ID");
   const fbMissing = [
-    !fbToken && "META_ACCESS_TOKEN",
-    !fbPageId && "FACEBOOK_PAGE_ID"
+    !env("META_APP_ID") && "META_APP_ID",
+    !env("META_APP_SECRET") && "META_APP_SECRET",
+    !fbToken && "META_PAGE_ACCESS_TOKEN",
+    !fbPageId && "META_PAGE_ID"
   ].filter(Boolean) as string[];
   platforms.push({
     platform: "facebook",
@@ -33,7 +35,7 @@ export default async function handler(req: any, res: any) {
   // Instagram
   const igAccountId = env("INSTAGRAM_BUSINESS_ACCOUNT_ID");
   const igMissing = [
-    !fbToken && "META_ACCESS_TOKEN",
+    !fbToken && "META_PAGE_ACCESS_TOKEN",
     !igAccountId && "INSTAGRAM_BUSINESS_ACCOUNT_ID"
   ].filter(Boolean) as string[];
   platforms.push({
