@@ -24,7 +24,7 @@ function envInvalid() {
   const redirectUri = env("LINKEDIN_REDIRECT_URI");
 
   if (clientId && (clientId.includes("=") || /^LINKEDIN_/i.test(clientId) || clientId.length < 5)) invalid.push("LINKEDIN_CLIENT_ID");
-  if (clientSecret && (clientSecret.includes("=") || /^LINKEDIN_/i.test(clientSecret) || clientSecret.length < 8)) invalid.push("LINKEDIN_CLIENT_SECRET");
+  if (clientSecret && (/^LINKEDIN_/i.test(clientSecret) || clientSecret.length < 8)) invalid.push("LINKEDIN_CLIENT_SECRET");
   if (redirectUri) {
     try {
       const parsed = new URL(redirectUri);

@@ -33,7 +33,7 @@ function invalidEnv() {
   const redirectUri = env("LINKEDIN_REDIRECT_URI");
 
   if (clientId.includes("=") || /^LINKEDIN_/i.test(clientId) || clientId.length < 5) invalid.push("LINKEDIN_CLIENT_ID");
-  if (clientSecret.includes("=") || /^LINKEDIN_/i.test(clientSecret) || clientSecret.length < 8) invalid.push("LINKEDIN_CLIENT_SECRET");
+  if (/^LINKEDIN_/i.test(clientSecret) || clientSecret.length < 8) invalid.push("LINKEDIN_CLIENT_SECRET");
   try {
     const parsed = new URL(redirectUri);
     if (!/^https?:$/.test(parsed.protocol)) invalid.push("LINKEDIN_REDIRECT_URI");
