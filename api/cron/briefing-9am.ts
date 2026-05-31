@@ -34,102 +34,103 @@ function istDate() {
 
 // ── Data fetchers (graceful — never crash briefing if one fails) ─────────────
 
+async function safeData(query: any, fallback: any[] = []) {
+  try {
+    const { data } = await query;
+    return data || fallback;
+  } catch {
+    return fallback;
+  }
+}
+
 async function fetchLeadsSince(client: any, since: Date) {
   if (!client) return [];
-  const { data } = await client
+  const data = await safeData(client
     .from("lead_intake")
     .select("id, buyer_name, product, quantity, country, status, created_at")
     .eq("tenant_id", TENANT_ID)
     .gte("created_at", since.toISOString())
     .order("created_at", { ascending: false })
-    .limit(20)
-    .catch(() => ({ data: [] }));
+    .limit(20));
   return data || [];
 }
 
 async function fetchPendingApprovals(client: any) {
   if (!client) return [];
-  const { data } = await client
+  const data = await safeData(client
     .from("founder_approvals")
     .select("id, buyer_name, amount, approval_status, created_at")
     .eq("tenant_id", TENANT_ID)
     .in("approval_status", ["Pending Approval", "Pending"])
     .order("created_at", { ascending: false })
-    .limit(10)
-    .catch(() => ({ data: [] }));
+    .limit(10));
   return data || [];
 }
 
 async function fetchActiveTasks(client: any) {
   if (!client) return [];
-  const { data } = await client
+  const data = await safeData(client
     .from("tasks")
     .select("id, title, status, priority, department, due_date")
     .eq("tenant_id", TENANT_ID)
     .in("status", ["Pending", "In Progress", "Blocked"])
     .order("priority", { ascending: false })
-    .limit(10)
-    .catch(() => ({ data: [] }));
+    .limit(10));
   return data || [];
 }
 
 async function fetchLivePrices(client: any) {
   if (!client) return [];
-  const { data } = await client
+  const data = await safeData(client
     .from("commodity_prices")
     .select("product_label, price_inr_per_kg, updated_at, source")
     .eq("tenant_id", TENANT_ID)
     .order("product_label")
-    .limit(13)
-    .catch(() => ({ data: [] }));
+    .limit(13));
   return data || [];
 }
 
 async function fetchPendingReceivables(client: any) {
   if (!client) return { total: 0, count: 0 };
-  const { data } = await client
+  const data = await safeData(client
     .from("pricing_requests")
     .select("id, product, quantity")
     .eq("tenant_id", TENANT_ID)
-    .in("status", ["Draft", "Sent", "Pending"])
-    .catch(() => ({ data: [] }));
+    .in("status", ["Draft", "Sent", "Pending"]));
   return { count: (data || []).length, total: 0 };
 }
 
 async function fetchColdEmailsDue(client: any) {
   if (!client) return 0;
   const now = new Date().toISOString();
-  const { data } = await client
+  const data = await safeData(client
     .from("cold_email_sequences")
     .select("id")
     .eq("tenant_id", TENANT_ID)
     .lte("next_followup_at", now)
-    .in("status", ["Pending", "Sent"])
-    .catch(() => ({ data: [] }));
+    .in("status", ["Pending", "Sent"]));
   return (data || []).length;
 }
 
 async function fetchCreditAlerts(client: any) {
   if (!client) return [];
-  const { data } = await client
+  const data = await safeData(client
     .from("cto_credit_alerts")
     .select("platform, alert_type, estimated_days_left, current_balance")
     .eq("tenant_id", TENANT_ID)
-    .in("status", ["Open", "CFO_Notified"])
-    .catch(() => ({ data: [] }));
+    .in("status", ["Open", "CFO_Notified"]));
   return data || [];
 }
 
 async function fetchExportOrders(client: any) {
   if (!client) return [];
-  const { data } = await client
+  const data = await safeData(client
     .from("export_orders")
     .select("id, buyer_name, product, current_stage, current_stage_name, status")
     .eq("tenant_id", TENANT_ID)
     .eq("status", "Active")
     .order("created_at", { ascending: false })
-    .limit(5)
-    .catch(() => ({ data: [] }));
+    .limit(5));
   return data || [];
 }
 
@@ -298,17 +299,21 @@ export default async function handler(req: any, res: any) {
 
   // Save briefing record
   if (client) {
-    await client.from("agent_briefings").insert({
-      tenant_id: TENANT_ID,
-      briefing_type: "morning_9am",
-      scheduled_at: new Date().toISOString(),
-      sent_at: new Date().toISOString(),
-      slack_ts: slackResult.ts || null,
-      summary: `${leads.length} leads, ${pendingApprovals.length} approvals pending, ${activeTasks.length} tasks active`,
-      leads_count: leads.length,
-      pending_approvals: pendingApprovals.length,
-      content: briefingData,
-    }).catch(() => null);
+    try {
+      await client.from("agent_briefings").insert({
+        tenant_id: TENANT_ID,
+        briefing_type: "morning_9am",
+        scheduled_at: new Date().toISOString(),
+        sent_at: new Date().toISOString(),
+        slack_ts: slackResult.ts || null,
+        summary: `${leads.length} leads, ${pendingApprovals.length} approvals pending, ${activeTasks.length} tasks active`,
+        leads_count: leads.length,
+        pending_approvals: pendingApprovals.length,
+        content: briefingData,
+      });
+    } catch {
+      // Briefing delivery should not fail when audit persistence is unavailable.
+    }
   }
 
   return res.status(200).json({

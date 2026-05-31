@@ -93,9 +93,11 @@ function sopIssues(tasks) {
 }
 
 export async function getCOOSummary(tenantId = demoTenantId) {
-  const taskSummary = await getCOOTaskSummary(tenantId);
+  const [taskSummary, approvals] = await Promise.all([
+    getCOOTaskSummary(tenantId),
+    getApprovalQueue(tenantId)
+  ]);
   const tasks = taskSummary.data?.tasks || [];
-  const approvals = await getApprovalQueue(tenantId);
   const approvalWaiting = approvals.data?.filter((item) => ['Founder Review Required', 'Attention Required', 'Review Pending'].includes(item.status)).length || taskSummary.data?.founderWaiting || 0;
   return {
     ok: true,

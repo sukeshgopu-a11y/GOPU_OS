@@ -78,7 +78,8 @@ async function syncSlackLeads() {
   const candidates = messages
     .filter((message: any) => {
       const text = String(message.text || "");
-      return text && isLeadMessage(text) && !isGopuSystemReply(text);
+      const fromBot = Boolean(message.bot_id || message.subtype === "bot_message");
+      return text && !fromBot && isLeadMessage(text) && !isGopuSystemReply(text);
     })
     .reverse();
 

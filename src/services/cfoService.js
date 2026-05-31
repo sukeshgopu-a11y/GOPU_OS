@@ -3,6 +3,7 @@ import { demoTenantId } from './demoData.js';
 import { sendSlackNotification } from './slackNotificationService.js';
 import { createAuditLog } from './auditService.js';
 import { createApprovalRequest } from './approvalService.js';
+import { cachedRead, clearCache } from './performanceCache.js';
 
 // Payment thresholds
 const AUTO_PAY_LIMIT = 1500;       // CFO auto-pays ≤ this
@@ -218,6 +219,7 @@ export async function initiatePayment(payload = {}, tenantId = demoTenantId) {
       source: 'CFO Agent',
     });
 
+    clearCache('cfo:');
     return { ok: true, data: { paymentId, status: 'Auto-Paid', amount, vendor, tier: 1 }, error: null };
   }
 
@@ -255,6 +257,7 @@ export async function initiatePayment(payload = {}, tenantId = demoTenantId) {
       metadata: { payment_id: paymentId, vendor, amount },
     });
 
+    clearCache('cfo:');
     return { ok: true, data: { paymentId, status: 'Pending Slack Approval', amount, vendor, tier: 2 }, error: null };
   }
 
@@ -291,6 +294,7 @@ export async function initiatePayment(payload = {}, tenantId = demoTenantId) {
     source: 'CFO Agent',
   });
 
+  clearCache('cfo:');
   return { ok: true, data: { paymentId, status: 'Pending Director Approval', amount, vendor, tier: 3 }, error: null };
 }
 
@@ -338,6 +342,7 @@ export async function submitOtp(paymentId, otp, tenantId = demoTenantId) {
   // eslint-disable-next-line no-param-reassign
   otp = null;
 
+  clearCache('cfo:');
   return { ok: true, data: { paymentId, status: 'Completed', otp_cleared: true }, error: null };
 }
 
@@ -365,6 +370,10 @@ export async function getPaymentStatus(paymentId, tenantId = demoTenantId) {
 // ─── CFO Dashboard ────────────────────────────────────────────────────────
 
 export async function getCFODashboard(tenantId = demoTenantId) {
+  return cachedRead(`cfo:dashboard:${tenantId}`, 15000, () => getCFODashboardUncached(tenantId));
+}
+
+async function getCFODashboardUncached(tenantId = demoTenantId) {
   const [monthlyPnl, weeklyPnl, recurringResult] = await Promise.all([
     getMonthlyProfit(tenantId),
     getWeeklyProfit(tenantId),

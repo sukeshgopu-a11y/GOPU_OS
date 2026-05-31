@@ -4,6 +4,8 @@
  * All functions are pure — no DOM, no React.
  */
 
+import { aiPriceSource, buildPricingSourceSummary, fallbackPriceSource, normalizePriceSource } from "../../lib/pricingSourceUtils.mjs";
+
 export const EXCHANGE_RATE_DEFAULT = 95.88;
 export const TARGET_MARGIN_DEFAULT = 20;
 export const MINIMUM_MARGIN_DEFAULT = 12;
@@ -147,7 +149,7 @@ function incotermKeys(incoterm) {
  *
  * @param {object} lead
  * @param {object} [liveMarketPrices] - Optional: pass result from GET /api/prices/market
- *   When provided, uses live prices. Without it, falls back to reference prices with stale warning.
+ *   Values are only labeled live when verified source metadata is present.
  * @returns {object} pricingResult
  */
 export function runPricingEngine(lead, liveMarketPrices = null) {
@@ -170,24 +172,43 @@ export function runPricingEngine(lead, liveMarketPrices = null) {
   const modeMultiplier = isAir ? 1.28 : 1;
   const toQuote = (inr) => roundMoney(convertCurrency(inr, 'INR', quoteCurrency, exRate));
 
-  // Raw material price resolution — live CFO price takes priority over reference
+  // Raw material price resolution. Verified live labels require complete source metadata.
   const livePrice = liveMarketPrices?.[pKey] || liveMarketPrices?.['default'];
   const fallbackRef = PRICE_REFERENCE[pKey] || PRICE_REFERENCE.default;
   const rawMaterialInrPerKg = livePrice?.price_inr_per_kg || fallbackRef.price;
   const priceSource = livePrice
-    ? {
+    ? normalizePriceSource({
+        ...livePrice,
         source: livePrice.source || 'CFO market price',
         updated_at: livePrice.updated_at,
+        fetched_at: livePrice.fetched_at || livePrice.updated_at,
+        product,
+        product_key: pKey,
+        product_grade: livePrice.product_grade || lead.product_grade || lead.grade || 'Commercial export grade',
+        market_location: livePrice.market_location || country || 'Destination pending',
+        unit: livePrice.unit || 'kg',
+        currency: livePrice.currency || 'INR',
         stale: livePrice.stale || false,
-        is_live: true,
-      }
-    : {
+      })
+    : fallbackPriceSource({
         source: fallbackRef.source,
-        updated_at: null,
-        stale: true,
-        is_live: false,
-        warning: 'Reference price only — update actual purchase price in CFO → Market Prices.',
-      };
+        product,
+        product_key: pKey,
+        product_grade: lead.product_grade || lead.grade || 'Commercial export grade',
+        market_location: country || 'Destination pending',
+        unit: 'kg',
+        currency: 'INR',
+        price_basis: fallbackRef.source,
+        warning: 'Reference price only - update actual purchase price in CFO Market Prices.',
+      });
+  const pricingSource = aiPriceSource({
+    product,
+    product_grade: priceSource.product_grade || lead.product_grade || lead.grade || 'Commercial export grade',
+    market_location: priceSource.market_location || country || 'Destination pending',
+    unit: quoteCurrency,
+    currency: quoteCurrency,
+    price_basis: 'CFO AI calculation using recorded raw material source, logistics estimates, packaging estimates, and margin guardrails.',
+  });
 
   const estimates = {
     raw_material_cost:          { amount: toQuote(rawMaterialInrPerKg),                                                                    basis: 'PER_KG' },
@@ -213,7 +234,12 @@ export function runPricingEngine(lead, liveMarketPrices = null) {
     if (isIncluded && est.basis !== 'PERCENT_INVOICE_VALUE') {
       lineTotal = est.basis === 'PER_KG' ? roundMoney(est.amount * kg) : est.amount;
     }
-    return { key, label, amount: est.amount, basis: est.basis, included: isIncluded, lineTotal };
+    const lineSource = key === 'raw_material_cost'
+      ? priceSource
+      : key === 'packaging_cost'
+        ? fallbackPriceSource({ product, product_grade: priceSource.product_grade, market_location: country || 'Destination pending', unit: est.basis, currency: quoteCurrency, price_basis: 'Packaging fallback estimate' })
+        : aiPriceSource({ product, product_grade: priceSource.product_grade, market_location: country || 'Destination pending', unit: est.basis, currency: quoteCurrency, price_basis: `${label} calculated from AI/internal estimate; external verified source not attached` });
+    return { key, label, amount: est.amount, basis: est.basis, included: isIncluded, lineTotal, price_source: lineSource };
   });
 
   const subtotal = lines.filter(l => l.included && l.basis !== 'PERCENT_INVOICE_VALUE').reduce((s, l) => s + l.lineTotal, 0);
@@ -231,7 +257,7 @@ export function runPricingEngine(lead, liveMarketPrices = null) {
   const profit = roundMoney(recommended - totalCost);
   const qtyValue = qty.value || 1;
 
-  return {
+  const result = {
     product,
     quantity: qty,
     incoterm,
@@ -244,6 +270,14 @@ export function runPricingEngine(lead, liveMarketPrices = null) {
     productCategory: preset.category,
     rawMaterialPriceInr: rawMaterialInrPerKg,
     priceSource,
+    price_source: pricingSource,
+    price_source_type: pricingSource.price_source_type,
+    price_source_name: pricingSource.price_source_name,
+    price_source_reference: pricingSource.price_source_reference,
+    price_fetched_at: pricingSource.price_fetched_at,
+    price_basis: pricingSource.price_basis,
+    product_grade: pricingSource.product_grade,
+    market_location: pricingSource.market_location,
     lines,
     totalCost,
     costPerUnit: roundMoney(totalCost / qtyValue),
@@ -257,5 +291,9 @@ export function runPricingEngine(lead, liveMarketPrices = null) {
     recommendedPricePerUnit: roundMoney(recommended / qtyValue),
     profitAmount: profit,
     achievedMarginPercent: recommended > 0 ? roundMoney((profit / recommended) * 100) : 0,
+  };
+  return {
+    ...result,
+    source_summary: buildPricingSourceSummary(result),
   };
 }

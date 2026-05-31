@@ -14,12 +14,17 @@ export default async function handler(req: any, res: any) {
   if (!supabase) return res.status(500).json({ ok: false, error: "Supabase not configured" });
 
   if (req.method === "GET") {
-    const { data: alerts } = await supabase
-      .from("cto_credit_alerts")
-      .select("*")
-      .eq("tenant_id", TENANT_ID)
-      .order("created_at", { ascending: false })
-      .catch(() => ({ data: [], error: null }));
+    let alerts: any[] = [];
+    try {
+      const result = await supabase
+        .from("cto_credit_alerts")
+        .select("*")
+        .eq("tenant_id", TENANT_ID)
+        .order("created_at", { ascending: false });
+      alerts = result.data || [];
+    } catch {
+      alerts = [];
+    }
 
     const rows = alerts || [];
     const summary = {
@@ -38,31 +43,40 @@ export default async function handler(req: any, res: any) {
     const updatePayload: any = { status };
     if (payment_note !== undefined) updatePayload.payment_note = payment_note;
 
-    const { data: updated, error: updateError } = await supabase
-      .from("cto_credit_alerts")
-      .update(updatePayload)
-      .eq("id", id)
-      .eq("tenant_id", TENANT_ID)
-      .select()
-      .single()
-      .catch(() => ({ data: null, error: { message: "Update failed" } }));
+    let updated = null;
+    let updateError: any = null;
+    try {
+      const result = await supabase
+        .from("cto_credit_alerts")
+        .update(updatePayload)
+        .eq("id", id)
+        .eq("tenant_id", TENANT_ID)
+        .select()
+        .single();
+      updated = result.data;
+      updateError = result.error;
+    } catch {
+      updated = null;
+      updateError = { message: "Update failed" };
+    }
 
     if (updateError || !updated) {
       return res.status(500).json({ ok: false, error: updateError?.message || "Update failed" });
     }
 
-    await supabase
-      .from("agent_decisions")
-      .insert({
-        tenant_id: TENANT_ID,
-        agent: "CTO",
-        action: `Updated credit alert ${id} status to ${status}`,
-        reference_id: id,
-        reference_table: "cto_credit_alerts",
-        metadata: { status, payment_note },
-        created_at: new Date().toISOString(),
-      })
-      .catch(() => ({ data: null, error: null }));
+    try {
+      await supabase
+        .from("agent_decisions")
+        .insert({
+          tenant_id: TENANT_ID,
+          agent: "CTO",
+          action: `Updated credit alert ${id} status to ${status}`,
+          reference_id: id,
+          reference_table: "cto_credit_alerts",
+          metadata: { status, payment_note },
+          created_at: new Date().toISOString(),
+        });
+    } catch {}
 
     return res.status(200).json({ ok: true, alert: updated });
   }

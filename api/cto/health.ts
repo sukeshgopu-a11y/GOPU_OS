@@ -16,12 +16,15 @@ export default async function handler(req: any, res: any) {
 
   let services: any[] = [];
   if (supabase) {
-    const { data } = await supabase
-      .from("integration_services")
-      .select("*")
-      .eq("tenant_id", TENANT_ID)
-      .catch(() => ({ data: [], error: null }));
-    services = data || [];
+    try {
+      const { data } = await supabase
+        .from("integration_services")
+        .select("*")
+        .eq("tenant_id", TENANT_ID);
+      services = data || [];
+    } catch {
+      services = [];
+    }
   }
 
   const summary = {

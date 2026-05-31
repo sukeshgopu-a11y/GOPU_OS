@@ -33,22 +33,27 @@ export default async function handler(req: any, res: any) {
 
     let query = supabase
       .from("founder_approvals")
-      .select("*")
+      .select("id, tenant_id, lead_id, approval_type, request_type, title, summary, quotation_amount, buyer_name, buyer_email, product, quantity, amount, status, approval_status, risk_level, priority, source_module, metadata, created_at, updated_at")
       .eq("tenant_id", TENANT_ID)
-      .order("created_at", { ascending: false });
+      .order("created_at", { ascending: false })
+      .limit(250);
 
     if (status) {
       query = query.or(`status.eq.${status},approval_status.eq.${status}`);
     }
 
-    const { data: approvals, error } = await query.catch(() => ({
-      data: [],
-      error: null,
-    }));
-
-    if (error) {
-      return res.status(500).json({ ok: false, error: error.message });
+    let approvals: any[] = [];
+    let error: any = null;
+    try {
+      const result = await query;
+      approvals = result.data ?? [];
+      error = result.error;
+    } catch (_) {
+      approvals = [];
+      error = null;
     }
+
+    if (error) approvals = [];
 
     const list = approvals ?? [];
     const isPending = (a: any) => ["Pending", "Pending Approval"].includes(a.status) || ["Pending", "Pending Approval"].includes(a.approval_status);
@@ -82,41 +87,49 @@ export default async function handler(req: any, res: any) {
         .json({ ok: false, error: "approval_type is required" });
     }
 
-    const { data: approval, error: insertError } = await supabase
-      .from("founder_approvals")
-      .insert({
-        tenant_id: TENANT_ID,
-        lead_id: lead_id ?? null,
-        approval_type,
-        summary: summary ?? null,
-        quotation_amount: quotation_amount ?? null,
-        buyer_name: buyer_name ?? null,
-        buyer_email: buyer_email ?? null,
-        product: product ?? null,
-        quantity: quantity ?? null,
-        status: "Pending",
-        created_at: new Date().toISOString(),
-      })
-      .select()
-      .single()
-      .catch(() => ({ data: null, error: { message: "Insert failed" } }));
+    let approval: any = null;
+    let insertError: any = null;
+    try {
+      const result = await supabase
+        .from("founder_approvals")
+        .insert({
+          tenant_id: TENANT_ID,
+          lead_id: lead_id ?? null,
+          approval_type,
+          summary: summary ?? null,
+          quotation_amount: quotation_amount ?? null,
+          buyer_name: buyer_name ?? null,
+          buyer_email: buyer_email ?? null,
+          product: product ?? null,
+          quantity: quantity ?? null,
+          status: "Pending",
+          created_at: new Date().toISOString(),
+        })
+        .select("id, approval_type, request_type, buyer_name, status, approval_status, created_at")
+        .single();
+      approval = result.data;
+      insertError = result.error;
+    } catch (_) {
+      insertError = { message: "Insert failed" };
+    }
 
     if (insertError) {
       return res.status(500).json({ ok: false, error: insertError.message });
     }
 
     // Log COO agent decision
-    await supabase
-      .from("agent_decisions")
-      .insert({
-        tenant_id: TENANT_ID,
-        agent: "COO",
-        action: "request_founder_approval",
-        reference_id: approval?.id ?? null,
-        notes: `Approval request submitted: ${approval_type}${buyer_name ? ` for ${buyer_name}` : ""}`,
-        created_at: new Date().toISOString(),
-      })
-      .catch(() => null);
+    try {
+      await supabase
+        .from("agent_decisions")
+        .insert({
+          tenant_id: TENANT_ID,
+          agent: "COO",
+          action: "request_founder_approval",
+          reference_id: approval?.id ?? null,
+          notes: `Approval request submitted: ${approval_type}${buyer_name ? ` for ${buyer_name}` : ""}`,
+          created_at: new Date().toISOString(),
+        });
+    } catch (_) {}
 
     return res.status(201).json({ ok: true, approval });
   }

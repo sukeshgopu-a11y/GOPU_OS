@@ -39,27 +39,34 @@ function todayStart() {
   return d.toISOString();
 }
 
+async function safeData(query: any, fallback: any[] = []) {
+  try {
+    const { data } = await query;
+    return data || fallback;
+  } catch {
+    return fallback;
+  }
+}
+
 async function fetchTodayLeads(client: any) {
   if (!client) return [];
-  const { data } = await client
+  const data = await safeData(client
     .from("lead_intake")
     .select("*")
     .eq("tenant_id", TENANT_ID)
     .gte("created_at", todayStart())
-    .order("created_at", { ascending: false })
-    .catch(() => ({ data: [] }));
+    .order("created_at", { ascending: false }));
   return data || [];
 }
 
 async function fetchAllApprovals(client: any) {
   if (!client) return { pending: [], done: [] };
-  const { data } = await client
+  const data = await safeData(client
     .from("founder_approvals")
     .select("id, buyer_name, amount, approval_status, reason, created_at, updated_at")
     .eq("tenant_id", TENANT_ID)
     .order("updated_at", { ascending: false })
-    .limit(20)
-    .catch(() => ({ data: [] }));
+    .limit(20));
   const all = data || [];
   return {
     pending: all.filter((a: any) => ["Pending Approval", "Pending"].includes(a.approval_status)),
@@ -69,12 +76,11 @@ async function fetchAllApprovals(client: any) {
 
 async function fetchTodayEmailSequences(client: any) {
   if (!client) return { sent: 0, replied: 0 };
-  const { data } = await client
+  const data = await safeData(client
     .from("cold_email_sequences")
     .select("id, status")
     .eq("tenant_id", TENANT_ID)
-    .gte("updated_at", todayStart())
-    .catch(() => ({ data: [] }));
+    .gte("updated_at", todayStart()));
   const all = data || [];
   return {
     sent: all.filter((e: any) => e.status === "Sent").length,
@@ -84,48 +90,44 @@ async function fetchTodayEmailSequences(client: any) {
 
 async function fetchOrdersAdvancedToday(client: any) {
   if (!client) return [];
-  const { data } = await client
+  const data = await safeData(client
     .from("export_stage_logs")
     .select("export_order_id, from_stage, to_stage, stage_name, triggered_by, created_at")
     .eq("tenant_id", TENANT_ID)
     .gte("created_at", todayStart())
-    .order("created_at", { ascending: false })
-    .catch(() => ({ data: [] }));
+    .order("created_at", { ascending: false }));
   return data || [];
 }
 
 async function fetchAgentDecisions(client: any) {
   if (!client) return [];
-  const { data } = await client
+  const data = await safeData(client
     .from("agent_decisions")
     .select("agent, decision_type, decision_summary, confidence, created_at")
     .eq("tenant_id", TENANT_ID)
     .gte("created_at", todayStart())
     .order("created_at", { ascending: false })
-    .limit(20)
-    .catch(() => ({ data: [] }));
+    .limit(20));
   return data || [];
 }
 
 async function fetchCreditAlerts(client: any) {
   if (!client) return [];
-  const { data } = await client
+  const data = await safeData(client
     .from("cto_credit_alerts")
     .select("platform, alert_type, estimated_days_left, status")
     .eq("tenant_id", TENANT_ID)
-    .in("status", ["Open", "CFO_Notified"])
-    .catch(() => ({ data: [] }));
+    .in("status", ["Open", "CFO_Notified"]));
   return data || [];
 }
 
 async function fetchPricingRequestsToday(client: any) {
   if (!client) return 0;
-  const { data } = await client
+  const data = await safeData(client
     .from("pricing_requests")
     .select("id")
     .eq("tenant_id", TENANT_ID)
-    .gte("created_at", todayStart())
-    .catch(() => ({ data: [] }));
+    .gte("created_at", todayStart()));
   return (data || []).length;
 }
 
@@ -290,17 +292,21 @@ export default async function handler(req: any, res: any) {
   const slackResult = await sendSlack(text);
 
   if (client) {
-    await client.from("agent_briefings").insert({
-      tenant_id: TENANT_ID,
-      briefing_type: "evening_9pm",
-      scheduled_at: new Date().toISOString(),
-      sent_at: new Date().toISOString(),
-      slack_ts: slackResult.ts || null,
-      summary: `Day end: ${todayLeads.length} leads, ${approvals.done.length} approvals done, ${approvals.pending.length} pending`,
-      leads_count: todayLeads.length,
-      pending_approvals: approvals.pending.length,
-      content: data,
-    }).catch(() => null);
+    try {
+      await client.from("agent_briefings").insert({
+        tenant_id: TENANT_ID,
+        briefing_type: "evening_9pm",
+        scheduled_at: new Date().toISOString(),
+        sent_at: new Date().toISOString(),
+        slack_ts: slackResult.ts || null,
+        summary: `Day end: ${todayLeads.length} leads, ${approvals.done.length} approvals done, ${approvals.pending.length} pending`,
+        leads_count: todayLeads.length,
+        pending_approvals: approvals.pending.length,
+        content: data,
+      });
+    } catch {
+      // Briefing delivery should not fail when audit persistence is unavailable.
+    }
   }
 
   return res.status(200).json({

@@ -1395,8 +1395,9 @@ scheduleIST(19, 0, () => sendDailyBriefing('Evening'));
 
 const server = http.createServer((request, response) => {
   const routePath = new URL(request.url || '/', 'http://127.0.0.1').pathname;
+  const origin = request.headers.origin || '';
   if (request.method === 'OPTIONS') {
-    sendJson(response, 200, { ok: true });
+    sendJson(response, 200, { ok: true }, origin);
     return;
   }
   if (request.method === 'POST' && routePath === '/api/slack/notify') {

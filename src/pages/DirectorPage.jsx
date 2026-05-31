@@ -18,8 +18,10 @@ import { directorBranches, getDirectorCommandData } from '../services/directorSe
 import { createCOOFollowupTask, getCOOSummary } from '../services/cooService.js';
 import { addTaskComment, createTaskFromWorkflow, getTasks, updateTaskStatus as updateWorkflowTaskStatus, writeTaskAuditLog } from '../services/taskService.js';
 import { createAuditLog, listAuditLogs } from '../services/auditService.js';
-// Shared components from main.jsx (resolved at runtime — main chunk loads first)
-import { ExportOSShell, Breadcrumb, StatusBadge, TrendIndicator, EmptyState, SkeletonBlock, SkeletonCard, SkeletonTable, SkeletonKpiBar, MetricSkeletonGrid, HBarChart, SortableTableHeader, StatusPulse, PriorityBadge, SeverityBadge, Panel, StatusPill, StateChip, SignalList, MiniBars, BulkActionBar, FilterBar, VirtualList, useSortable } from '../main.jsx';
+import { ExportOSShell } from '../shared/routeShell.jsx';
+import { Breadcrumb, StatusBadge, TrendIndicator, EmptyState, SkeletonBlock, SkeletonCard, SkeletonTable, SkeletonKpiBar, MetricSkeletonGrid, HBarChart, SortableTableHeader, StatusPulse, PriorityBadge, SeverityBadge, Panel, StatusPill, StateChip, SignalList, MiniBars, BulkActionBar, FilterBar, VirtualList, useSortable } from '../shared/uiPrimitives.jsx';
+import { Pagination } from '../shared/dashboardPrimitives.jsx';
+import { approvalAuditEvents, approvalFilters, approvalMemoryPatterns, approvalModels, exportCSV, urgentExecutiveAlerts, useConfirm, useRowSelection, useToast } from '../shared/runtimeHelpers.jsx';
 
 const approvalWallRequests = [];
 
@@ -315,6 +317,7 @@ function DirectorCommandCenter({ navigate, onBack, onOpenTasks }) {
                       <td className="dir-td-title">
                         <strong className="dir-table-title">{item.title}</strong>
                         {item.buyer_name && <span className="dir-table-buyer">{item.buyer_name}</span>}
+                        {(item.lead_number || item.product) && <span className="dir-table-buyer">{item.lead_number || 'Lead'} / {item.product || 'Product pending'}</span>}
                       </td>
                       <td className="dir-td-agent">
                         <span className="dir-agent-chip" style={{ color: agentColours[role], borderColor: agentColours[role] + '44' }}>{role}</span>
@@ -322,7 +325,7 @@ function DirectorCommandCenter({ navigate, onBack, onOpenTasks }) {
                       <td className="dir-td-date">{item.date_added || '—'}</td>
                       <td className="dir-td-amount">
                         {item.quotation_amount
-                          ? <span className="dir-table-amount">₹{Number(item.quotation_amount).toLocaleString('en-IN')}</span>
+                          ? <span className="dir-table-amount">{Number.isFinite(Number(item.quotation_amount)) ? `₹${Number(item.quotation_amount).toLocaleString('en-IN')}` : item.quotation_amount}</span>
                           : <span className="dir-table-na">—</span>}
                       </td>
                       <td className="dir-td-wait">
@@ -505,7 +508,8 @@ function DirectorReviewDrawer({ item, note, setNote, onClose, onApprove, onClari
   const activity = [
     [`Routed from ${item.source_executive || item.owner}`, item.date_added || 'Today'],
     [`Status set to ${normalizeDirectorStatus(item.status)}`, item.last_update || 'Latest sync'],
-    [item.nextAction || 'Review required', 'Next action']
+    [item.nextAction || 'Review required', 'Next action'],
+    ...(item.timeline || []).map((event) => [event.label || event.actor || 'Workflow event', event.at || event.detail || 'Recorded'])
   ];
   return (
     <div className="director-review-backdrop" onClick={onClose}>
@@ -524,6 +528,11 @@ function DirectorReviewDrawer({ item, note, setNote, onClose, onApprove, onClari
         <section className="director-review-section">
           <span>Context</span>
           <p>{item.blocker || item.impact || 'This workflow is waiting for Director review before it can proceed.'}</p>
+        </section>
+        <section className="director-review-section">
+          <span>Lead and price evidence</span>
+          <p>{item.lead_number || 'Lead number pending'} / {item.buyer_name || 'Buyer pending'} / {item.product || 'Product pending'}</p>
+          <small>Quote: {item.quotation_amount || item.amount || 'Pending'} · Source: {item.price_source_type || 'Internal Estimate'} · Confidence: {item.source_confidence || 'Estimate'}</small>
         </section>
         <section className="director-review-section recommended">
           <span>Recommended action</span>
@@ -747,8 +756,22 @@ function ExecutiveDepartmentFooter({ updates, navigate }) {
 function normalizeDirectorItem(request, index = 0) {
   const sourceExecutive = request.executive_owner || request.source_executive || inferDirectorExecutive(request);
   const waitingHours = request.waiting_hours ?? inferWaitingHours(request.created_at, index);
+  const meta = request.metadata || {};
+  const lead = meta.lead || {};
+  const pricing = meta.pricing || {};
+  const sourceSummary = meta.price_source_summary || pricing.source_summary || {};
   return {
     ...request,
+    lead_number: request.lead_number || meta.lead_number || lead.lead_number || '',
+    buyer_name: request.buyer_name || lead.company_name || lead.buyer_name || '',
+    product: request.product || meta.product || lead.product || '',
+    quantity: request.quantity || meta.quantity || lead.quantity || '',
+    unit: request.unit || meta.unit || lead.unit || '',
+    quotation_amount: request.quotation_amount || pricing.recommendedTotalPrice || meta.final_quote_amount || request.amount,
+    price_source_type: request.price_source_type || sourceSummary.price_source_type || pricing.price_source_type || '',
+    source_confidence: request.source_confidence || sourceSummary.source_confidence || '',
+    timeline: meta.timeline || [],
+    export_order_id: meta.export_order_id || '',
     title: cleanDirectorLanguage(request.title || request.summary || 'Director decision item'),
     summary: cleanDirectorLanguage(request.summary || ''),
     source_executive: sourceExecutive,
@@ -2150,3 +2173,4 @@ function DirectorDecisionDetailPage({ decisionId, navigate, onBack }) {
 
 export default DirectorCommandCenter;
 export { DirectorDecisionDetailPage };
+

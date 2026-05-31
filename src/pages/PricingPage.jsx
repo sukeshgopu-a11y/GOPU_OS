@@ -16,8 +16,8 @@ import { demoTenantId, buildCompanySnapshotFromVault, createInvoiceCompanySnapsh
 import { generateCFOReport, getCFODashboard, generateFounderFinancialSummary, getCFOSummary, getFinancialRisks, getMonthlyProfit, getMarginAnalytics, getPayables, getPaymentVaultSummary, getRecurringPayments, getReceivables, getRenewalForecast, getWeeklyProfit, initiatePayment } from '../services/cfoService.js';
 import { addApprovalComment, approveRequest, createApprovalRequest, getApprovalQueue, needsReviewRequest, rejectRequest } from '../services/approvalService.js';
 import { createAuditLog, listAuditLogs } from '../services/auditService.js';
-// Shared components from main.jsx (resolved at runtime — main chunk loads first)
-import { ExportOSShell, Breadcrumb, StatusBadge, TrendIndicator, EmptyState, SkeletonBlock, SkeletonCard, SkeletonTable, SkeletonKpiBar, MetricSkeletonGrid, HBarChart, SortableTableHeader, StatusPulse, PriorityBadge, SeverityBadge, Panel, StatusPill, StateChip, SignalList, MiniBars, BulkActionBar, FilterBar, VirtualList, useSortable } from '../main.jsx';
+import { ExportOSShell } from '../shared/routeShell.jsx';
+import { Breadcrumb, StatusBadge, TrendIndicator, EmptyState, SkeletonBlock, SkeletonCard, SkeletonTable, SkeletonKpiBar, MetricSkeletonGrid, HBarChart, SortableTableHeader, StatusPulse, PriorityBadge, SeverityBadge, Panel, StatusPill, StateChip, SignalList, MiniBars, BulkActionBar, FilterBar, VirtualList, useSortable } from '../shared/uiPrimitives.jsx';
 
 
 function formatDisplayDate(dateValue) {
@@ -4560,3 +4560,4 @@ function buildInvoiceValidation(invoice) {
 
 export { QuotationSopPricingPage };
 export default PricingEnginePage;
+

@@ -16,8 +16,8 @@ import { demoTenantId } from '../services/companyService.js';
 import { createApprovalRequest } from '../services/approvalService.js';
 import { DEFAULT_CMO_TIMEZONE, CMO_PLATFORM_DEFAULT_SLOTS, CMO_TIMEZONE_OPTIONS, formatInCmoTimezone, getCmoDateRangeUtc, getCmoLocalIsoDate, getCmoNowUtc, getCmoRollingRangeStartUtc, getCmoTimezoneLabel, getCmoTimezoneOption, getNextPlatformSlot, getSelectedCmoTimezone, isUtcOnOrAfter, isUtcOnOrBefore } from '../lib/cmoTimezone.js';
 import { generateDailyGrowthRunbook, generateCMOReport, generateFounderMarketingSummary, createMarketingCampaignDraft, cleanupLatestStep6TestContentPackage, createStep6TestContentPackage, getAIBudgetAnalysis, getAICampaignForecasts, getAICmoOperatingSystem, getAIGrowthInsights, getAILeadScores, getAIRecommendations, getAIScheduleOptimizations, getBrandRisks, getBuyerOutreach, getCMOSummary, getCampaigns, getContentApprovalQueue, getCompetitorReviews, getContentMemoryArchive, getCmoTimezonePreference, getCmoAutomationFlow, getCmoLearningCentreDashboard, getMarketingCampaignControlCenter, getCmoProviderConnectionStatus, saveCmoPostingSettings, saveCmoTimezonePreference, getContentCalendar, getContentPerformance, getCrossExecutiveContentIdeas, getFacebookPipeline, getGrowthOptimizationInsights, getGrowthTargets, getInstagramPipeline, getLinkedInPipeline, getContentToolchain, getDigitalMarketingOptimization, getGlobalTargetingStrategy, getOpenAIContentBrain, getOpenAIContentMemory, getTenglishVoiceRules, getThumbnailDirections, getVideoScriptStyles, getSocialGrowthAnalytics, getSocialGrowthMetrics, getYouTubePlans, updateFounderContentDecision } from '../services/cmoService.js';
-// Shared components from main.jsx (resolved at runtime — main chunk loads first)
-import { ExportOSShell, Breadcrumb, StatusBadge, TrendIndicator, EmptyState, SkeletonBlock, SkeletonCard, SkeletonTable, SkeletonKpiBar, MetricSkeletonGrid, HBarChart, SortableTableHeader, StatusPulse, PriorityBadge, SeverityBadge, Panel, StatusPill, StateChip, SignalList, MiniBars, BulkActionBar, FilterBar, VirtualList, useSortable } from '../main.jsx';
+import { ExportOSShell } from '../shared/routeShell.jsx';
+import { Breadcrumb, StatusBadge, TrendIndicator, EmptyState, SkeletonBlock, SkeletonCard, SkeletonTable, SkeletonKpiBar, MetricSkeletonGrid, HBarChart, SortableTableHeader, StatusPulse, PriorityBadge, SeverityBadge, Panel, StatusPill, StateChip, SignalList, MiniBars, BulkActionBar, FilterBar, VirtualList, useSortable } from '../shared/uiPrimitives.jsx';
 
 function CMOCommandPage({ view = 'command', navigate, onBack }) {
   const [now, setNow] = useState(() => new Date());
@@ -2447,7 +2447,7 @@ function CMOAutomationFlow({ flow, contentMemoryArchive }) {
       if (!active) return;
       await refreshContentArchive();
     };
-    const timer = setInterval(refreshContent, 5000);
+    const timer = setInterval(refreshContent, 30000);
     return () => {
       active = false;
       clearInterval(timer);
@@ -4650,3 +4650,4 @@ function ContentIntelligenceMemory() {
 }
 
 export default CMOCommandPage;
+

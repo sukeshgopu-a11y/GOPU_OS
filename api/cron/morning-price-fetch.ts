@@ -205,15 +205,19 @@ export default async function handler(req: any, res: any) {
 
   // 4. Log to audit
   if (client) {
-    await client.from("audit_logs").insert({
-      tenant_id: TENANT_ID,
-      action_type: "morning_price_fetch",
-      module: "CFO Pricing Engine",
-      actor: "System Cron",
-      description: `Morning price fetch: ${liveCount} live prices, ${dbResult.updated} updated in DB, Slack ${slackResult.ok ? "sent" : "failed"}`,
-      metadata: { prices, liveCount, dbResult, slackResult, duration_ms: Date.now() - startAt },
-      created_at: new Date().toISOString(),
-    }).catch(() => null);
+    try {
+      await client.from("audit_logs").insert({
+        tenant_id: TENANT_ID,
+        action_type: "morning_price_fetch",
+        module: "CFO Pricing Engine",
+        actor: "System Cron",
+        description: `Morning price fetch: ${liveCount} live prices, ${dbResult.updated} updated in DB, Slack ${slackResult.ok ? "sent" : "failed"}`,
+        metadata: { prices, liveCount, dbResult, slackResult, duration_ms: Date.now() - startAt },
+        created_at: new Date().toISOString(),
+      });
+    } catch {
+      // Price fetch should still return if audit persistence is unavailable.
+    }
   }
 
   return res.status(200).json({

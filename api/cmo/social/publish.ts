@@ -14,14 +14,18 @@ function getSupabaseClient() {
 
 async function logDecision(client: any, platform: string, status: string, notes: string, metadata: Record<string, unknown> = {}) {
   if (!client) return;
-  await client.from("agent_decisions").insert({
-    agent: "CMO",
-    decision_type: "social_post",
-    platform,
-    status,
-    notes,
-    metadata: { ...metadata, timestamp: new Date().toISOString() }
-  }).catch(() => null);
+  try {
+    await client.from("agent_decisions").insert({
+      agent: "CMO",
+      decision_type: "social_post",
+      platform,
+      status,
+      notes,
+      metadata: { ...metadata, timestamp: new Date().toISOString() }
+    });
+  } catch {
+    // Publishing response should not fail when decision logging is unavailable.
+  }
 }
 
 async function postToFacebook(content: string): Promise<{ ok: boolean; post_id?: string; url?: string; error?: string }> {

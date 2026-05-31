@@ -1,5 +1,6 @@
 // @ts-nocheck
 import { createClient } from "@supabase/supabase-js";
+import { PRICE_SOURCE_TYPES, normalizePriceSource } from "../../lib/pricingSourceUtils.mjs";
 
 function env(k: string) { return process.env[k]?.trim() || ""; }
 
@@ -58,6 +59,10 @@ export default async function handler(req: any, res: any) {
         source: fb.source,
         note: fb.note,
         is_fallback: true,
+        price_source_type: PRICE_SOURCE_TYPES.FALLBACK,
+        price_source_name: fb.source,
+        price_source_reference: "MARKET_PRICE_FALLBACKS",
+        price_basis: fb.note,
         days_old: null,
         stale: true,
         updated_at: null,
@@ -69,6 +74,7 @@ export default async function handler(req: any, res: any) {
         : null;
       merged[row.product_key] = {
         ...row,
+        ...normalizePriceSource(row, PRICE_SOURCE_TYPES.CACHED),
         is_fallback: false,
         days_old: daysOld,
         stale: daysOld !== null ? daysOld > 7 : true,
@@ -80,7 +86,7 @@ export default async function handler(req: any, res: any) {
 
   // POST — CFO updates a market price
   if (req.method === "POST") {
-    const { product_key, price_inr_per_kg, source, note, product_label } = req.body || {};
+    const { product_key, price_inr_per_kg, source, note, product_label, source_reference, source_url, product_grade, market_location, unit, currency } = req.body || {};
     if (!product_key || !price_inr_per_kg) {
       return res.status(400).json({ ok: false, message: "product_key and price_inr_per_kg are required" });
     }
@@ -94,6 +100,13 @@ export default async function handler(req: any, res: any) {
       product_label: product_label || product_key,
       price_inr_per_kg: Number(price_inr_per_kg),
       source: source || "Manual entry by CFO",
+      price_source_type: PRICE_SOURCE_TYPES.MANUAL,
+      price_source_name: source || "Manual entry by CFO",
+      price_source_reference: source_reference || source_url || "CFO Market Prices",
+      product_grade: product_grade || "Commercial export grade",
+      market_location: market_location || "Manual market entry",
+      unit: unit || "kg",
+      currency: currency || "INR",
       note: note || "",
       updated_at: new Date().toISOString(),
     }, { onConflict: "tenant_id,product_key" }).select("*").maybeSingle();

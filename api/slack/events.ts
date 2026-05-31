@@ -3,8 +3,14 @@ import crypto from "node:crypto";
 import { createClient } from "@supabase/supabase-js";
 import { runPricingEngine } from "../../src/services/pricingEngineService.js";
 import { createExportOrder } from "../export/stages.js";
+import { buildPricingSourceSummary } from "../../lib/pricingSourceUtils.mjs";
 
 const demoTenantId = "11111111-1111-1111-1111-111111111111";
+
+function leadReference(id = "") {
+  const day = new Date().toISOString().slice(0, 10).replace(/-/g, "");
+  return `LEAD-${day}-${String(id || crypto.randomUUID()).slice(0, 8).toUpperCase()}`;
+}
 
 function env(name: string) {
   return process.env[name]?.trim() || "";
@@ -74,7 +80,8 @@ function labelValue(text = "", labels: string[] = []) {
 }
 
 function extractEmail(text = "") {
-  return normalizeText(String(text).match(/[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/i)?.[0] || "");
+  const slackMailto = String(text).match(/<mailto:([^|>]+)(?:\|[^>]+)?>/i)?.[1];
+  return normalizeText(slackMailto || String(text).match(/[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/i)?.[0] || "");
 }
 
 function extractLeadQuantity(text = "") {
@@ -133,6 +140,7 @@ function parseSlackLead(text = "", event: Record<string, any> = {}) {
     assigned_to: "COO Command",
     notes: normalizeText(text),
     source_channel: event.channel || "",
+    source_thread: event.thread_ts || event.ts || "",
     source_thread_ts: event.thread_ts || event.ts || "",
   };
 }
@@ -148,7 +156,7 @@ function isMarketingCommand(text = "") {
 }
 
 export function isGopuSystemReply(text = "") {
-  return /GOPU OS Slack lead received|GOPU OS Marketing Command Received|GOPU OS could not process|No quote, posting, or final invoice|Codex verified Slack outbound|Slack Connection Test/i.test(text);
+  return /GOPU OS Slack lead received|New Lead Received\s+[\u2014-]\s+GOPU OS|Export Pipeline\s+[\u2014-]\s+Stage|CFO Pricing Estimate|GOPU OS Marketing Command Received|GOPU OS could not process|No quote, posting, or final invoice|Codex verified Slack outbound|Slack Connection Test/i.test(text);
 }
 
 function parseMarketingCommand(text = "") {
@@ -266,6 +274,12 @@ function formatMoney(value: unknown, currency = "USD") {
 async function safeInsert(client: any, table: string, payload: Record<string, any>, select = "id") {
   if (!client) return { ok: false, table, message: "Supabase service role env is missing." };
   const { data, error } = await client.from(table).insert(payload).select(select).maybeSingle();
+  const missingColumn = String(error?.message || "").match(/'([^']+)'\s+column/)?.[1];
+  if (error && missingColumn && Object.prototype.hasOwnProperty.call(payload, missingColumn)) {
+    const fallback = { ...payload };
+    delete fallback[missingColumn];
+    return safeInsert(client, table, fallback, select);
+  }
   if (error) return { ok: false, table, message: error.message };
   return { ok: true, table, data };
 }
@@ -273,6 +287,12 @@ async function safeInsert(client: any, table: string, payload: Record<string, an
 async function safeUpdate(client: any, table: string, id: string, payload: Record<string, any>, select = "id,status") {
   if (!client || !id) return { ok: false, table, message: "Supabase service role env is missing." };
   const { data, error } = await client.from(table).update({ ...payload, updated_at: new Date().toISOString() }).eq("id", id).select(select).maybeSingle();
+  const missingColumn = String(error?.message || "").match(/'([^']+)'\s+column/)?.[1];
+  if (error && missingColumn && Object.prototype.hasOwnProperty.call(payload, missingColumn)) {
+    const fallback = { ...payload };
+    delete fallback[missingColumn];
+    return safeUpdate(client, table, id, fallback, select);
+  }
   if (error) return { ok: false, table, message: error.message };
   return { ok: true, table, data };
 }
@@ -421,11 +441,26 @@ async function runAgent(client: any, agentName: string, lead: any, pricing: any,
 }
 
 function buildLogisticsPlan(lead: any, pricing: any) {
-  const freight = pricing.lines?.find((line: any) => line.key === "freight_cost")?.lineTotal || 0;
-  const inland = pricing.lines?.find((line: any) => line.key === "inland_logistics_cost")?.lineTotal || 0;
-  const clearance = pricing.lines?.find((line: any) => line.key === "export_clearance_cost")?.lineTotal || 0;
+  const freightLine = pricing.lines?.find((line: any) => line.key === "freight_cost");
+  const inlandLine = pricing.lines?.find((line: any) => line.key === "inland_logistics_cost");
+  const clearanceLine = pricing.lines?.find((line: any) => line.key === "export_clearance_cost");
+  const packingLine = pricing.lines?.find((line: any) => line.key === "packaging_cost");
+  const freight = freightLine?.lineTotal || 0;
+  const inland = inlandLine?.lineTotal || 0;
+  const clearance = clearanceLine?.lineTotal || 0;
   const packing = pricing.packingSuggestion || "Buyer-specific export packing";
-  return { freight, inland, clearance, packing, lead_time: pricing.seaLeadTime, mode: lead.shipping_mode };
+  return {
+    freight,
+    inland,
+    clearance,
+    packing,
+    lead_time: pricing.seaLeadTime,
+    mode: lead.shipping_mode,
+    freight_source: freightLine?.price_source || pricing.price_source,
+    inland_logistics_source: inlandLine?.price_source || pricing.price_source,
+    clearance_source: clearanceLine?.price_source || pricing.price_source,
+    packaging_source: packingLine?.price_source || pricing.price_source,
+  };
 }
 
 function buildCompliancePlan(lead: any) {
@@ -438,10 +473,11 @@ function buildCompliancePlan(lead: any) {
 }
 
 function buildBuyerReplyDraft(lead: any, pricing: any, amount: string) {
+  const sourceSummary = buildPricingSourceSummary(pricing);
   return [
     `Dear ${lead.company_name},`,
     `Thank you for your enquiry for ${lead.quantity} ${lead.unit} ${lead.product} to ${lead.destination_country}.`,
-    `Indicative internal quote prepared: ${amount} (${pricing.incoterm}), subject to Director approval, final freight confirmation, documents, and buyer verification.`,
+    `Indicative quote prepared: ${amount} (${pricing.incoterm}). Price source: ${sourceSummary.price_source_type}. ${sourceSummary.estimate_vs_verified}`,
     `Estimated lead time: ${pricing.seaLeadTime}.`,
     "We will share the final approved quotation after internal approval is complete.",
   ].join("\n");
@@ -494,7 +530,7 @@ export async function processLead(event: Record<string, any>, text: string, opti
   if (client) {
     const { data } = await client
       .from("commodity_prices")
-      .select("product_key, price_inr_per_kg, source, updated_at")
+      .select("*")
       .eq("tenant_id", demoTenantId);
     if (data?.length) {
       liveMarketPrices = {};
@@ -506,14 +542,23 @@ export async function processLead(event: Record<string, any>, text: string, opti
   }
 
   const pricing = runPricingEngine(lead, liveMarketPrices);
+  const priceSourceSummary = buildPricingSourceSummary(pricing);
   const amount = formatMoney(pricing.recommendedTotalPrice, pricing.currency);
   const issues: string[] = [];
 
   const existingLead = options.existingLead || await findExistingLead(client, text);
+  const leadNumber = existingLead?.lead_number || leadReference(lead.id);
+  const receivedAt = new Date().toISOString();
+  const initialTimeline = [
+    { step: 1, label: "Slack lead received", actor: "Slack", at: receivedAt, detail: event.channel ? `Channel ${event.channel}` : "Slack event" },
+    { step: 2, label: "AI Lead Intake parsed and saved", actor: "AI Lead Intake Agent", at: receivedAt, detail: leadNumber },
+  ];
+  const manualReviewRequired = Boolean(priceSourceSummary.manual_review_required);
   if (existingLead && !options.force) {
     return {
-      lead: { ...lead, ...existingLead, destination_country: existingLead.country || lead.destination_country, unit_of_measure: existingLead.unit || lead.unit },
+      lead: { ...lead, ...existingLead, lead_number: leadNumber, destination_country: existingLead.country || lead.destination_country, unit_of_measure: existingLead.unit || lead.unit },
       pricing,
+      priceSourceSummary,
       amount,
       issues,
       duplicate: true,
@@ -527,6 +572,7 @@ export async function processLead(event: Record<string, any>, text: string, opti
   const leadResult = existingLead ? { ok: true, table: "lead_intake", data: existingLead } : await safeInsert(client, "lead_intake", {
     id: lead.id,
     tenant_id: lead.tenant_id,
+    lead_number: leadNumber,
     source: lead.source,
     buyer_name: lead.buyer_name,
     company_name: lead.company_name,
@@ -542,10 +588,24 @@ export async function processLead(event: Record<string, any>, text: string, opti
     notes: lead.notes,
     status: "Pending COO Verification",
     assigned_to: lead.assigned_to,
+    priority: lead.destination_country === "Not provided" || lead.product === "Requested product" ? "High" : "High",
+    source_channel: lead.source_channel,
+    source_thread: lead.source_thread || lead.source_thread_ts,
+    source_thread_ts: lead.source_thread_ts,
+    received_at: receivedAt,
+    forwarded_by: event.user || "Slack",
+    timeline_metadata: initialTimeline,
+    metadata: {
+      raw_slack_text: normalizeText(text),
+      slack_channel: event.channel || "",
+      slack_thread_ts: event.thread_ts || event.ts || "",
+      slack_user_id: event.user || "",
+      parsed_at: receivedAt,
+    },
   }, "id,status");
   if (!leadResult.ok) issues.push(`lead_intake: ${leadResult.message}`);
   const leadId = leadResult.data?.id || lead.id;
-  const leadRecord = { ...lead, ...(existingLead || {}), id: leadId, status: "Completed" };
+  const leadRecord = { ...lead, ...(existingLead || {}), id: leadId, lead_number: leadNumber, priority: "High", received_at: receivedAt, status: "Completed" };
 
   // Create export order at Stage 1 — kicks off COO ↔ CFO ↔ Director pipeline
   const exportOrderId = await createExportOrder(client, leadRecord, pricing).catch((err: any) => {
@@ -558,13 +618,14 @@ export async function processLead(event: Record<string, any>, text: string, opti
     department: "Lead Intake",
     description: `Parsed Slack lead for ${lead.company_name}.`,
     next_action: "Lead saved and routed to AI COO Agent.",
-    metadata: { parsed_fields: lead },
+    metadata: { parsed_fields: lead, lead_number: leadNumber, received_at: receivedAt, forwarded_by: event.user || "Slack" },
   });
 
   const existingPricing = await findExistingPricing(client, leadId);
   const pricingPayload = {
     tenant_id: lead.tenant_id,
     lead_id: leadId || null,
+    lead_number: leadNumber,
     buyer_name: lead.buyer_name,
     product: lead.product,
     quantity: lead.quantity,
@@ -575,10 +636,23 @@ export async function processLead(event: Record<string, any>, text: string, opti
     margin_target: pricing.targetMargin,
     currency: pricing.currency,
     status: "Completed",
+    priority: "High",
+    pricing_source_type: priceSourceSummary.price_source_type,
+    pricing_confidence: priceSourceSummary.pricing_confidence || priceSourceSummary.source_confidence,
+    pricing_evidence: priceSourceSummary,
+    price_source_type: priceSourceSummary.price_source_type,
+    price_source_name: priceSourceSummary.price_source_name,
+    price_source_reference: priceSourceSummary.price_source_reference,
+    price_fetched_at: priceSourceSummary.price_fetched_at,
+    price_basis: priceSourceSummary.price_basis,
+    product_grade: priceSourceSummary.product_grade,
+    market_location: priceSourceSummary.market_location,
     payload: {
       pricing,
+      price_source_summary: priceSourceSummary,
       ai_agent: "AI CFO Agent",
       approval_required: true,
+      manual_review_required: manualReviewRequired,
       blocked_until_director_approval: true,
     },
   };
@@ -596,17 +670,32 @@ export async function processLead(event: Record<string, any>, text: string, opti
     department: "Operations",
     description: `Verified export feasibility for ${lead.quantity} ${lead.unit} ${lead.product} to ${lead.destination_country}.`,
     next_action: "COO feasibility prepared automatically. No manual COO work required.",
-    metadata: { feasible: lead.destination_country !== "Not provided", checks: ["buyer captured", "product captured", "destination captured", "quantity captured"] },
+    metadata: { feasible: lead.destination_country !== "Not provided", lead_number: leadNumber, checks: ["buyer captured", "product captured", "destination captured", "quantity captured"] },
   });
   if (!cooTask.task?.id) issues.push("AI COO Agent task: not created");
 
   const cfoTask = await runAgent(client, "AI CFO Agent", leadRecord, pricing, {
-    status: pricing.achievedMarginPercent < pricing.minMargin ? "Needs Review" : "Completed",
+    status: pricing.achievedMarginPercent < pricing.minMargin || manualReviewRequired ? "Needs Review" : "Completed",
     department: "Finance",
     description: `Calculated ${amount} total, ${formatMoney(pricing.recommendedPricePerUnit, pricing.currency)} per ${lead.unit}, ${pricing.achievedMarginPercent}% margin.`,
     next_action: "CFO pricing complete automatically. Director approval required before buyer release.",
     pricing_request_id: pricingResult.data?.id,
-    metadata: { pricing, amount, profit: pricing.profitAmount, margin: pricing.achievedMarginPercent },
+    metadata: {
+      pricing,
+      amount,
+      profit: pricing.profitAmount,
+      margin: pricing.achievedMarginPercent,
+      lead_number: leadNumber,
+      raw_material_cost_source: pricing.lines?.find((line: any) => line.key === "raw_material_cost")?.price_source || priceSourceSummary,
+      logistics_cost_source: {
+        freight: pricing.lines?.find((line: any) => line.key === "freight_cost")?.price_source || priceSourceSummary,
+        inland: pricing.lines?.find((line: any) => line.key === "inland_logistics_cost")?.price_source || priceSourceSummary,
+      },
+      packaging_cost_source: pricing.lines?.find((line: any) => line.key === "packaging_cost")?.price_source || priceSourceSummary,
+      margin_basis: `Target margin ${pricing.targetMargin}%; minimum margin ${pricing.minMargin}%; achieved margin ${pricing.achievedMarginPercent}%.`,
+      final_recommendation_basis: priceSourceSummary.estimate_vs_verified,
+      price_source_summary: priceSourceSummary,
+    },
   });
   if (!cfoTask.task?.id) issues.push("AI CFO Agent task: not created");
 
@@ -640,8 +729,11 @@ export async function processLead(event: Record<string, any>, text: string, opti
     tenant_id: lead.tenant_id,
     approval_request_id: approvalId,
     request_type: "Slack Lead Quote Approval",
-    title: `Approve Slack lead quote: ${lead.company_name}`,
-    summary: `Approve ${amount} quote for ${lead.quantity} ${lead.unit} ${lead.product} to ${lead.destination_country}. COO verification and CFO pricing review are required before final invoice.`,
+    lead_number: leadNumber,
+    priority: "High",
+    quotation_amount: pricing.recommendedTotalPrice,
+    title: `${leadNumber} - Approve Slack lead quote: ${lead.company_name}`,
+    summary: `Approve ${amount} quote for ${lead.quantity} ${lead.unit} ${lead.product} to ${lead.destination_country}. Source: ${priceSourceSummary.price_source_type}; confidence: ${priceSourceSummary.source_confidence}. ${priceSourceSummary.estimate_vs_verified} COO verification and CFO pricing review are required before final invoice.`,
     source_module: "Slack Lead Intake",
     related_table: "lead_intake",
     related_record_id: leadId || null,
@@ -649,7 +741,7 @@ export async function processLead(event: Record<string, any>, text: string, opti
     buyer_name: lead.company_name,
     amount,
     requested_by: "Slack Lead Intake",
-    risk_level: pricing.achievedMarginPercent < pricing.minMargin ? "High" : "Medium",
+    risk_level: pricing.achievedMarginPercent < pricing.minMargin || manualReviewRequired ? "High" : "Medium",
     reason: "Director approval is required before quote, final invoice, or buyer-facing commitment proceeds.",
     status: "Pending Approval",
     approval_status: "Pending Approval",
@@ -657,19 +749,58 @@ export async function processLead(event: Record<string, any>, text: string, opti
     whatsapp_provider: "slack",
     metadata: {
       lead,
+      lead_number: leadNumber,
+      priority: "High",
+      received_at: receivedAt,
+      forwarded_by: event.user || "Slack",
+      slack_channel: event.channel || "",
+      slack_thread_ts: event.thread_ts || event.ts || "",
       pricing,
+      price_source_summary: priceSourceSummary,
+      final_quote_amount: amount,
+      source_confidence: priceSourceSummary.source_confidence,
+      estimate_vs_verified: priceSourceSummary.estimate_vs_verified,
       logistics,
       compliance,
       buyer_reply_draft: buyerReplyDraft,
+      lead_id: leadId,
+      export_order_id: exportOrderId,
+      buyer_email: lead.email || "",
+      email: lead.email || "",
+      product: lead.product,
+      quantity: lead.quantity,
+      unit: lead.unit,
+      destination: lead.destination_country,
+      incoterm: lead.incoterm,
       coo_task_id: cooTask.task?.id || null,
       cfo_task_id: cfoTask.task?.id || null,
       logistics_task_id: logisticsTask.task?.id || null,
       compliance_task_id: complianceTask.task?.id || null,
       sales_task_id: salesTask.task?.id || null,
+      timeline: [
+        ...initialTimeline,
+        { step: 3, label: "AI COO verified feasibility", actor: "AI COO Agent", at: new Date().toISOString(), detail: cooTask.status || "Completed" },
+        { step: 4, label: "AI CFO calculated price", actor: "AI CFO Agent", at: new Date().toISOString(), detail: `${amount}; ${priceSourceSummary.price_source_type}` },
+        { step: 5, label: "Director approval requested", actor: "AI Director Agent", at: new Date().toISOString(), detail: "Quote and invoice blocked until Director decision" },
+      ],
+      director_approval_metadata: {
+        price_source_type: priceSourceSummary.price_source_type,
+        pricing_confidence: priceSourceSummary.pricing_confidence || priceSourceSummary.source_confidence,
+        manual_review_required: manualReviewRequired,
+        stage_2_blocked_until_approval: true,
+      },
       approval_gating_required: true,
       quote_blocked_until_director_approval: true,
       invoice_blocked_until_director_approval: true,
       buyer_reply_blocked_until_director_approval: true,
+    },
+    director_approval_metadata: {
+      lead_number: leadNumber,
+      price_source_type: priceSourceSummary.price_source_type,
+      pricing_confidence: priceSourceSummary.pricing_confidence || priceSourceSummary.source_confidence,
+      pricing_evidence: priceSourceSummary,
+      manual_review_required: manualReviewRequired,
+      stage_2_blocked_until_approval: true,
     },
     audit_trail: [{ event: "Slack lead routed to Director approval", status: "Pending Approval", at: new Date().toISOString() }],
   };
@@ -689,6 +820,16 @@ export async function processLead(event: Record<string, any>, text: string, opti
       manual_approval_required: true,
       approval_id: approval.data?.id || null,
       buyer_reply_draft: buyerReplyDraft,
+      lead_number: leadNumber,
+      price_source_summary: priceSourceSummary,
+    },
+    director_approval_metadata: {
+      lead_number: leadNumber,
+      price_source_type: priceSourceSummary.price_source_type,
+      pricing_confidence: priceSourceSummary.pricing_confidence || priceSourceSummary.source_confidence,
+      pricing_evidence: priceSourceSummary,
+      manual_review_required: manualReviewRequired,
+      stage_2_blocked_until_approval: true,
     },
   });
   [leadAgent, cooTask, cfoTask, logisticsTask, complianceTask, salesTask, directorTask]
@@ -699,6 +840,7 @@ export async function processLead(event: Record<string, any>, text: string, opti
   return {
     lead: leadRecord,
     pricing,
+    priceSourceSummary,
     amount,
     issues,
     cooTask: { ok: true, data: cooTask.task },
@@ -715,6 +857,7 @@ export async function processLead(event: Record<string, any>, text: string, opti
 
 export function buildReply(result: any) {
   const { lead, pricing, amount, issues, cooTask, cfoTask, approval, exportOrderId } = result;
+  const sourceSummary = result.priceSourceSummary || buildPricingSourceSummary(pricing);
   const pricePerUnit = formatMoney(pricing.recommendedPricePerUnit, pricing.currency);
   const cooStatus = cooTask.data?.id ? "✅ Verified" : "⏳ Queued";
   const cfoStatus = cfoTask.data?.id ? "✅ Priced" : "⏳ Queued";
@@ -733,15 +876,16 @@ export function buildReply(result: any) {
     `• Per ${lead.unit.toUpperCase()}: *${pricePerUnit}*`,
     `• Margin: ${pricing.achievedMarginPercent}%`,
     `• Delivery: ${pricing.seaLeadTime}`,
-    pricing.priceSource?.stale
-      ? `• ⚠️ Raw material: ₹${pricing.rawMaterialPriceInr}/kg (${pricing.priceSource.source}) — _update in CFO → Market Prices_`
-      : `• ✅ Raw material: ₹${pricing.rawMaterialPriceInr}/kg (${pricing.priceSource?.source})`,
+    `• Source: *${sourceSummary.price_source_type}* (${sourceSummary.source_confidence})`,
+    `• Raw material: ₹${pricing.rawMaterialPriceInr}/kg (${sourceSummary.price_source_name || pricing.priceSource?.source || "source not recorded"})`,
+    `• Basis: ${sourceSummary.estimate_vs_verified}`,
     ``,
     `📋 *Export Pipeline — Stage 1 of 7: Proforma Invoice*`,
     `• COO: ${cooStatus}`,
     `• CFO: ${cfoStatus}`,
     `• Director Approval: ${dirStatus}`,
     exportOrderId ? `• Order Ref: ${exportOrderId.slice(0, 8).toUpperCase()}` : "",
+    lead.lead_number ? `• Lead No: ${lead.lead_number}` : "",
     ``,
     `*Next steps in GOPU OS:*`,
     `1️⃣ Director approves Proforma → 2️⃣ Send PI to buyer → 3️⃣ Buyer confirms order`,

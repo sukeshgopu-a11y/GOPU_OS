@@ -21,6 +21,15 @@ function getSupabase() {
 
 export const config = { api: { bodyParser: true } };
 
+async function safeQuery(query: any, fallback: any) {
+  try {
+    const result = await query;
+    return result?.error ? fallback : result;
+  } catch (_) {
+    return fallback;
+  }
+}
+
 export default async function handler(req: any, res: any) {
   if (req.method !== "GET") {
     return res.status(405).json({ ok: false, error: "Method not allowed" });
@@ -43,50 +52,62 @@ export default async function handler(req: any, res: any) {
     recentLeadsResult,
     blockedTasksResult,
   ] = await Promise.all([
-    supabase
-      .from("lead_intake")
-      .select("id", { count: "exact", head: true })
-      .eq("tenant_id", TENANT_ID)
-      .not("status", "in", '("Closed","Lost")')
-      .catch(() => ({ count: 0, error: null })),
+    safeQuery(
+      supabase
+        .from("lead_intake")
+        .select("id", { count: "exact", head: true })
+        .eq("tenant_id", TENANT_ID)
+        .not("status", "in", '("Closed","Lost")'),
+      { count: 0, error: null }
+    ),
 
-    supabase
-      .from("tasks")
-      .select("id", { count: "exact", head: true })
-      .eq("tenant_id", TENANT_ID)
-      .eq("status", "Pending")
-      .catch(() => ({ count: 0, error: null })),
+    safeQuery(
+      supabase
+        .from("tasks")
+        .select("id", { count: "exact", head: true })
+        .eq("tenant_id", TENANT_ID)
+        .eq("status", "Pending"),
+      { count: 0, error: null }
+    ),
 
-    supabase
-      .from("export_orders")
-      .select("id", { count: "exact", head: true })
-      .eq("tenant_id", TENANT_ID)
-      .eq("status", "Active")
-      .catch(() => ({ count: 0, error: null })),
+    safeQuery(
+      supabase
+        .from("export_orders")
+        .select("id", { count: "exact", head: true })
+        .eq("tenant_id", TENANT_ID)
+        .eq("status", "Active"),
+      { count: 0, error: null }
+    ),
 
-    supabase
-      .from("lead_intake")
-      .select("id", { count: "exact", head: true })
-      .eq("tenant_id", TENANT_ID)
-      .gte("created_at", todayISO)
-      .catch(() => ({ count: 0, error: null })),
+    safeQuery(
+      supabase
+        .from("lead_intake")
+        .select("id", { count: "exact", head: true })
+        .eq("tenant_id", TENANT_ID)
+        .gte("created_at", todayISO),
+      { count: 0, error: null }
+    ),
 
-    supabase
-      .from("lead_intake")
-      .select("*")
-      .eq("tenant_id", TENANT_ID)
-      .order("created_at", { ascending: false })
-      .limit(5)
-      .catch(() => ({ data: [], error: null })),
+    safeQuery(
+      supabase
+        .from("lead_intake")
+        .select("id, buyer_name, company_name, product, quantity, country, status, created_at")
+        .eq("tenant_id", TENANT_ID)
+        .order("created_at", { ascending: false })
+        .limit(5),
+      { data: [], error: null }
+    ),
 
-    supabase
-      .from("tasks")
-      .select("*")
-      .eq("tenant_id", TENANT_ID)
-      .eq("status", "Blocked")
-      .order("created_at", { ascending: false })
-      .limit(5)
-      .catch(() => ({ data: [], error: null })),
+    safeQuery(
+      supabase
+        .from("tasks")
+        .select("id, title, status, priority, department, workflow_source, blocking_reason, next_action, created_at")
+        .eq("tenant_id", TENANT_ID)
+        .eq("status", "Blocked")
+        .order("created_at", { ascending: false })
+        .limit(5),
+      { data: [], error: null }
+    ),
   ]);
 
   const summary = {

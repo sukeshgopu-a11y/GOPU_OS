@@ -1,8 +1,8 @@
 // @ts-nocheck
 /**
- * CFO Creative Wallet — marketing campaign budget tracker
- * GET  /api/cfo/wallet        → balance, threshold, recent transactions
- * POST /api/cfo/wallet/topup  → add funds (handled via same file with sub-path)
+ * CFO Creative Wallet - marketing campaign budget tracker
+ * GET  /api/cfo/wallet        -> balance, threshold, recent transactions
+ * POST /api/cfo/wallet/topup  -> add funds (handled via same file with sub-path)
  */
 
 import { createClient } from "@supabase/supabase-js";
@@ -18,6 +18,15 @@ function getSupabase() {
   return createClient(url, key, { auth: { persistSession: false, autoRefreshToken: false } });
 }
 
+async function safeQuery(query: any, fallback: any) {
+  try {
+    const result = await query;
+    return result?.error ? fallback : result;
+  } catch (_) {
+    return fallback;
+  }
+}
+
 export const config = { api: { bodyParser: true } };
 
 export default async function handler(req: any, res: any) {
@@ -31,20 +40,24 @@ export default async function handler(req: any, res: any) {
       });
     }
 
-    const { data: wallet } = await client
-      .from("cfo_wallet")
-      .select("*")
-      .eq("tenant_id", TENANT_ID)
-      .maybeSingle()
-      .catch(() => ({ data: null }));
+    const { data: wallet } = await safeQuery(
+      client
+        .from("cfo_wallet")
+        .select("id, balance, auto_topup_threshold")
+        .eq("tenant_id", TENANT_ID)
+        .maybeSingle(),
+      { data: null }
+    );
 
-    const { data: txns } = await client
-      .from("cfo_wallet_transactions")
-      .select("id, amount, type, description, created_at")
-      .eq("tenant_id", TENANT_ID)
-      .order("created_at", { ascending: false })
-      .limit(20)
-      .catch(() => ({ data: [] }));
+    const { data: txns } = await safeQuery(
+      client
+        .from("cfo_wallet_transactions")
+        .select("id, amount, type, description, created_at")
+        .eq("tenant_id", TENANT_ID)
+        .order("created_at", { ascending: false })
+        .limit(20),
+      { data: [] }
+    );
 
     return res.status(200).json({
       ok: true,
@@ -63,51 +76,61 @@ export default async function handler(req: any, res: any) {
 
     if (!client) return res.status(200).json({ ok: false, error: "no_supabase" });
 
-    // Upsert wallet balance
-    const { data: existing } = await client
-      .from("cfo_wallet")
-      .select("id, balance")
-      .eq("tenant_id", TENANT_ID)
-      .maybeSingle()
-      .catch(() => ({ data: null }));
+    const { data: existing } = await safeQuery(
+      client
+        .from("cfo_wallet")
+        .select("id, balance")
+        .eq("tenant_id", TENANT_ID)
+        .maybeSingle(),
+      { data: null }
+    );
 
     const newBalance = (existing?.balance ?? 0) + num;
 
     if (existing?.id) {
-      await client
-        .from("cfo_wallet")
-        .update({ balance: newBalance, updated_at: new Date().toISOString() })
-        .eq("id", existing.id)
-        .catch(() => null);
+      await safeQuery(
+        client
+          .from("cfo_wallet")
+          .update({ balance: newBalance, updated_at: new Date().toISOString() })
+          .eq("id", existing.id),
+        null
+      );
     } else {
-      await client
-        .from("cfo_wallet")
-        .insert({ tenant_id: TENANT_ID, balance: newBalance, auto_topup_threshold: 100 })
-        .catch(() => null);
+      await safeQuery(
+        client
+          .from("cfo_wallet")
+          .insert({ tenant_id: TENANT_ID, balance: newBalance, auto_topup_threshold: 100 }),
+        null
+      );
     }
 
-    await client
-      .from("cfo_wallet_transactions")
-      .insert({
+    await safeQuery(
+      client
+        .from("cfo_wallet_transactions")
+        .insert({
+          tenant_id: TENANT_ID,
+          amount: num,
+          type: "topup",
+          description: note || "Founder top-up",
+          created_at: new Date().toISOString(),
+        }),
+      null
+    );
+
+    await safeQuery(
+      client.from("agent_decisions").insert({
         tenant_id: TENANT_ID,
-        amount: num,
-        type: "topup",
-        description: note || "Founder top-up",
-        created_at: new Date().toISOString(),
-      })
-      .catch(() => null);
+        agent: "CFO",
+        decision_type: "wallet_topup",
+        decision_summary: `Creative wallet topped up by INR ${num}. New balance: INR ${newBalance}`,
+        confidence: 1.0,
+        requires_director: false,
+        output_data: { amount: num, new_balance: newBalance },
+      }),
+      null
+    );
 
-    await client.from("agent_decisions").insert({
-      tenant_id: TENANT_ID,
-      agent: "CFO",
-      decision_type: "wallet_topup",
-      decision_summary: `Creative wallet topped up by ₹${num}. New balance: ₹${newBalance}`,
-      confidence: 1.0,
-      requires_director: false,
-      output_data: { amount: num, new_balance: newBalance },
-    }).catch(() => null);
-
-    return res.status(200).json({ ok: true, balance: newBalance, message: `Topped up ₹${num}` });
+    return res.status(200).json({ ok: true, balance: newBalance, message: `Topped up INR ${num}` });
   }
 
   return res.status(405).json({ ok: false, error: "method not allowed" });

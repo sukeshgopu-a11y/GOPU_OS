@@ -11,6 +11,7 @@ import {
 import { createAuditLog } from './auditService.js';
 import { getIntegrations } from './integrationService.js';
 import { demoTenantId } from './demoData.js';
+import { cachedRead, clearCache } from './performanceCache.js';
 
 const serviceResponse = (data) => ({ ok: true, data, error: null, backend: backendStatus });
 const serviceErrorResponse = (data, error) => ({ ok: false, data, error: error?.message || String(error), backend: backendStatus });
@@ -200,10 +201,10 @@ export async function getThumbnailDirections() { return serviceResponse(thumbnai
 export async function getVideoScriptStyles() { return serviceResponse(videoScriptStyles); }
 export async function getDigitalMarketingOptimization() { return serviceResponse(digitalMarketingOptimization); }
 
-async function listAiRows(tableName, orderColumn = 'created_at', limit = 30) {
+async function listAiRows(tableName, orderColumn = 'created_at', limit = 30, columns = '*') {
   const { client, error } = requireSupabase();
   if (error) return { rows: [], connected: false, error: error.message };
-  let query = client.from(tableName).select('*').limit(limit);
+  let query = client.from(tableName).select(columns).limit(limit);
   if (orderColumn) query = query.order(orderColumn, { ascending: false });
   const { data, error: queryError } = await query;
   if (queryError) return { rows: [], connected: false, error: queryError.message };
@@ -215,7 +216,7 @@ export async function getAICmoOperatingSystem() {
 }
 
 export async function getAIBudgetAnalysis(tenantId = demoTenantId) {
-  const result = await listAiRows('ai_budget_analysis', 'created_at', 20);
+  const result = await listAiRows('ai_budget_analysis', 'created_at', 20, 'id,tenant_id,budget_health_score,health_score,spend_efficiency_score,roi_confidence_score,campaign_profitability_estimate,profitability_estimate,recommendation,summary,analysis,created_at');
   if (!result.connected) return serviceResponse({ ...aiBudgetAnalysisFallback, error: result.error || '' });
   const rows = result.rows.filter((row) => !row.tenant_id || row.tenant_id === tenantId);
   const latest = rows[0] || {};
@@ -231,32 +232,32 @@ export async function getAIBudgetAnalysis(tenantId = demoTenantId) {
 }
 
 export async function getAICampaignForecasts(tenantId = demoTenantId) {
-  const result = await listAiRows('ai_campaign_forecasts', 'created_at', 30);
+  const result = await listAiRows('ai_campaign_forecasts', 'created_at', 30, 'id,tenant_id,campaign_id,campaign_name,platform,forecast_type,projected_reach,projected_leads,cpl,cpc,roi,summary,recommendation,created_at');
   if (!result.connected) return serviceResponse({ ...aiCampaignForecastFallback, error: result.error || '' });
   return serviceResponse({ connected: true, rows: result.rows.filter((row) => !row.tenant_id || row.tenant_id === tenantId), summary: 'Live AI campaign forecasts connected.' });
 }
 
 export async function getAIScheduleOptimizations(filters = {}) {
   const timezone = getSelectedCmoTimezone({ timezone: filters.timezone || DEFAULT_CMO_TIMEZONE });
-  const result = await listAiRows('ai_schedule_optimizations', 'created_at', 30);
+  const result = await listAiRows('ai_schedule_optimizations', 'created_at', 30, 'id,tenant_id,platform,timezone,recommended_time,recommended_day,score,reason,summary,created_at');
   if (!result.connected) return serviceResponse({ ...aiScheduleOptimizationFallback, timezone, error: result.error || '' });
   return serviceResponse({ connected: true, timezone, rows: result.rows, summary: `AI schedule recommendations are interpreted in ${timezone}.` });
 }
 
 export async function getAILeadScores(tenantId = demoTenantId) {
-  const result = await listAiRows('ai_lead_scores', 'created_at', 40);
+  const result = await listAiRows('ai_lead_scores', 'created_at', 40, 'id,tenant_id,buyer_name,company_name,lead_score,score,priority,spam_risk,follow_up_priority,summary,recommendation,created_at');
   if (!result.connected) return serviceResponse({ ...aiLeadScoresFallback, error: result.error || '' });
   return serviceResponse({ connected: true, rows: result.rows.filter((row) => !row.tenant_id || row.tenant_id === tenantId), summary: 'Live importer lead scores connected.' });
 }
 
 export async function getAIGrowthInsights(tenantId = demoTenantId) {
-  const result = await listAiRows('ai_growth_insights', 'created_at', 30);
+  const result = await listAiRows('ai_growth_insights', 'created_at', 30, 'id,tenant_id,platform,metric_name,metric_value,insight,summary,recommendation,created_at');
   if (!result.connected) return serviceResponse({ ...aiGrowthInsightsFallback, error: result.error || '' });
   return serviceResponse({ connected: true, rows: result.rows.filter((row) => !row.tenant_id || row.tenant_id === tenantId), summary: 'Live AI growth insights connected.' });
 }
 
 export async function getAIRecommendations(tenantId = demoTenantId) {
-  const result = await listAiRows('ai_recommendations', 'created_at', 40);
+  const result = await listAiRows('ai_recommendations', 'created_at', 40, 'id,tenant_id,agent,category,recommendation,summary,priority,status,created_at');
   if (!result.connected) return serviceResponse({ ...aiRecommendationsFallback, error: result.error || '' });
   return serviceResponse({ connected: true, rows: result.rows.filter((row) => !row.tenant_id || row.tenant_id === tenantId) });
 }
@@ -363,6 +364,10 @@ function buildCampaignRecommendations(campaigns = []) {
 }
 
 export async function getMarketingCampaignControlCenter(tenantId = demoTenantId) {
+  return cachedRead(`cmo:campaign-control:${tenantId}`, 15000, () => getMarketingCampaignControlCenterUncached(tenantId));
+}
+
+async function getMarketingCampaignControlCenterUncached(tenantId = demoTenantId) {
   const empty = {
     connected: backendStatus.mode === 'Connected',
     campaigns: [],
@@ -378,11 +383,11 @@ export async function getMarketingCampaignControlCenter(tenantId = demoTenantId)
 
   try {
     const [campaignResult, budgetResult, metricResult, leadResult, scheduleResult] = await Promise.all([
-      client.from('marketing_campaigns').select('*').eq('tenant_id', tenantId).order('created_at', { ascending: false }),
-      client.from('campaign_budgets').select('*').eq('tenant_id', tenantId).order('created_at', { ascending: false }),
-      client.from('campaign_metrics').select('*').eq('tenant_id', tenantId).order('created_at', { ascending: false }),
-      client.from('campaign_leads').select('*').eq('tenant_id', tenantId).order('created_at', { ascending: false }),
-      client.from('campaign_schedule').select('*').eq('tenant_id', tenantId).order('scheduled_at', { ascending: true })
+      client.from('marketing_campaigns').select('id,tenant_id,campaign_name,name,platform,channel,objective,stage,status,performance_status,total_budget_inr,total_budget,allocated_budget,spend_inr,spend,cpc,ctr,roi,start_date,end_date,country_target,target_market,audience_target,founder_approval_status,approval_status,created_at').eq('tenant_id', tenantId).order('created_at', { ascending: false }).limit(80),
+      client.from('campaign_budgets').select('id,tenant_id,campaign_id,campaign_name,total_budget_inr,budget_amount,spend_amount,start_date,end_date,approval_status,created_at').eq('tenant_id', tenantId).order('created_at', { ascending: false }).limit(120),
+      client.from('campaign_metrics').select('id,tenant_id,campaign_id,marketing_campaign_id,metric_name,metric_value,created_at').eq('tenant_id', tenantId).order('created_at', { ascending: false }).limit(300),
+      client.from('campaign_leads').select('id,tenant_id,campaign_id,campaign_name,buyer_name,company_name,status,created_at').eq('tenant_id', tenantId).order('created_at', { ascending: false }).limit(200),
+      client.from('campaign_schedule').select('id,tenant_id,campaign_id,campaign_name,scheduled_at,status,platform,created_at').eq('tenant_id', tenantId).order('scheduled_at', { ascending: true }).limit(120)
     ]);
     if (campaignResult.error) return serviceErrorResponse(empty, campaignResult.error);
     const errors = [budgetResult.error, metricResult.error, leadResult.error, scheduleResult.error].filter(Boolean);
@@ -433,6 +438,7 @@ export async function createMarketingCampaignDraft(payload = {}) {
   try {
     const { data, error: insertError } = await client.from('marketing_campaigns').insert(campaignPayload).select('*').single();
     if (insertError) return serviceErrorResponse(null, insertError);
+    clearCache('cmo:campaign-control:');
 
     await client.from('campaign_budgets').insert({
       tenant_id: tenantId,
@@ -1705,6 +1711,11 @@ export async function saveGeneratedContentPackage(payload = {}) {
 
 export async function getContentMemoryArchive(filters = {}) {
   const selectedTimezone = getSelectedCmoTimezone({ timezone: filters.timezone || DEFAULT_CMO_TIMEZONE });
+  const cacheKey = `cmo:content-archive:${selectedTimezone}:${filters.selectedDate || ''}`;
+  return cachedRead(cacheKey, filters.selectedDate ? 15000 : 30000, () => getContentMemoryArchiveUncached(filters, selectedTimezone));
+}
+
+async function getContentMemoryArchiveUncached(filters = {}, selectedTimezone = DEFAULT_CMO_TIMEZONE) {
   const emptyArchive = {
     items: [],
     connected: backendStatus.mode === 'Connected',
@@ -1719,14 +1730,14 @@ export async function getContentMemoryArchive(filters = {}) {
     let query = client
       .from('content_history')
       .select(`
-        *,
-        content_versions(*),
-        content_links(*),
-        content_metrics(*),
-        content_approvals(*),
-        ai_generation_logs(*),
-        content_quality_reviews(*),
-        ai_content_memory(*)
+        id,tenant_id,run_id,platform,content_type,topic,generated_text,caption,final_text,scheduled_at_utc,generated_at_utc,publish_status,status,approval_status,metadata,created_at,
+        content_versions(id,content_history_id,version_type,platform,content,created_at),
+        content_links(id,content_history_id,url,label,created_at),
+        content_metrics(id,content_history_id,platform,metric_name,metric_value,metric_unit,captured_at),
+        content_approvals(id,content_history_id,approval_status,status,approved_at,approved_at_utc,rejected_at,created_at),
+        ai_generation_logs(id,content_history_id,model,prompt_summary,output_summary,token_count,created_at),
+        content_quality_reviews(id,content_history_id,overall_score,quality_score,review_status,recommendation,created_at),
+        ai_content_memory(id,content_history_id,memory_type,content,created_at)
       `)
       .order('generated_at_utc', { ascending: false, nullsFirst: false })
       .limit(120);

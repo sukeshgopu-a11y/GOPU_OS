@@ -16,13 +16,23 @@ export default async function handler(req: any, res: any) {
   const { amount, note } = req.body || {};
   const num = Number(amount);
   if (!num || num <= 0) return res.status(400).json({ ok: false, error: "valid amount required" });
-  const { data: existing } = await client.from("cfo_wallet").select("id, balance").eq("tenant_id", TENANT_ID).maybeSingle().catch(() => ({ data: null }));
-  const newBalance = (existing?.balance ?? 0) + num;
-  if (existing?.id) {
-    await client.from("cfo_wallet").update({ balance: newBalance, updated_at: new Date().toISOString() }).eq("id", existing.id).catch(() => null);
-  } else {
-    await client.from("cfo_wallet").insert({ tenant_id: TENANT_ID, balance: newBalance, auto_topup_threshold: 100 }).catch(() => null);
+  let existing = null;
+  try {
+    const result = await client.from("cfo_wallet").select("id, balance").eq("tenant_id", TENANT_ID).maybeSingle();
+    existing = result.data || null;
+  } catch {
+    existing = null;
   }
-  await client.from("cfo_wallet_transactions").insert({ tenant_id: TENANT_ID, amount: num, type: "topup", description: note || "Founder top-up", created_at: new Date().toISOString() }).catch(() => null);
+  const newBalance = (existing?.balance ?? 0) + num;
+  try {
+    if (existing?.id) {
+      await client.from("cfo_wallet").update({ balance: newBalance, updated_at: new Date().toISOString() }).eq("id", existing.id);
+    } else {
+      await client.from("cfo_wallet").insert({ tenant_id: TENANT_ID, balance: newBalance, auto_topup_threshold: 100 });
+    }
+  } catch {}
+  try {
+    await client.from("cfo_wallet_transactions").insert({ tenant_id: TENANT_ID, amount: num, type: "topup", description: note || "Founder top-up", created_at: new Date().toISOString() });
+  } catch {}
   return res.status(200).json({ ok: true, balance: newBalance });
 }

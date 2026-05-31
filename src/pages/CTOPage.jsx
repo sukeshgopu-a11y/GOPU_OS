@@ -16,8 +16,8 @@ import { demoTenantId } from '../services/companyService.js';
 import { ctoLabels } from '../../GOPU_OS/cto/labels.js';
 import { createPaymentRequirement, generateFounderTechnicalSummary, getCTODashboard, getIncidents, getLiveIntegrationStatus, getSubscriptionWatch, getSystemHealthSummary } from '../services/ctoService.js';
 import { getPaymentVaultRenewals } from '../services/renewalService.js';
-// Shared components from main.jsx (resolved at runtime — main chunk loads first)
-import { ExportOSShell, Breadcrumb, StatusBadge, TrendIndicator, EmptyState, SkeletonBlock, SkeletonCard, SkeletonTable, SkeletonKpiBar, MetricSkeletonGrid, HBarChart, SortableTableHeader, StatusPulse, PriorityBadge, SeverityBadge, Panel, StatusPill, StateChip, SignalList, MiniBars, BulkActionBar, FilterBar, VirtualList, useSortable } from '../main.jsx';
+import { ExportOSShell } from '../shared/routeShell.jsx';
+import { Breadcrumb, StatusBadge, TrendIndicator, EmptyState, SkeletonBlock, SkeletonCard, SkeletonTable, SkeletonKpiBar, MetricSkeletonGrid, HBarChart, SortableTableHeader, StatusPulse, PriorityBadge, SeverityBadge, Panel, StatusPill, StateChip, SignalList, MiniBars, BulkActionBar, FilterBar, VirtualList, useSortable } from '../shared/uiPrimitives.jsx';
 
 const ctoDefaultLoginEmail = 'sukeshreddy4.g@gmail.com';
 
@@ -1878,3 +1878,4 @@ function SecurePaymentConfirmationPanel() {
 
 export { IntegrationsVault };
 export default CTOCommandPage;
+

@@ -93,15 +93,20 @@ export default async function handler(req: any, res: any) {
   let sent = 0, skipped = 0, markedCold = 0;
 
   // Fetch all sequences due for follow-up
-  const { data: due } = await client
-    .from("cold_email_sequences")
-    .select("*")
-    .eq("tenant_id", TENANT_ID)
-    .in("status", ["Sent", "Pending"])
-    .lte("next_followup_at", now)
-    .lt("sequence_stage", 4)
-    .limit(50)
-    .catch(() => ({ data: [] }));
+  let due = [];
+  try {
+    const { data } = await client
+      .from("cold_email_sequences")
+      .select("*")
+      .eq("tenant_id", TENANT_ID)
+      .in("status", ["Sent", "Pending"])
+      .lte("next_followup_at", now)
+      .lt("sequence_stage", 4)
+      .limit(50);
+    due = data || [];
+  } catch {
+    due = [];
+  }
 
   for (const seq of (due || [])) {
     const nextStage = (seq.sequence_stage || 1) + 1;
@@ -116,21 +121,25 @@ export default async function handler(req: any, res: any) {
         ? new Date(Date.now() + FOLLOW_UP_DAYS[nextStage] * 24 * 60 * 60 * 1000).toISOString()
         : null;
 
-      await client
-        .from("cold_email_sequences")
-        .update({
-          sequence_stage: nextStage,
-          status: nextStage >= 4 ? "Exhausted" : "Sent",
-          sent_at: now,
-          next_followup_at: nextFollowup,
-          email_subject: subject,
-          updated_at: now,
-        })
-        .eq("id", seq.id)
-        .catch(() => null);
+      try {
+        await client
+          .from("cold_email_sequences")
+          .update({
+            sequence_stage: nextStage,
+            status: nextStage >= 4 ? "Exhausted" : "Sent",
+            sent_at: now,
+            next_followup_at: nextFollowup,
+            email_subject: subject,
+            updated_at: now,
+          })
+          .eq("id", seq.id);
+      } catch {
+        // Follow-up processing should continue if a sequence update fails.
+      }
 
       // Log agent decision
-      await client.from("agent_decisions").insert({
+      try {
+        await client.from("agent_decisions").insert({
         tenant_id: TENANT_ID,
         agent: "CMO",
         decision_type: "email_send",
@@ -138,7 +147,10 @@ export default async function handler(req: any, res: any) {
         confidence: 0.9,
         requires_director: false,
         output_data: { buyer_email: seq.buyer_email, stage: nextStage, subject },
-      }).catch(() => null);
+        });
+      } catch {
+        // Follow-up processing should continue if decision logging is unavailable.
+      }
 
       sent++;
     } else {
@@ -147,20 +159,28 @@ export default async function handler(req: any, res: any) {
   }
 
   // Mark sequences exhausted after stage 4 as Cold
-  const { data: exhausted } = await client
-    .from("cold_email_sequences")
-    .select("id, buyer_name")
-    .eq("tenant_id", TENANT_ID)
-    .eq("status", "Exhausted")
-    .is("next_followup_at", null)
-    .catch(() => ({ data: [] }));
+  let exhausted = [];
+  try {
+    const { data } = await client
+      .from("cold_email_sequences")
+      .select("id, buyer_name")
+      .eq("tenant_id", TENANT_ID)
+      .eq("status", "Exhausted")
+      .is("next_followup_at", null);
+    exhausted = data || [];
+  } catch {
+    exhausted = [];
+  }
 
   for (const seq of (exhausted || [])) {
-    await client
-      .from("cold_email_sequences")
-      .update({ status: "Cold", updated_at: now })
-      .eq("id", seq.id)
-      .catch(() => null);
+    try {
+      await client
+        .from("cold_email_sequences")
+        .update({ status: "Cold", updated_at: now })
+        .eq("id", seq.id);
+    } catch {
+      // Exhaustion cleanup should continue if one sequence update fails.
+    }
     markedCold++;
   }
 

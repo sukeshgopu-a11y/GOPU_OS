@@ -72,14 +72,19 @@ export default async function handler(req: any, res: any) {
   if (!client) return res.status(200).json({ ok: false, error: "no_supabase" });
 
   // Check if sequence already exists for this email
-  const { data: existing } = await client
-    .from("cold_email_sequences")
-    .select("id, status")
-    .eq("tenant_id", TENANT_ID)
-    .eq("buyer_email", buyer_email)
-    .in("status", ["Sent", "Pending", "Opened"])
-    .maybeSingle()
-    .catch(() => ({ data: null }));
+  let existing = null;
+  try {
+    const { data } = await client
+      .from("cold_email_sequences")
+      .select("id, status")
+      .eq("tenant_id", TENANT_ID)
+      .eq("buyer_email", buyer_email)
+      .in("status", ["Sent", "Pending", "Opened"])
+      .maybeSingle();
+    existing = data;
+  } catch {
+    existing = null;
+  }
 
   if (existing) {
     return res.status(200).json({ ok: true, skipped: true, reason: "sequence_already_active", id: existing.id });
@@ -130,7 +135,8 @@ export default async function handler(req: any, res: any) {
     .maybeSingle();
 
   // Log CMO decision
-  await client.from("agent_decisions").insert({
+  try {
+    await client.from("agent_decisions").insert({
     tenant_id: TENANT_ID,
     agent: "CMO",
     decision_type: "email_send",
@@ -138,7 +144,10 @@ export default async function handler(req: any, res: any) {
     confidence: 0.85,
     requires_director: false,
     output_data: { buyer_email, product, email_sent: emailSent, sequence_id: seq?.id },
-  }).catch(() => null);
+    });
+  } catch {
+    // Sequence creation should still return if decision logging is unavailable.
+  }
 
   return res.status(200).json({
     ok: true,

@@ -90,7 +90,16 @@ export default async function handler(req: any, res: any) {
     if (status) query = query.eq("status", status);
     if (search) query = query.or(`buyer_name.ilike.%${search}%,company_name.ilike.%${search}%,country.ilike.%${search}%`);
 
-    const { data, error } = await query.catch(() => ({ data: [], error: "query_failed" }));
+    let data: any[] = [];
+    let error: any = null;
+    try {
+      const result = await query;
+      data = result.data || [];
+      error = result.error;
+    } catch {
+      data = [];
+      error = "query_failed";
+    }
     if (error && error !== "query_failed") return res.status(500).json({ ok: false, error });
 
     const buyers = (data || []).map((b: any) => ({
@@ -149,15 +158,19 @@ export default async function handler(req: any, res: any) {
     if (error) return res.status(500).json({ ok: false, error: error.message });
 
     // Log CIO decision
-    await client.from("agent_decisions").insert({
-      tenant_id: TENANT_ID,
-      agent: "CIO",
-      decision_type: "lead_score",
-      decision_summary: `New buyer added: ${buyer_name || company_name} from ${country || "Unknown"}. Scored ${scoring.tier}-tier (${scoring.score}/10). ${scoring.tier !== "C" && email ? "Triggering CMO cold email." : ""}`,
-      confidence: 0.85,
-      requires_director: false,
-      output_data: { buyer_id: buyer?.id, scoring },
-    }).catch(() => null);
+    try {
+      await client.from("agent_decisions").insert({
+        tenant_id: TENANT_ID,
+        agent: "CIO",
+        decision_type: "lead_score",
+        decision_summary: `New buyer added: ${buyer_name || company_name} from ${country || "Unknown"}. Scored ${scoring.tier}-tier (${scoring.score}/10). ${scoring.tier !== "C" && email ? "Triggering CMO cold email." : ""}`,
+        confidence: 0.85,
+        requires_director: false,
+        output_data: { buyer_id: buyer?.id, scoring },
+      });
+    } catch {
+      // Buyer creation should still return if decision logging is unavailable.
+    }
 
     // Auto-trigger CMO cold email for A/B tier buyers with email
     let cmoTriggered = false;

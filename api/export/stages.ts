@@ -61,6 +61,17 @@ async function logStageTransition(client: any, orderId: string, fromStage: numbe
   });
 }
 
+async function tolerantUpdate(client: any, table: string, payload: Record<string, any>, column: string, value: string) {
+  const { data, error } = await client.from(table).update(payload).eq(column, value).select("id").maybeSingle();
+  const missingColumn = String(error?.message || "").match(/'([^']+)'\s+column/)?.[1];
+  if (error && missingColumn && Object.prototype.hasOwnProperty.call(payload, missingColumn)) {
+    const fallback = { ...payload };
+    delete fallback[missingColumn];
+    return tolerantUpdate(client, table, fallback, column, value);
+  }
+  return { data, error };
+}
+
 async function createDocumentChecklist(client: any, orderId: string, stage: number) {
   if (!client || !orderId) return;
   const docs = STAGES[stage]?.docs || [];
@@ -97,7 +108,7 @@ export async function createExportOrder(client: any, lead: Record<string, any>, 
     current_stage: 1,
     current_stage_name: STAGES[1].name,
     status: "Active",
-    metadata: { pricing_snapshot: pricing },
+    metadata: { pricing_snapshot: pricing, lead_number: lead.lead_number || "" },
   }).select("id").maybeSingle();
 
   if (error || !data) return null;
@@ -139,12 +150,22 @@ export async function advanceStage(client: any, orderId: string, toStage: number
   const fromStage = order.current_stage;
   if (toStage <= fromStage) return { ok: false, message: `Already at stage ${fromStage}` };
 
-  await client.from("export_orders").update({
+  const stageUpdate: Record<string, any> = {
     current_stage: toStage,
     current_stage_name: STAGES[toStage]?.name || "",
     updated_at: new Date().toISOString(),
     ...details,
-  }).eq("id", orderId);
+  };
+  if (toStage === 2) {
+    stageUpdate.stage_2_handoff_metadata = {
+      approved_at: new Date().toISOString(),
+      triggered_by: triggeredBy,
+      previous_stage: fromStage,
+      next_stage: STAGES[toStage]?.name || "",
+      ...details,
+    };
+  }
+  await tolerantUpdate(client, "export_orders", stageUpdate, "id", orderId);
 
   await createDocumentChecklist(client, orderId, toStage);
   await logStageTransition(client, orderId, fromStage, toStage, triggeredBy);

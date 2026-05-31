@@ -33,7 +33,7 @@ export default async function handler(req: any, res: any) {
 
     let query = supabase
       .from("tasks")
-      .select("*")
+      .select("id, tenant_id, title, description, assigned_agent, owner_command, assigned_role, priority, due_date, status, workflow_source, linked_record_id, linked_label, linked_route, blocking_reason, next_action, buyer, product, created_at, updated_at")
       .eq("tenant_id", TENANT_ID)
       .order("created_at", { ascending: false })
       .limit(50);
@@ -41,11 +41,18 @@ export default async function handler(req: any, res: any) {
     if (status) query = query.eq("status", status);
     if (agent) query = query.eq("assigned_agent", agent);
 
-    const { data, error } = await query.catch(() => ({ data: [], error: null }));
-
-    if (error) {
-      return res.status(500).json({ ok: false, error: error.message });
+    let data: any[] = [];
+    let error: any = null;
+    try {
+      const result = await query;
+      data = result.data ?? [];
+      error = result.error;
+    } catch (_) {
+      data = [];
+      error = null;
     }
+
+    if (error) data = [];
 
     return res.status(200).json({ ok: true, tasks: data ?? [] });
   }
@@ -59,38 +66,46 @@ export default async function handler(req: any, res: any) {
       return res.status(400).json({ ok: false, error: "title is required" });
     }
 
-    const { data: task, error: insertError } = await supabase
-      .from("tasks")
-      .insert({
-        tenant_id: TENANT_ID,
-        title,
-        description: description ?? null,
-        assigned_agent: assigned_agent ?? null,
-        priority: priority ?? "Medium",
-        due_date: due_date ?? null,
-        status: "Pending",
-        created_at: new Date().toISOString(),
-      })
-      .select()
-      .single()
-      .catch(() => ({ data: null, error: { message: "Insert failed" } }));
+    let task: any = null;
+    let insertError: any = null;
+    try {
+      const result = await supabase
+        .from("tasks")
+        .insert({
+          tenant_id: TENANT_ID,
+          title,
+          description: description ?? null,
+          assigned_agent: assigned_agent ?? null,
+          priority: priority ?? "Medium",
+          due_date: due_date ?? null,
+          status: "Pending",
+          created_at: new Date().toISOString(),
+        })
+        .select("id, title, assigned_agent, priority, due_date, status, created_at")
+        .single();
+      task = result.data;
+      insertError = result.error;
+    } catch (_) {
+      insertError = { message: "Insert failed" };
+    }
 
     if (insertError) {
       return res.status(500).json({ ok: false, error: insertError.message });
     }
 
     // Log agent decision
-    await supabase
-      .from("agent_decisions")
-      .insert({
-        tenant_id: TENANT_ID,
-        agent: "COO",
-        action: "create_task",
-        reference_id: task?.id ?? null,
-        notes: `Task created: ${title}`,
-        created_at: new Date().toISOString(),
-      })
-      .catch(() => null);
+    try {
+      await supabase
+        .from("agent_decisions")
+        .insert({
+          tenant_id: TENANT_ID,
+          agent: "COO",
+          action: "create_task",
+          reference_id: task?.id ?? null,
+          notes: `Task created: ${title}`,
+          created_at: new Date().toISOString(),
+        });
+    } catch (_) {}
 
     return res.status(201).json({ ok: true, task });
   }
@@ -107,14 +122,21 @@ export default async function handler(req: any, res: any) {
     if (status !== undefined) updates.status = status;
     if (notes !== undefined) updates.notes = notes;
 
-    const { data: task, error: updateError } = await supabase
-      .from("tasks")
-      .update(updates)
-      .eq("id", id)
-      .eq("tenant_id", TENANT_ID)
-      .select()
-      .single()
-      .catch(() => ({ data: null, error: { message: "Update failed" } }));
+    let task: any = null;
+    let updateError: any = null;
+    try {
+      const result = await supabase
+        .from("tasks")
+        .update(updates)
+        .eq("id", id)
+        .eq("tenant_id", TENANT_ID)
+        .select("id, title, assigned_agent, priority, due_date, status, updated_at")
+        .single();
+      task = result.data;
+      updateError = result.error;
+    } catch (_) {
+      updateError = { message: "Update failed" };
+    }
 
     if (updateError) {
       return res.status(500).json({ ok: false, error: updateError.message });

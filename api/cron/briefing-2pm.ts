@@ -30,30 +30,37 @@ function istTime() {
   });
 }
 
+async function safeData(query: any, fallback: any[] = []) {
+  try {
+    const { data } = await query;
+    return data || fallback;
+  } catch {
+    return fallback;
+  }
+}
+
 async function fetchTodayLeads(client: any) {
   if (!client) return [];
   const todayStart = new Date();
   todayStart.setHours(0, 0, 0, 0);
-  const { data } = await client
+  const data = await safeData(client
     .from("lead_intake")
     .select("id, buyer_name, product, quantity, country, status, created_at")
     .eq("tenant_id", TENANT_ID)
     .gte("created_at", todayStart.toISOString())
-    .order("created_at", { ascending: false })
-    .catch(() => ({ data: [] }));
+    .order("created_at", { ascending: false }));
   return data || [];
 }
 
 async function fetchPendingApprovals(client: any) {
   if (!client) return [];
-  const { data } = await client
+  const data = await safeData(client
     .from("founder_approvals")
     .select("id, buyer_name, amount, approval_status, created_at")
     .eq("tenant_id", TENANT_ID)
     .in("approval_status", ["Pending Approval", "Pending"])
     .order("created_at", { ascending: false })
-    .limit(10)
-    .catch(() => ({ data: [] }));
+    .limit(10));
   return data || [];
 }
 
@@ -61,38 +68,35 @@ async function fetchApprovalsDoneToday(client: any) {
   if (!client) return [];
   const todayStart = new Date();
   todayStart.setHours(0, 0, 0, 0);
-  const { data } = await client
+  const data = await safeData(client
     .from("founder_approvals")
     .select("id, buyer_name, amount, approval_status")
     .eq("tenant_id", TENANT_ID)
     .in("approval_status", ["Approved", "Rejected"])
-    .gte("updated_at", todayStart.toISOString())
-    .catch(() => ({ data: [] }));
+    .gte("updated_at", todayStart.toISOString()));
   return data || [];
 }
 
 async function fetchBlockedTasks(client: any) {
   if (!client) return [];
-  const { data } = await client
+  const data = await safeData(client
     .from("tasks")
     .select("id, title, status, priority, department, blocking_reason")
     .eq("tenant_id", TENANT_ID)
     .eq("status", "Blocked")
-    .limit(5)
-    .catch(() => ({ data: [] }));
+    .limit(5));
   return data || [];
 }
 
 async function fetchActiveOrders(client: any) {
   if (!client) return [];
-  const { data } = await client
+  const data = await safeData(client
     .from("export_orders")
     .select("id, buyer_name, product, current_stage, current_stage_name, quantity, unit")
     .eq("tenant_id", TENANT_ID)
     .eq("status", "Active")
     .order("updated_at", { ascending: false })
-    .limit(5)
-    .catch(() => ({ data: [] }));
+    .limit(5));
   return data || [];
 }
 
@@ -100,12 +104,11 @@ async function fetchColdEmailsSentToday(client: any) {
   if (!client) return 0;
   const todayStart = new Date();
   todayStart.setHours(0, 0, 0, 0);
-  const { data } = await client
+  const data = await safeData(client
     .from("cold_email_sequences")
     .select("id")
     .eq("tenant_id", TENANT_ID)
-    .gte("sent_at", todayStart.toISOString())
-    .catch(() => ({ data: [] }));
+    .gte("sent_at", todayStart.toISOString()));
   return (data || []).length;
 }
 
@@ -231,17 +234,21 @@ export default async function handler(req: any, res: any) {
   const slackResult = await sendSlack(text);
 
   if (client) {
-    await client.from("agent_briefings").insert({
-      tenant_id: TENANT_ID,
-      briefing_type: "afternoon_2pm",
-      scheduled_at: new Date().toISOString(),
-      sent_at: new Date().toISOString(),
-      slack_ts: slackResult.ts || null,
-      summary: `${todayLeads.length} leads today, ${pendingApprovals.length} pending approvals`,
-      leads_count: todayLeads.length,
-      pending_approvals: pendingApprovals.length,
-      content: data,
-    }).catch(() => null);
+    try {
+      await client.from("agent_briefings").insert({
+        tenant_id: TENANT_ID,
+        briefing_type: "afternoon_2pm",
+        scheduled_at: new Date().toISOString(),
+        sent_at: new Date().toISOString(),
+        slack_ts: slackResult.ts || null,
+        summary: `${todayLeads.length} leads today, ${pendingApprovals.length} pending approvals`,
+        leads_count: todayLeads.length,
+        pending_approvals: pendingApprovals.length,
+        content: data,
+      });
+    } catch {
+      // Briefing delivery should not fail when audit persistence is unavailable.
+    }
   }
 
   return res.status(200).json({

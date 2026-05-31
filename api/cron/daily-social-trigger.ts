@@ -264,8 +264,16 @@ export default async function handler(req: any, res: any) {
 
   if (!cronSecret) {
     if (client) {
-      await upsertCronHealth(client, "error", "Missing CRON_SECRET", { last_cron_check_status: "failed", next_check_at_utc: nextVercelCronWake(nowUtc) }).catch(() => null);
-      await writeAudit(client, "vercel_cron_health_checked", "failed", "Missing CRON_SECRET", {}).catch(() => null);
+      try {
+        await upsertCronHealth(client, "error", "Missing CRON_SECRET", { last_cron_check_status: "failed", next_check_at_utc: nextVercelCronWake(nowUtc) });
+      } catch {
+        // Cron should still return its configuration status if health persistence fails.
+      }
+      try {
+        await writeAudit(client, "vercel_cron_health_checked", "failed", "Missing CRON_SECRET", {});
+      } catch {
+        // Cron should still return its configuration status if audit persistence fails.
+      }
     }
     return res.status(200).json({ ok: false, status: "missing_cron_secret", message: "Missing CRON_SECRET" });
   }
@@ -385,37 +393,45 @@ export default async function handler(req: any, res: any) {
             const publishData = await publishRes.json().catch(() => ({ ok: false, error: "Invalid JSON response" }));
             spicePostResults.push({ platform, ...publishData });
 
-            await activeClient.from("agent_decisions").insert({
-              agent: "CMO",
-              decision_type: "social_post",
-              platform,
-              status: publishData.ok ? "success" : "failed",
-              notes: publishData.ok
-                ? `Daily spice post published to ${platform}: ${publishData.url || ""}`
-                : `Daily spice post failed on ${platform}: ${publishData.error || "unknown"}`,
-              metadata: {
-                post_id: publishData.post_id,
-                url: publishData.url,
-                error: publishData.error,
-                topic: topicLine,
-                day: todayName,
-                content_preview: dailyContent.slice(0, 100),
-                timestamp: new Date().toISOString()
-              }
-            }).catch(() => null);
+            try {
+              await activeClient.from("agent_decisions").insert({
+                agent: "CMO",
+                decision_type: "social_post",
+                platform,
+                status: publishData.ok ? "success" : "failed",
+                notes: publishData.ok
+                  ? `Daily spice post published to ${platform}: ${publishData.url || ""}`
+                  : `Daily spice post failed on ${platform}: ${publishData.error || "unknown"}`,
+                metadata: {
+                  post_id: publishData.post_id,
+                  url: publishData.url,
+                  error: publishData.error,
+                  topic: topicLine,
+                  day: todayName,
+                  content_preview: dailyContent.slice(0, 100),
+                  timestamp: new Date().toISOString()
+                }
+              });
+            } catch {
+              // Publishing loop should continue if decision logging is unavailable.
+            }
 
             console.log(`[cron] Daily spice post — ${platform}:`, publishData.ok ? `ok (${publishData.url})` : `failed (${publishData.error})`);
           } catch (spicePostError) {
             const errMsg = spicePostError instanceof Error ? spicePostError.message : "Unknown error";
             spicePostResults.push({ platform, ok: false, error: errMsg });
-            await activeClient.from("agent_decisions").insert({
-              agent: "CMO",
-              decision_type: "social_post",
-              platform,
-              status: "failed",
-              notes: `Daily spice post threw exception on ${platform}: ${errMsg}`,
-              metadata: { error: errMsg, topic: topicLine, day: todayName, timestamp: new Date().toISOString() }
-            }).catch(() => null);
+            try {
+              await activeClient.from("agent_decisions").insert({
+                agent: "CMO",
+                decision_type: "social_post",
+                platform,
+                status: "failed",
+                notes: `Daily spice post threw exception on ${platform}: ${errMsg}`,
+                metadata: { error: errMsg, topic: topicLine, day: todayName, timestamp: new Date().toISOString() }
+              });
+            } catch {
+              // Publishing loop should continue if decision logging is unavailable.
+            }
             console.error(`[cron] Daily spice post exception — ${platform}:`, errMsg);
           }
         }
@@ -493,8 +509,16 @@ export default async function handler(req: any, res: any) {
     console.error("[cron] content scheduler failed safely", {
       message: error instanceof Error ? error.message : "Unknown cron error"
     });
-    await upsertCronHealth(activeClient, "error", "Workflow trigger failed", { last_cron_check_status: "failed" }).catch(() => null);
-    await writeAudit(activeClient, "vercel_cron_workflow_failed", "failed", "Cron trigger failed safely. No publishing was attempted.", {}).catch(() => null);
+    try {
+      await upsertCronHealth(activeClient, "error", "Workflow trigger failed", { last_cron_check_status: "failed" });
+    } catch {
+      // Preserve the safe failure response if health persistence also fails.
+    }
+    try {
+      await writeAudit(activeClient, "vercel_cron_workflow_failed", "failed", "Cron trigger failed safely. No publishing was attempted.", {});
+    } catch {
+      // Preserve the safe failure response if audit persistence also fails.
+    }
     return res.status(200).json({
       ok: false,
       status: "failed_safely",

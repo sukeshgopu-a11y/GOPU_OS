@@ -1,6 +1,7 @@
 import { backendStatus, isSupabaseConfigured, requireSupabase } from '../lib/supabaseClient.js';
 import { demoTenantId } from './demoData.js';
 import { createTableService } from './serviceHelpers.js';
+import { cachedRead, clearCache } from './performanceCache.js';
 
 export const taskService = createTableService('tasks');
 export const taskCommentService = createTableService('task_comments');
@@ -99,13 +100,23 @@ function findLocalTask(id) {
 }
 
 export async function getTasks(tenantId = demoTenantId, filters = {}) {
+  const cacheKey = `tasks:list:${tenantId}:${JSON.stringify(filters)}`;
+  return cachedRead(cacheKey, 12000, () => getTasksUncached(tenantId, filters));
+}
+
+async function getTasksUncached(tenantId = demoTenantId, filters = {}) {
   const { client, error } = requireSupabase();
   if (error) {
     hydrateLocalTasks();
     return { ok: true, data: localTasks.map(normalizeTask), error: null, backend: backendStatus };
   }
 
-  let query = client.from('tasks').select('*').eq('tenant_id', tenantId).order('created_at', { ascending: false });
+  let query = client
+    .from('tasks')
+    .select('id,tenant_id,title,description,workflow_source,linked_record_id,linked_label,linked_route,department,owner_command,assigned_to,assigned_role,priority,status,due_date,escalation_level,blocking_reason,next_action,buyer,product,created_at,updated_at')
+    .eq('tenant_id', tenantId)
+    .order('created_at', { ascending: false })
+    .limit(250);
   Object.entries(filters).forEach(([key, value]) => {
     if (value !== undefined && value !== null && value !== 'All') query = query.eq(key, value);
   });
@@ -153,6 +164,7 @@ export async function createTaskFromWorkflow(payload = {}) {
   if (error) {
     const local = localInsert(localTasks, task);
     persistLocalTasks();
+    clearCache('tasks:');
     await writeTaskAuditLog(tenantId, local.id, { actor: task.workflow_source, event: 'task created', previous_status: '-', new_status: local.status, notes: local.blocking_reason });
     dispatchTaskEvent('gopu:task-created', local);
     return { ok: true, data: local, error: null, backend: backendStatus };
@@ -160,6 +172,7 @@ export async function createTaskFromWorkflow(payload = {}) {
 
   const { data, error: queryError } = await client.from('tasks').insert(task).select('*').single();
   if (queryError) return { ok: false, data: null, error: queryError, backend: backendStatus };
+  clearCache('tasks:');
   await writeTaskAuditLog(tenantId, data.id, { actor: task.workflow_source, event: 'task created', previous_status: '-', new_status: data.status, notes: data.blocking_reason });
   dispatchTaskEvent('gopu:task-created', normalizeTask(data));
   return { ok: true, data: normalizeTask(data), error: null, backend: backendStatus };
@@ -181,6 +194,7 @@ export async function updateTaskStatus(tenantId = demoTenantId, taskId, status, 
     if (queryError) return { ok: false, data: null, error: queryError, backend: backendStatus };
     updated = normalizeTask(data);
   }
+  clearCache('tasks:');
   await writeTaskAuditLog(tenantId, taskId, { actor, event: 'status changed', previous_status: previous, new_status: nextStatus, notes });
   dispatchTaskEvent('gopu:task-updated', updated);
   return { ok: true, data: updated, error: null, backend: backendStatus };
@@ -212,6 +226,7 @@ export async function escalateTask(tenantId = demoTenantId, taskId, reason = 'Wo
     if (queryError) return { ok: false, data: null, error: queryError, backend: backendStatus };
   }
   const statusResult = await updateTaskStatus(tenantId, taskId, 'Escalated', reason, 'COO Command');
+  clearCache('tasks:');
   await writeTaskAuditLog(tenantId, taskId, { actor: 'COO Command', event: 'escalated', previous_status: '', new_status: 'Escalated', notes: reason });
   return { ok: true, data: statusResult.data, error: null, backend: backendStatus };
 }

@@ -4748,7 +4748,6 @@ input[type="range"] {
   color: var(--text);
   font-family: var(--font-mono);
   font-size: clamp(1.25rem, 2.2vw, 2rem);
-  font-family: var(--font-mono);
   font-variant-numeric: tabular-nums;
 }
 
@@ -9066,7 +9065,6 @@ input[type="range"] {
   font-family: var(--font-mono);
   font-weight: 900;
   font-size: clamp(1.35rem, 2.6vw, 2.35rem);
-  font-family: var(--font-mono);
   font-variant-numeric: tabular-nums;
 }
 

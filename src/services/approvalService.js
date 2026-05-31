@@ -4,6 +4,7 @@ import { createAuditLog } from './auditService.js';
 import { createTableService } from './serviceHelpers.js';
 import { sendSlackNotification } from './slackNotificationService.js';
 import { createTaskFromWorkflow } from './taskService.js';
+import { cachedRead, clearCache } from './performanceCache.js';
 import {
   sendWhatsAppApprovalRequest,
   syncFounderApproval,
@@ -78,6 +79,13 @@ function normalizeApproval(row) {
     executive_owner: row.executive_owner || metadata.executive_owner || metadata.requested_by_label || 'Workflow Owner',
     requested_by_label: row.requested_by_label || metadata.requested_by_label || row.executive_owner || 'Workflow Owner',
     requested_time: row.requested_time || row.created_at,
+    lead_number: row.lead_number || metadata.lead_number || metadata.lead?.lead_number || '',
+    quotation_amount: row.quotation_amount || metadata.pricing?.recommendedTotalPrice || metadata.final_quote_amount || null,
+    product: row.product || metadata.product || metadata.lead?.product || details.product || '',
+    quantity: row.quantity || metadata.quantity || metadata.lead?.quantity || details.quantity || '',
+    unit: row.unit || metadata.unit || metadata.lead?.unit || details.unit || '',
+    price_source_type: metadata.price_source_summary?.price_source_type || metadata.pricing?.price_source_type || '',
+    source_confidence: metadata.price_source_summary?.source_confidence || '',
     buyer_name: row.buyer_name || metadata.buyer_name || metadata.related_record_label || 'Workflow',
     related_workflow_id: relatedRecord,
     related_record: relatedRecord || 'Not linked',
@@ -218,14 +226,20 @@ async function attachWhatsAppApprovalRequest(tenantId, approvalRow) {
 }
 
 export async function getApprovalQueue(tenantId = demoTenantId) {
+  const cacheKey = `approvals:list:${tenantId}`;
+  return cachedRead(cacheKey, 12000, () => getApprovalQueueUncached(tenantId));
+}
+
+async function getApprovalQueueUncached(tenantId = demoTenantId) {
   const { client, error } = requireSupabase();
   if (error) return { ok: true, data: localApprovals.map(normalizeApproval), error: null, backend: backendStatus };
 
   const { data, error: queryError } = await client
     .from('founder_approvals')
-    .select('*')
+    .select('id,tenant_id,approval_request_id,request_type,approval_type,title,summary,source_module,related_table,related_record_id,related_record,buyer_name,amount,requested_by,risk_level,priority,lead_number,quotation_amount,reason,status,approval_status,whatsapp_status,whatsapp_provider,provider_message_id,retry_count,metadata,details,audit_trail,decision_note,decided_by,decided_at,created_at,updated_at')
     .eq('tenant_id', tenantId)
-    .order('created_at', { ascending: false });
+    .order('created_at', { ascending: false })
+    .limit(250);
 
   if (queryError) return { ok: false, data: isSupabaseConfigured ? localApprovals.map(normalizeApproval) : localApprovals.map(normalizeApproval), error: queryError, backend: backendStatus };
   return { ok: true, data: (data || []).map(normalizeApproval), error: null, backend: backendStatus };
@@ -354,12 +368,16 @@ export async function createApprovalRequest(payload = {}) {
       source: local.source_module || 'Approval Workflow'
     });
     const localWithWhatsApp = await attachWhatsAppApprovalRequest(tenantId, local);
+    clearCache('approvals:');
+    clearCache('tasks:');
     if (typeof window !== 'undefined') window.dispatchEvent(new CustomEvent('gopu:approval-created', { detail: normalizeApproval(localWithWhatsApp) }));
     return { ok: true, data: normalizeApproval(localWithWhatsApp), error: null, backend: backendStatus };
   }
 
   const { data, error: queryError } = await client.from('founder_approvals').insert(request).select('*').single();
   if (queryError) return { ok: false, data: null, error: queryError, backend: backendStatus };
+  clearCache('approvals:');
+  clearCache('tasks:');
   await writeApprovalAudit(tenantId, data.id, { event: 'approval request created', actor: payload.executive_owner || payload.requested_by || 'Workflow', status: request.status });
   await createAuditLog({
     tenant_id: tenantId,
@@ -429,16 +447,19 @@ export async function addApprovalComment(tenantId = demoTenantId, approvalReques
   const { client, error } = requireSupabase();
   if (error) {
     const local = localInsert(localComments, payload);
+    clearCache('approvals:');
     await writeApprovalAudit(tenantId, approvalRequestId, { event: 'founder note added', actor: author, status: 'Comment Added' });
     return { ok: true, data: local, error: null, backend: backendStatus };
   }
   const { data, error: queryError } = await client.from('approval_comments').insert(payload).select('*').single();
   if (queryError) {
     const local = localInsert(localComments, payload);
+    clearCache('approvals:');
     await writeApprovalAudit(tenantId, approvalRequestId, { event: 'founder note added', actor: author, status: 'Comment Added', note: comment });
     return { ok: true, data: local, error: null, backend: backendStatus };
   }
   await writeApprovalAudit(tenantId, approvalRequestId, { event: 'founder note added', actor: author, status: 'Comment Added' });
+  clearCache('approvals:');
   return { ok: true, data, error: null, backend: backendStatus };
 }
 
@@ -547,6 +568,8 @@ async function updateApprovalStatus(tenantId, request, nextStatus, actionType, n
     if (queryError) return { ok: false, data: null, error: queryError, backend: backendStatus };
     updated = data;
   }
+  clearCache('approvals:');
+  clearCache('tasks:');
   if (note) await addApprovalComment(tenantId, request.id, note, 'Founder');
   await recordApprovalAction(tenantId, request, actionType, normalizedNextStatus, note || `${previousStatus} -> ${normalizedNextStatus}`);
   await createAuditLog({
@@ -563,6 +586,33 @@ async function updateApprovalStatus(tenantId, request, nextStatus, actionType, n
   });
   const founderDecision = actionType === 'Approve' ? 'Approve' : actionType === 'Reject' ? 'Reject' : 'Needs Review';
   await updateFounderApprovalDecision(tenantId, request.id, founderDecision, note || `${previousStatus} -> ${normalizedNextStatus}`);
+  if (normalizedNextStatus === 'Approved' && request.request_type === 'Slack Lead Quote Approval') {
+    try {
+      const response = await fetch('/api/director/approve-lead', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ approval_id: request.id, note })
+      });
+      const result = await response.json().catch(() => ({}));
+      const nextMeta = {
+        ...(updated.metadata || {}),
+        director_release_result: result,
+        stage_after_approval: result.stage?.toStage || result.stage?.stageName || 2
+      };
+      if (!error && result.ok) {
+        await client.from('founder_approvals').update({ metadata: nextMeta, updated_at: new Date().toISOString() }).eq('id', request.id).eq('tenant_id', tenantId);
+      }
+      updated = { ...updated, metadata: nextMeta };
+    } catch (releaseError) {
+      updated = {
+        ...updated,
+        metadata: {
+          ...(updated.metadata || {}),
+          director_release_result: { ok: false, message: releaseError.message || 'Director release endpoint failed.' }
+        }
+      };
+    }
+  }
   if (normalizedNextStatus === 'Needs Review') {
     await createTaskFromWorkflow({
       tenant_id: tenantId,

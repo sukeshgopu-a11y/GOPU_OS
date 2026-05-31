@@ -165,59 +165,79 @@ export default async function handler(req: any, res: any) {
   if (client) {
     for (const check of [...critical, ...unknown]) {
       // Check if alert already open
-      const { data: existing } = await client
-        .from("cto_credit_alerts")
-        .select("id")
-        .eq("tenant_id", TENANT_ID)
-        .eq("platform", check.platform)
-        .in("status", ["Open", "CFO_Notified"])
-        .maybeSingle()
-        .catch(() => ({ data: null }));
+      let existing = null;
+      try {
+        const { data } = await client
+          .from("cto_credit_alerts")
+          .select("id")
+          .eq("tenant_id", TENANT_ID)
+          .eq("platform", check.platform)
+          .in("status", ["Open", "CFO_Notified"])
+          .maybeSingle();
+        existing = data;
+      } catch {
+        existing = null;
+      }
 
       if (!existing) {
-        await client.from("cto_credit_alerts").insert({
-          tenant_id: TENANT_ID,
-          platform: check.platform,
-          alert_type: check.status === "critical" ? "credit_critical" : "config_missing",
-          current_balance: check.balance || check.note || "Unknown",
-          estimated_days_left: check.daysLeft ?? null,
-          status: "Open",
-          cfo_notified_at: new Date().toISOString(),
-        }).catch(() => null);
+        try {
+          await client.from("cto_credit_alerts").insert({
+            tenant_id: TENANT_ID,
+            platform: check.platform,
+            alert_type: check.status === "critical" ? "credit_critical" : "config_missing",
+            current_balance: check.balance || check.note || "Unknown",
+            estimated_days_left: check.daysLeft ?? null,
+            status: "Open",
+            cfo_notified_at: new Date().toISOString(),
+          });
+        } catch {
+          // Health check should still return if alert persistence is unavailable.
+        }
       }
     }
 
     // Resolve alerts for platforms now OK
     for (const check of ok) {
-      await client.from("cto_credit_alerts")
-        .update({ status: "Paid", paid_at: new Date().toISOString() })
-        .eq("tenant_id", TENANT_ID)
-        .eq("platform", check.platform)
-        .in("status", ["Open", "CFO_Notified"])
-        .catch(() => null);
+      try {
+        await client.from("cto_credit_alerts")
+          .update({ status: "Paid", paid_at: new Date().toISOString() })
+          .eq("tenant_id", TENANT_ID)
+          .eq("platform", check.platform)
+          .in("status", ["Open", "CFO_Notified"]);
+      } catch {
+        // Health check should still return if alert resolution persistence is unavailable.
+      }
     }
 
     // Log CTO decision
-    await client.from("agent_decisions").insert({
-      tenant_id: TENANT_ID,
-      agent: "CTO",
-      decision_type: "credit_alert",
-      decision_summary: `Daily platform health check: ${ok.length} OK, ${critical.length} critical, ${unknown.length} not configured`,
-      confidence: 1.0,
-      requires_director: false,
-      output_data: { checks },
-    }).catch(() => null);
+    try {
+      await client.from("agent_decisions").insert({
+        tenant_id: TENANT_ID,
+        agent: "CTO",
+        decision_type: "credit_alert",
+        decision_summary: `Daily platform health check: ${ok.length} OK, ${critical.length} critical, ${unknown.length} not configured`,
+        confidence: 1.0,
+        requires_director: false,
+        output_data: { checks },
+      });
+    } catch {
+      // Health check should still return if decision logging is unavailable.
+    }
 
     // Update integration_services table
     for (const check of checks) {
-      await client.from("integration_services").upsert({
-        tenant_id: TENANT_ID,
-        platform_key: check.platform,
-        platform_name: check.label,
-        status: check.status === "ok" ? "live" : check.status === "critical" ? "error" : "warning",
-        error_message: check.note || null,
-        last_checked_at: new Date().toISOString(),
-      }, { onConflict: "tenant_id,platform_key" }).catch(() => null);
+      try {
+        await client.from("integration_services").upsert({
+          tenant_id: TENANT_ID,
+          platform_key: check.platform,
+          platform_name: check.label,
+          status: check.status === "ok" ? "live" : check.status === "critical" ? "error" : "warning",
+          error_message: check.note || null,
+          last_checked_at: new Date().toISOString(),
+        }, { onConflict: "tenant_id,platform_key" });
+      } catch {
+        // Health check should still return if integration status persistence is unavailable.
+      }
     }
   }
 

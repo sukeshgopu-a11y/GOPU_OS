@@ -1,5 +1,6 @@
 import crypto from "node:crypto";
 import { createClient } from "@supabase/supabase-js";
+import { advanceStage } from "../export/stages.js";
 
 const demoTenantId = "11111111-1111-1111-1111-111111111111";
 
@@ -298,10 +299,10 @@ export default async function handler(req: any, res: any) {
 
           // 5. Notify COO — advance export order to Stage 2 if exists
           if (meta.export_order_id) {
-            await client
-              .from("export_orders")
-              .update({ current_stage: 2, current_stage_name: "Order Confirmed", updated_at: new Date().toISOString() })
-              .eq("id", meta.export_order_id);
+            await advanceStage(client, meta.export_order_id, 2, "Director Approval", {
+              buyer_reply_sent_at: new Date().toISOString(),
+              buyer_email: buyerEmail,
+            });
           }
 
           // 6. Post Slack confirmation to channel
