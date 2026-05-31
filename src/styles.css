@@ -29580,8 +29580,10 @@ select {
 
 .dir-decision-table {
   width: 100%;
+  min-width: 1120px;
   border-collapse: collapse;
   font-size: 0.82rem;
+  table-layout: fixed;
 }
 
 .dir-decision-table thead tr {
@@ -29619,8 +29621,9 @@ select {
 }
 
 .dir-table-row td {
-  padding: 13px 14px;
+  padding: 11px 12px;
   vertical-align: middle;
+  line-height: 1.3;
 }
 
 /* Left accent bar on first cell */
@@ -29643,8 +29646,32 @@ select {
 /* S.No + Priority combined cell */
 .dir-td-priority {
   white-space: nowrap;
-  min-width: 120px;
+  width: 120px;
 }
+
+.dir-th-sno,
+.dir-td-sno { width: 58px; }
+
+.dir-th-priority,
+.dir-td-priority { width: 122px; }
+
+.dir-th-title,
+.dir-td-title { width: auto; }
+
+.dir-th-agent,
+.dir-td-agent { width: 86px; }
+
+.dir-th-date,
+.dir-td-date { width: 150px; }
+
+.dir-th-amount,
+.dir-td-amount { width: 110px; }
+
+.dir-th-wait,
+.dir-td-wait { width: 84px; }
+
+.dir-th-action,
+.dir-td-action { width: 220px; }
 
 .dir-row-num {
   display: inline-flex;
@@ -29703,7 +29730,9 @@ select {
   color: var(--text);
   font-size: 0.86rem;
   font-weight: 800;
+  line-height: 1.28;
   margin-bottom: 3px;
+  overflow-wrap: anywhere;
 }
 
 .dir-table-buyer {
@@ -29761,6 +29790,7 @@ select {
 
 .dir-table-actions {
   display: flex;
+  flex-wrap: nowrap;
   gap: 6px;
   align-items: center;
 }
@@ -29774,9 +29804,72 @@ select {
     flex-direction: column;
     align-items: flex-start;
   }
-  .dir-th-date, .dir-td-date,
-  .dir-th-wait, .dir-td-wait {
+
+  .dir-table-wrap {
+    overflow-x: visible;
+  }
+
+  .dir-decision-table,
+  .dir-decision-table tbody {
+    display: block;
+    width: 100%;
+    min-width: 0;
+  }
+
+  .dir-decision-table thead {
     display: none;
+  }
+
+  .dir-table-row {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    gap: 8px 12px;
+    padding: 12px;
+    margin-bottom: 10px;
+    border: 1px solid rgba(255,255,255,0.08);
+    background: rgba(255,255,255,0.025);
+  }
+
+  .dir-table-row td {
+    display: block;
+    width: auto;
+    height: auto;
+    padding: 0;
+  }
+
+  .dir-table-row td:first-child {
+    padding-left: 10px;
+    grid-row: 1 / 4;
+  }
+
+  .dir-td-priority {
+    grid-column: 2;
+    min-width: 0;
+  }
+
+  .dir-td-title {
+    grid-column: 2;
+  }
+
+  .dir-table-title {
+    font-size: 0.92rem;
+    overflow-wrap: normal;
+  }
+
+  .dir-td-agent,
+  .dir-td-date,
+  .dir-td-amount,
+  .dir-td-wait {
+    grid-column: 2;
+  }
+
+  .dir-td-action {
+    grid-column: 1 / -1;
+  }
+
+  .dir-table-actions {
+    flex-wrap: wrap;
+    margin-top: 6px;
   }
 }
 
