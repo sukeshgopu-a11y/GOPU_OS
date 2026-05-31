@@ -92,8 +92,6 @@ async function saveAccessToken(accessToken: string, expiresIn: number | null, sc
   };
 
   const { error } = await client.from("platform_integrations").upsert({
-    tenant_id: DEMO_TENANT_ID,
-    platform: "LinkedIn Personal",
     platform_key: "linkedin_personal",
     platform_name: "LinkedIn Personal",
     logo_key: "linkedin",
@@ -167,12 +165,12 @@ export default async function handler(req: any, res: any) {
     );
 
     return res.status(200).json({
-      ok: true,
+      ok: storage.ok === true,
       expires_in: result.expires_in || null,
       scope: result.scope || "",
       connected: storage.ok === true,
       profile_saved: storage.profile_saved === true,
-      storage: { ok: storage.ok, status: storage.status }
+      storage: { ok: storage.ok, status: storage.status, message: storage.message || null }
     });
   } catch (error: any) {
     return res.status(200).json({
