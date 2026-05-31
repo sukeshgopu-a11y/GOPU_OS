@@ -350,7 +350,7 @@ import { getTrustCenterData } from './services/trustCenterService.js';
 import './styles.css';
 import './premium.css';
 
-// ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ Lazy-loaded route pages ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬
+// Lazy-loaded route pages
 const DirectorCommandCenter   = React.lazy(() => import('./pages/DirectorPage.jsx'));
 const DirectorDecisionDetailPage = React.lazy(() => import('./pages/DirectorPage.jsx').then(m => ({ default: m.DirectorDecisionDetailPage })));
 const FounderApprovalWall     = React.lazy(() => import('./pages/DirectorPage.jsx').then(m => ({ default: m.FounderApprovalWall })));
@@ -1093,8 +1093,8 @@ const pricingAuditEvents = [
 ].map(([time, event, actor, status], index) => ({ id: `pricing-audit-${index}`, time, event, actor, status }));
 
 const savedQuoteDrafts = [
-  { id: 'GX-QTN-1042', buyer: 'Buyer pending', product: 'Product pending', destination: 'Destination pending', margin: '8.4%', status: 'Founder Approval', approval: 'Founder Review Required', updated: 'Today 10:05' },
-  { id: 'GX-QTN-1041', buyer: 'Buyer pending', product: 'Product pending', destination: 'Destination pending', margin: '13.2%', status: 'CFO Review', approval: 'CFO Review Recommended', updated: 'Today 09:42' },
+  { id: 'GX-QTN-1042', buyer: 'Gulf Foods LLC', product: 'Black pepper', destination: 'UAE', margin: '8.4%', status: 'Founder Approval', approval: 'Founder Review Required', updated: 'Today 10:05' },
+  { id: 'GX-QTN-1041', buyer: 'Gulf Foods LLC', product: 'Black pepper', destination: 'UAE', margin: '13.2%', status: 'CFO Review', approval: 'CFO Review Recommended', updated: 'Today 09:42' },
   { id: 'GX-QTN-1040', buyer: 'Nordic Foods AB', product: 'Turmeric powder', destination: 'Gothenburg, Sweden', margin: '15.8%', status: 'Draft', approval: 'Monitoring', updated: 'Yesterday 16:30' },
   { id: 'GX-QTN-1039', buyer: 'Pacific Retail Group', product: 'Mixed spice cartons', destination: 'Auckland, New Zealand', margin: '10.1%', status: 'Revision Required', approval: 'Revision Requested', updated: 'Yesterday 14:10' }
 ];
@@ -1274,9 +1274,9 @@ const invoiceLibraryItems = [
     id: 'invoice-draft-pi-002',
     invoice_type: 'Proforma Invoice',
     invoice_number: 'GX-PI-DRAFT-002',
-    buyer_name: 'Buyer pending',
-    buyer_company: 'Buyer pending',
-    destination_country: 'Country pending',
+    buyer_name: 'Gulf Foods LLC',
+    buyer_company: 'Gulf Foods LLC',
+    destination_country: 'UAE',
     status: 'CFO Review Required',
     approval_status: 'CFO Review Required'
   },
@@ -1729,6 +1729,13 @@ function useSettings() {
           slackWebhook: '',
           whatsappEnabled: false,
           whatsappNumber: '',
+          metaAccessToken: '',
+          facebookPageId: '',
+          instagramBusinessAccountId: '',
+          linkedinClientId: '',
+          linkedinClientSecret: '',
+          linkedinRedirectUri: '',
+          linkedinAccessToken: '',
         },
       };
     } catch { return {}; }
@@ -1878,12 +1885,12 @@ function SettingsPage({ onBack }) {
       const r = await fetch('/api/slack/notify', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ text: 'ÃƒÆ’Ã‚Â¢Ãƒâ€¦Ã¢â‚¬Å“ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ Test message from GOPU OS Settings ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â Slack integration is working!' }),
+        body: JSON.stringify({ text: 'Test message from GOPU OS Settings - Slack integration is working!' }),
       });
       const j = await r.json().catch(() => ({}));
-      setSlackMsg(j.ok ? 'ÃƒÆ’Ã‚Â¢Ãƒâ€¦Ã¢â‚¬Å“ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ Test message sent to Slack!' : 'ÃƒÆ’Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒâ€¦Ã¢â‚¬â„¢ Send failed ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â check your bot token and channel ID in Vercel env vars.');
+      setSlackMsg(j.ok ? 'Test message sent to Slack.' : 'Send failed - check your bot token and channel ID in Vercel env vars.');
     } catch {
-      setSlackMsg('ÃƒÆ’Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒâ€¦Ã¢â‚¬â„¢ Request failed.');
+      setSlackMsg('Request failed.');
     }
     setTimeout(() => setSlackMsg(''), 4000);
   }
@@ -1892,7 +1899,7 @@ function SettingsPage({ onBack }) {
     if (!pwFields.current) return setPwMsg('Enter your current password.');
     if (!pwFields.next || pwFields.next.length < 8) return setPwMsg('New password must be at least 8 characters.');
     if (pwFields.next !== pwFields.confirm) return setPwMsg('New passwords do not match.');
-    setPwMsg('ÃƒÆ’Ã‚Â¢Ãƒâ€¦Ã¢â‚¬Å“ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ Password updated successfully.');
+    setPwMsg('Password updated successfully.');
     setPwFields({ current: '', next: '', confirm: '' });
     setTimeout(() => setPwMsg(''), 3000);
   }
@@ -1906,7 +1913,7 @@ function SettingsPage({ onBack }) {
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)' }}>
           {saveMsg && <span style={{ fontSize: 'var(--text-xs)', color: 'var(--success, #22c55e)' }}>{saveMsg}</span>}
-          {onBack && <button className="btn btn-ghost btn-sm" onClick={onBack}>ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â Ãƒâ€šÃ‚Â Back</button>}
+          {onBack && <button className="btn btn-ghost btn-sm" onClick={onBack}>Back</button>}
         </div>
       </div>
 
@@ -1949,12 +1956,12 @@ function SettingsPage({ onBack }) {
                   value={p.timezone}
                   onChange={(v) => { update('profile', 'timezone', v); showSave(); }}
                   options={[
-                    { value: 'Asia/Kolkata', label: 'IST ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â Asia/Kolkata (UTC+5:30)' },
-                    { value: 'Asia/Dubai', label: 'GST ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â Asia/Dubai (UTC+4)' },
-                    { value: 'Asia/Singapore', label: 'SGT ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â Asia/Singapore (UTC+8)' },
-                    { value: 'Europe/London', label: 'GMT ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â Europe/London' },
-                    { value: 'America/New_York', label: 'EST ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â America/New_York' },
-                    { value: 'America/Los_Angeles', label: 'PST ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â America/Los_Angeles' },
+                    { value: 'Asia/Kolkata', label: 'IST - Asia/Kolkata (UTC+5:30)' },
+                    { value: 'Asia/Dubai', label: 'GST - Asia/Dubai (UTC+4)' },
+                    { value: 'Asia/Singapore', label: 'SGT - Asia/Singapore (UTC+8)' },
+                    { value: 'Europe/London', label: 'GMT - Europe/London' },
+                    { value: 'America/New_York', label: 'EST - America/New_York' },
+                    { value: 'America/Los_Angeles', label: 'PST - America/Los_Angeles' },
                   ]}
                 />
                 <SelectRow
@@ -1962,12 +1969,12 @@ function SettingsPage({ onBack }) {
                   value={p.currency}
                   onChange={(v) => { update('profile', 'currency', v); showSave(); }}
                   options={[
-                    { value: 'INR', label: 'INR ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â Indian Rupee' },
-                    { value: 'USD', label: 'USD ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â US Dollar' },
-                    { value: 'EUR', label: 'EUR ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â Euro' },
-                    { value: 'AED', label: 'AED ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â UAE Dirham' },
-                    { value: 'GBP', label: 'GBP ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â British Pound' },
-                    { value: 'SGD', label: 'SGD ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â Singapore Dollar' },
+                    { value: 'INR', label: 'INR - Indian Rupee' },
+                    { value: 'USD', label: 'USD - US Dollar' },
+                    { value: 'EUR', label: 'EUR - Euro' },
+                    { value: 'AED', label: 'AED - UAE Dirham' },
+                    { value: 'GBP', label: 'GBP - British Pound' },
+                    { value: 'SGD', label: 'SGD - Singapore Dollar' },
                   ]}
                 />
               </Section>
@@ -1990,7 +1997,7 @@ function SettingsPage({ onBack }) {
                       aria-pressed={a.theme === t}
                     >
                       <span className="theme-option-preview" data-theme-preview={t} />
-                      <span>{t === 'dark' ? 'ÃƒÆ’Ã‚Â°Ãƒâ€¦Ã‚Â¸Ãƒâ€¦Ã¢â‚¬â„¢ÃƒÂ¢Ã¢â‚¬Å¾Ã‚Â¢ Dark' : 'ÃƒÆ’Ã‚Â¢Ãƒâ€¹Ã…â€œÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¯Ãƒâ€šÃ‚Â¸Ãƒâ€šÃ‚Â Light'}</span>
+                      <span>{t === 'dark' ? 'Dark' : 'Light'}</span>
                     </button>
                   ))}
                 </div>
@@ -2092,7 +2099,7 @@ function SettingsPage({ onBack }) {
                 <div className="security-session-card active-session">
                   <div>
                     <strong>This device</strong>
-                    <span className="session-meta">Current browser ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â IST ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â Active now</span>
+                    <span className="session-meta">Current browser - IST - Active now</span>
                   </div>
                   <span className="session-badge current">Current</span>
                 </div>
@@ -2103,7 +2110,7 @@ function SettingsPage({ onBack }) {
                     <div key={s.id} className="security-session-card">
                       <div>
                         <strong>{s.device}</strong>
-                        <span className="session-meta">{s.location} ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â {s.time}</span>
+                        <span className="session-meta">{s.location} - {s.time}</span>
                       </div>
                       <button
                         className="btn btn-ghost btn-sm session-revoke"
@@ -2132,7 +2139,7 @@ function SettingsPage({ onBack }) {
                 <InputRow label="New password" type="password" value={pwFields.next} onChange={(v) => setPwFields((p) => ({ ...p, next: v }))} placeholder="Min 8 characters" />
                 <InputRow label="Confirm new password" type="password" value={pwFields.confirm} onChange={(v) => setPwFields((p) => ({ ...p, confirm: v }))} placeholder="Repeat new password" />
                 {pwMsg && (
-                  <p style={{ fontSize: 'var(--text-xs)', color: pwMsg.startsWith('ÃƒÆ’Ã‚Â¢Ãƒâ€¦Ã¢â‚¬Å“ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦') ? 'var(--success, #22c55e)' : 'var(--danger, #ff4d6d)', margin: 0 }}>
+                  <p style={{ fontSize: 'var(--text-xs)', color: pwMsg.includes('successfully') ? 'var(--success, #22c55e)' : 'var(--danger, #ff4d6d)', margin: 0 }}>
                     {pwMsg}
                   </p>
                 )}
@@ -2177,7 +2184,7 @@ function SettingsPage({ onBack }) {
                     Send test message
                   </button>
                   {slackMsg && (
-                    <span style={{ fontSize: 'var(--text-xs)', color: slackMsg.startsWith('ÃƒÆ’Ã‚Â¢Ãƒâ€¦Ã¢â‚¬Å“ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦') ? 'var(--success, #22c55e)' : 'var(--danger, #ff4d6d)' }}>
+                    <span style={{ fontSize: 'var(--text-xs)', color: slackMsg.includes('sent') ? 'var(--success, #22c55e)' : 'var(--danger, #ff4d6d)' }}>
                       {slackMsg}
                     </span>
                   )}
@@ -2205,19 +2212,70 @@ function SettingsPage({ onBack }) {
               </Section>
               <Section title="Social Media">
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--space-3)' }}>
-                  {[
-                    { label: 'Meta (Facebook/Instagram)', env: 'META_ACCESS_TOKEN', key: 'metaConnected' },
-                    { label: 'LinkedIn', env: 'LINKEDIN_ACCESS_TOKEN', key: 'linkedinConnected' },
-                  ].map((item) => (
-                    <div key={item.key} className="integration-status-card disconnected" style={{ padding: 'var(--space-3)' }}>
-                      <div className="integration-status-dot" />
-                      <div>
-                        <strong style={{ fontSize: 'var(--text-xs)' }}>{item.label}</strong>
-                        <span className="integration-status-desc">Set {item.env} in Vercel</span>
-                      </div>
+                  <div className="integration-status-card disconnected" style={{ padding: 'var(--space-3)' }}>
+                    <div className="integration-status-dot" />
+                    <div>
+                      <strong style={{ fontSize: 'var(--text-xs)' }}>Meta (Facebook/Instagram)</strong>
+                      <span className="integration-status-desc">Needs META_ACCESS_TOKEN, FACEBOOK_PAGE_ID, INSTAGRAM_BUSINESS_ACCOUNT_ID</span>
                     </div>
-                  ))}
+                  </div>
+                  <div className="integration-status-card disconnected" style={{ padding: 'var(--space-3)' }}>
+                    <div className="integration-status-dot" />
+                    <div>
+                      <strong style={{ fontSize: 'var(--text-xs)' }}>LinkedIn Personal</strong>
+                      <span className="integration-status-desc">Needs LINKEDIN_CLIENT_ID, LINKEDIN_CLIENT_SECRET, LINKEDIN_REDIRECT_URI, LINKEDIN_ACCESS_TOKEN</span>
+                    </div>
+                  </div>
                 </div>
+                <InputRow
+                  label="Meta access token"
+                  type="password"
+                  value={intg.metaAccessToken || ''}
+                  onChange={(v) => { update('integrations', 'metaAccessToken', v); showSave(); }}
+                  placeholder="META_ACCESS_TOKEN"
+                />
+                <InputRow
+                  label="Facebook Page ID"
+                  value={intg.facebookPageId || ''}
+                  onChange={(v) => { update('integrations', 'facebookPageId', v); showSave(); }}
+                  placeholder="FACEBOOK_PAGE_ID"
+                />
+                <InputRow
+                  label="Instagram Business Account ID"
+                  value={intg.instagramBusinessAccountId || ''}
+                  onChange={(v) => { update('integrations', 'instagramBusinessAccountId', v); showSave(); }}
+                  placeholder="INSTAGRAM_BUSINESS_ACCOUNT_ID"
+                />
+                <InputRow
+                  label="LinkedIn Client ID"
+                  type="password"
+                  value={intg.linkedinClientId || ''}
+                  onChange={(v) => { update('integrations', 'linkedinClientId', v); showSave(); }}
+                  placeholder="LINKEDIN_CLIENT_ID"
+                />
+                <InputRow
+                  label="LinkedIn Client Secret"
+                  type="password"
+                  value={intg.linkedinClientSecret || ''}
+                  onChange={(v) => { update('integrations', 'linkedinClientSecret', v); showSave(); }}
+                  placeholder="LINKEDIN_CLIENT_SECRET"
+                />
+                <InputRow
+                  label="LinkedIn Redirect URI"
+                  value={intg.linkedinRedirectUri || ''}
+                  onChange={(v) => { update('integrations', 'linkedinRedirectUri', v); showSave(); }}
+                  placeholder="LINKEDIN_REDIRECT_URI"
+                />
+                <InputRow
+                  label="LinkedIn access token"
+                  type="password"
+                  value={intg.linkedinAccessToken || ''}
+                  onChange={(v) => { update('integrations', 'linkedinAccessToken', v); showSave(); }}
+                  placeholder="LINKEDIN_ACCESS_TOKEN"
+                />
+                <p style={{ fontSize: 'var(--text-xs)', color: 'var(--dim)', margin: 0 }}>
+                  These settings are saved locally for setup tracking. Add the same keys to .env.local for local development and Vercel Production env for publishing.
+                </p>
               </Section>
             </div>
           )}
@@ -2276,7 +2334,7 @@ const ANALYTICS_DATA = {
     revenue: [42, 38, 55, 61, 49, 67, 72],
     shipments: [3, 2, 4, 5, 3, 6, 5],
     labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
-    totalRevenue: 'ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¹48.2L',
+    totalRevenue: 'INR 48.2L',
     revenueChange: 12,
     totalShipments: 28,
     shipmentChange: 8,
@@ -2289,7 +2347,7 @@ const ANALYTICS_DATA = {
     revenue: [120, 135, 118, 142, 155, 148, 163, 171, 158, 168, 175, 182, 170, 188, 195, 182, 199, 210, 198, 215, 208, 222, 218, 235, 228, 242, 238, 251, 245, 258],
     shipments: [8, 10, 7, 12, 11, 9, 14, 13, 10, 15, 12, 16, 11, 14, 18, 13, 17, 20, 15, 19, 16, 21, 18, 23, 20, 24, 22, 26, 21, 25],
     labels: Array.from({ length: 30 }, (_, i) => `${i + 1}`),
-    totalRevenue: 'ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¹2.14Cr',
+    totalRevenue: 'INR 2.14Cr',
     revenueChange: 18,
     totalShipments: 124,
     shipmentChange: 15,
@@ -2302,7 +2360,7 @@ const ANALYTICS_DATA = {
     revenue: [380, 420, 395, 445, 468, 432, 478, 512, 488, 524, 506, 548, 532, 568, 552, 589, 575, 610, 592, 628, 614, 645, 630, 658, 645, 672, 660, 685, 670, 694, 682, 708, 695, 720, 708, 732, 718, 745, 730, 755, 742, 768, 755, 778, 765, 790, 778, 802, 790, 815],
     shipments: [22, 26, 24, 28, 30, 27, 32, 35, 31, 36, 34, 38, 36, 40, 38, 42, 40, 45, 43, 47, 45, 49, 47, 52, 50, 54, 52, 56, 54, 58],
     labels: ['Jan W1', 'Jan W2', 'Jan W3', 'Jan W4', 'Feb W1', 'Feb W2', 'Feb W3', 'Feb W4', 'Mar W1', 'Mar W2', 'Mar W3', 'Mar W4'],
-    totalRevenue: 'ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¹6.8Cr',
+    totalRevenue: 'INR 6.8Cr',
     revenueChange: 24,
     totalShipments: 412,
     shipmentChange: 22,
@@ -2315,7 +2373,7 @@ const ANALYTICS_DATA = {
     revenue: [820, 940, 880, 1020, 980, 1150, 1080, 1240, 1180, 1320, 1260, 1420],
     shipments: [48, 56, 52, 62, 58, 70, 66, 76, 72, 82, 78, 90],
     labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
-    totalRevenue: 'ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¹28.4Cr',
+    totalRevenue: 'INR 28.4Cr',
     revenueChange: 31,
     totalShipments: 1810,
     shipmentChange: 28,
@@ -2327,11 +2385,11 @@ const ANALYTICS_DATA = {
 };
 
 const TOP_MARKETS = [
-  { country: 'UAE', flag: '', revenue: 'ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¹8.2L', share: 72, shipments: 34, trend: 'up' },
-  { country: 'Saudi Arabia', flag: '', revenue: 'ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¹5.6L', share: 49, shipments: 22, trend: 'up' },
-  { country: 'USA', flag: '', revenue: 'ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¹4.1L', share: 36, shipments: 16, trend: 'stable' },
-  { country: 'UK', flag: '', revenue: 'ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¹2.8L', share: 25, shipments: 11, trend: 'up' },
-  { country: 'Germany', flag: '', revenue: 'ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¹1.9L', share: 17, shipments: 8, trend: 'down' },
+  { country: 'UAE', flag: '', revenue: 'INR 8.2L', share: 72, shipments: 34, trend: 'up' },
+  { country: 'Saudi Arabia', flag: '', revenue: 'INR 5.6L', share: 49, shipments: 22, trend: 'up' },
+  { country: 'USA', flag: '', revenue: 'INR 4.1L', share: 36, shipments: 16, trend: 'stable' },
+  { country: 'UK', flag: '', revenue: 'INR 2.8L', share: 25, shipments: 11, trend: 'up' },
+  { country: 'Germany', flag: '', revenue: 'INR 1.9L', share: 17, shipments: 8, trend: 'down' },
 ];
 
 const PRODUCT_MIX = [
@@ -2568,7 +2626,7 @@ function AnalyticsDashboard({ onBack }) {
                   </td>
                   <td>{m.shipments}</td>
                   <td style={{ color: m.trend === 'up' ? '#22c55e' : m.trend === 'down' ? '#ff4d6d' : 'var(--dim)' }}>
-                    {m.trend === 'up' ? 'Up' : m.trend === 'down' ? 'Down' : '--ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â'}
+                    {m.trend === 'up' ? 'Up' : m.trend === 'down' ? 'Down' : 'Stable'}
                   </td>
                 </tr>
               ))}
@@ -2671,7 +2729,7 @@ function App() {
           transition={{ duration: 0.1 }}
           style={{ minHeight: 0 }}
         >
-          <React.Suspense fallback={<div className="page-loading"><span>LoadingÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¦</span></div>}>{node}</React.Suspense>
+          <React.Suspense fallback={<div className="page-loading"><span>Loading...</span></div>}>{node}</React.Suspense>
         </motion.div>
       </AnimatePresence>
       {sessionWarning}
@@ -3170,7 +3228,7 @@ function ExportOSLoginPage({ osId, onBack, onSuccess }) {
     // Fallback: local demo login
     if (identity !== LOCAL_AUTH_EMAIL) {
       setErrors({ identity: `Use ${LOCAL_AUTH_EMAIL} for local test access.` });
-      setAuthMessage(isSupabaseConfigured ? 'Authentication failed' : 'Supabase not configured ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â use local test account');
+      setAuthMessage(isSupabaseConfigured ? 'Authentication failed' : 'Supabase not configured - use local test account');
       setIsSubmitting(false);
       return;
     }
@@ -3863,8 +3921,28 @@ class GlobalErrorBoundary extends React.Component {
   static getDerivedStateFromError(error) {
     return { hasError: true, error };
   }
+  componentDidMount() {
+    if (typeof window === 'undefined') return;
+    window.setTimeout(() => {
+      try {
+        window.sessionStorage.removeItem(`gopuos:error-reload:${window.location.pathname}`);
+      } catch {}
+    }, 1500);
+  }
   componentDidCatch(error, info) {
     console.error('Gopu OS runtime error:', error, info);
+    const message = String(error?.message || '');
+    const isRecoverableReferenceError = /Can't find variable:|is not defined/.test(message);
+    if (!isRecoverableReferenceError || typeof window === 'undefined') return;
+    try {
+      const reloadKey = `gopuos:error-reload:${window.location.pathname}`;
+      if (window.sessionStorage.getItem(reloadKey) === '1') {
+        window.sessionStorage.removeItem(reloadKey);
+        return;
+      }
+      window.sessionStorage.setItem(reloadKey, '1');
+      window.setTimeout(() => window.location.reload(), 80);
+    } catch {}
   }
   render() {
     if (!this.state.hasError) return this.props.children;
@@ -4127,7 +4205,7 @@ function ConnectionBanner() {
   return (
     <div className="connection-banner" role="alert" aria-live="assertive">
       <AlertTriangle size={14} aria-hidden="true" />
-      You are offline --ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â changes may not save until connection is restored.
+      You are offline - changes may not save until connection is restored.
     </div>
   );
 }
@@ -4242,12 +4320,12 @@ export const Pagination = React.memo(function Pagination({ total, perPage = 20, 
         disabled={page === 1}
         aria-label="Previous page"
       >
-        ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¹
+        Prev
       </button>
       {pages.map((p) => (
         <button
           key={p}
-          className={`page-btn ${p === page ? 'active' : ''}`}
+        Prev
           onClick={() => onPage(p)}
           aria-label={`Page ${p}`}
           aria-current={p === page ? 'page' : undefined}
@@ -4261,7 +4339,7 @@ export const Pagination = React.memo(function Pagination({ total, perPage = 20, 
         disabled={page === totalPages}
         aria-label="Next page"
       >
-        ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Âº
+        Next
       </button>
     </nav>
   );
@@ -4683,6 +4761,7 @@ function SettingToggle({ label, description, value, onChange }) {
         id={id}
         role="switch"
         aria-checked={value}
+        aria-label={label}
         className={`toggle-switch ${value ? 'on' : ''}`}
         onClick={() => onChange(!value)}
       >
@@ -5283,7 +5362,7 @@ function getGlobalBackContext(pathname) {
     ['/export-os/payments', 'Back to Payments'],
     ['/export-os/pricing-engine', 'Back to Pricing'],
     ['/export-os/director', 'Back to Director'],
-    ['/export-os/notification', 'Back to Notifications'],
+    ['/export-os/notification-center', 'Back to Notifications'],
     ['/export-os/learning-centre', 'Back to Learning Centre'],
     ['/export-os/workflow-engine', 'Back to Workflow Engine'],
     ['/export-os/workflow-dependencies', 'Back to Workflow Engine']
@@ -5317,7 +5396,7 @@ const operationalStatusGroups = [
   {
     group: 'Strategic',
     items: [
-      { title: 'Opportunity Detected', source: 'CIO + CMO', detail: 'Country pending importer interest rising.', severity: 'Opportunity', waiting: 'Live', action: 'Open Director signal', tone: 'purple', icon: TrendingUp, route: '/export-os/director', explanation: 'Market signal suggests importer outreach potential after commercial and operational readiness checks.' }
+      { title: 'Opportunity Detected', source: 'CIO + CMO', detail: 'UAE importer interest rising.', severity: 'Opportunity', waiting: 'Live', action: 'Open Director signal', tone: 'purple', icon: TrendingUp, route: '/export-os/director', explanation: 'Market signal suggests importer outreach potential after commercial and operational readiness checks.' }
     ]
   }
 ];
@@ -5490,12 +5569,12 @@ function QuickLaunch({ navigate }) {
 
 function DashboardActivityFeed() {
   const events = [
-    { id: 1, time: '2m ago', actor: 'CFO', action: 'reviewed', subject: 'Q3 margin report', icon: 'ÃƒÆ’Ã‚Â°Ãƒâ€¦Ã‚Â¸ÃƒÂ¢Ã¢â€šÂ¬Ã…â€œÃƒâ€šÃ‚Â', tone: 'blue' },
+    { id: 1, time: '2m ago', actor: 'CFO', action: 'reviewed', subject: 'Q3 margin report', icon: 'CFO', tone: 'blue' },
     { id: 2, time: '11m ago', actor: 'COO', action: 'escalated', subject: 'GCC shipment delay', icon: 'No', tone: 'amber' },
     { id: 3, time: '28m ago', actor: 'System', action: 'generated', subject: 'Morning briefing draft', icon: 'Done', tone: 'cyan' },
     { id: 4, time: '1h ago', actor: 'CTO', action: 'resolved', subject: 'Automation retry queue', icon: '...', tone: 'green' },
     { id: 5, time: '2h ago', actor: 'Director', action: 'approved', subject: 'New buyer quotation release', icon: 'Done', tone: 'green' },
-    { id: 6, time: '3h ago', actor: 'CMO', action: 'drafted', subject: 'GCC importer outreach email', icon: 'ÃƒÆ’Ã‚Â¢Ãƒâ€¦Ã¢â‚¬Å“ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â°', tone: 'blue' },
+    { id: 6, time: '3h ago', actor: 'CMO', action: 'drafted', subject: 'GCC importer outreach email', icon: 'Mail', tone: 'blue' },
   ];
 
   return (
@@ -5719,7 +5798,7 @@ function HeroCommandPanel({ navigate }) {
 
 const topBarSearchRecords = [
   { id: 'srch-workflow-delayed', title: 'Delayed shipment workflows', type: 'Workflow', owner: 'COO', status: 'Delayed', priority: 'High', route: '/export-os/workflows', keywords: 'show delayed shipments delayed shipment blocker dispatch supplier container cha logistics' },
-  { id: 'srch-uae-buyers', title: 'Country pending buyer and importer opportunities', type: 'Importer Intelligence', owner: 'CIO + CMO', status: 'Opportunity Detected', priority: 'High', route: '/export-os/cio', keywords: 'find uae buyers importer opportunity gcc turmeric black pepper market demand' },
+  { id: 'srch-uae-buyers', title: 'UAE buyer and importer opportunities', type: 'Importer Intelligence', owner: 'CIO + CMO', status: 'Opportunity Detected', priority: 'High', route: '/export-os/cio', keywords: 'find uae buyers importer opportunity gcc turmeric black pepper market demand' },
   { id: 'srch-invoices-pending', title: 'Pending export invoices', type: 'Invoice', owner: 'CFO', status: 'Review Required', priority: 'Critical', route: '/export-os/invoices', keywords: 'open pending invoices blocked invoice lut hsn final pdf buyer email' },
   { id: 'srch-high-risk', title: 'High-risk workflows', type: 'Risk', owner: 'Director', status: 'Risk Detected', priority: 'Critical', route: '/export-os/director', keywords: 'any high risk workflows critical escalated director queue pending review' },
   { id: 'srch-openai-renewal', title: 'OpenAI renewal and credit watch', type: 'Payment', owner: 'CTO + CFO', status: 'Monitoring', priority: 'Medium', route: '/export-os/payment-vault', keywords: 'openai renewal credit payment pending subscription vault budget' },
@@ -5736,7 +5815,7 @@ const executiveHealthRows = [
   { executive: 'CFO', status: 'Executive Attention Required', summary: 'Low-margin quote and invoice release gates are waiting.', route: '/export-os/executives/cfo', state: 'warning' },
   { executive: 'CTO', status: 'Monitoring Risks', summary: 'Automation queue and renewal triggers are under watch.', route: '/export-os/executives/cto', state: 'progress' },
   { executive: 'CMO', status: 'Monitoring', summary: 'Content approvals and importer outreach drafts are queued.', route: '/export-os/executives/cmo', state: 'progress' },
-  { executive: 'CIO', status: 'Opportunity Detected', summary: 'Country pending and GCC importer demand signals are active.', route: '/export-os/cio', state: 'success' }
+  { executive: 'CIO', status: 'Opportunity Detected', summary: 'UAE and GCC importer demand signals are active.', route: '/export-os/cio', state: 'success' }
 ];
 
 function CommandDeckHeader({ navigate, onLogout, showSearch = false, setShowSearch, setShowShortcuts, session }) {
@@ -5958,7 +6037,7 @@ function ExecutiveSharedControlPanel({ navigate }) {
 function ExecutiveActivityControlPanel({ navigate }) {
   const activities = [
     ['Executive Sync', 'COO + CFO + CTO alignment active'],
-    ['Market Signal', 'Country pending importer interest rising'],
+    ['Market Signal', 'UAE importer interest rising'],
     ['Growth Queue', 'Content and buyer outreach waiting review']
   ];
   return (
@@ -6156,7 +6235,7 @@ function TopNotificationPanel({ notifications, filter, setFilter, navigate }) {
 }
 
 function GlobalCommandSearch({ query, setQuery, records, navigate }) {
-  const suggestions = ['Show delayed shipments', 'Find Country pending buyers', 'Open pending invoices', 'Any high-risk workflows?', 'Show OpenAI renewal', 'What is pending today?'];
+  const suggestions = ['Show delayed shipments', 'Find UAE buyers', 'Open pending invoices', 'Any high-risk workflows?', 'Show OpenAI renewal', 'What is pending today?'];
   const debouncedQuery = useDebounce(query, 250);
   const normalized = debouncedQuery.trim().toLowerCase();
   const results = React.useMemo(() => (
@@ -6187,7 +6266,7 @@ function GlobalCommandSearch({ query, setQuery, records, navigate }) {
       </div>
       <label className="global-command-search-box">
         <Search size={18} />
-        <input aria-label="AI command query" value={query} onChange={(event) => setQuery(event.target.value)} autoFocus placeholder="Show delayed shipments, find Country pending buyers, open pending invoices..." />
+        <input aria-label="AI command query" value={query} onChange={(event) => setQuery(event.target.value)} autoFocus placeholder="Show delayed shipments, find UAE buyers, open pending invoices..." />
       </label>
       <div className="search-suggestion-row">
         {suggestions.map((item) => <button key={item} onClick={() => setQuery(item)}>{item}</button>)}
@@ -6829,6 +6908,136 @@ function getSecurityState(status) {
   return 'online';
 }
 
+function formatMoney(value, currency = 'USD') {
+  return `${currency} ${Number(value || 0).toLocaleString(undefined, { maximumFractionDigits: 2 })}`;
+}
+
+function calculateInvoiceTotals(invoice) {
+  const subtotal = invoice.items.reduce((sum, item) => {
+    const taxable = (Number(item.quantity) || 0) * (Number(item.unit_price) || 0) - (Number(item.discount) || 0);
+    return sum + taxable;
+  }, 0);
+  const taxTotal = invoice.export_mode === 'LUT/Bond Without IGST' ? 0 : invoice.items.reduce((sum, item) => {
+    const taxable = (Number(item.quantity) || 0) * (Number(item.unit_price) || 0) - (Number(item.discount) || 0);
+    return sum + (taxable * ((Number(item.tax_rate) || 0) / 100));
+  }, 0);
+  const grandTotal = subtotal + taxTotal + Number(invoice.freight || 0) + Number(invoice.insurance || 0) + Number(invoice.other_charges || 0);
+  return { subtotal, taxTotal, grandTotal, amountInWords: `${invoice.currency} ${grandTotal.toLocaleString(undefined, { maximumFractionDigits: 2 })} only` };
+}
+
+function buildInvoiceValidation(invoice) {
+  const serviceChecks = validateInvoiceFromService(invoice);
+  const c = invoice.company_snapshot;
+  const totals = calculateInvoiceTotals(invoice);
+  const item = invoice.items[0] || {};
+  const isPacking = ['Packing List', 'Invoice-cum-Packing List', 'Commercial Invoice + Packing List Package'].includes(invoice.invoice_type);
+  const isCommercial = ['Commercial Invoice', 'Invoice-cum-Packing List', 'Commercial Invoice + Packing List Package', 'Export Tax Invoice under LUT', 'Buyer Invoice Copy', 'Draft Invoice Copy', 'Revised Invoice'].includes(invoice.invoice_type);
+  const isLut = invoice.invoice_type === 'Export Tax Invoice under LUT' || invoice.export_mode === 'LUT/Bond Without IGST';
+  const checks = [
+    ['invoice_type_supported', 'Document Type', 'document/invoice type exists', invoiceDocumentTypes.some((type) => type.name === invoice.invoice_type), 'System', 'critical'],
+    ['buyer_name', 'Buyer', 'buyer name present', invoice.buyer_name, 'Sales', 'critical'],
+    ['product_description', 'Product', 'product description present', item.product_description, 'Operations', 'critical'],
+    ['quantity', 'Product', 'quantity present', Number(item.quantity) > 0, 'Operations', 'critical'],
+    ['invoice_status_allowed', 'Invoice', 'uses controlled invoice status', ['Draft', 'Validation Failed', 'Validation Passed', 'COO Review Required', 'CFO Review Required', 'Founder Review Required', 'Approved for Release', 'PDF Draft Ready', 'Email Draft Prepared', 'Revision Required'].includes(invoice.status), 'System', 'critical'],
+    ['audit_log', 'Approval', 'audit log created', true, 'System', 'info']
+  ];
+  if (invoice.invoice_type === 'Proforma Invoice') {
+    checks.push(
+      ['price', 'Commercial', 'price present', Number(item.unit_price) > 0, 'Finance', 'critical'],
+      ['currency', 'Commercial', 'currency selected', invoice.currency, 'Finance', 'critical'],
+      ['validity', 'Commercial', 'validity present', invoice.validity, 'Sales', 'critical'],
+      ['payment_terms', 'Commercial', 'payment terms selected', invoice.payment_terms, 'Finance', 'critical'],
+      ['founder_approval', 'Approval', 'founder approval before sending', false, 'Founder Office', 'critical']
+    );
+  }
+  if (isCommercial) {
+    checks.push(
+      ['legal_company_name', 'Company', 'seller legal company name present', c.legal_company_name, 'Founder Office', 'critical'],
+      ['registered_address', 'Company', 'registered address present', c.registered_address, 'Founder Office', 'critical'],
+      ['gstin', 'Company', 'GSTIN present', c.gstin, 'Finance', 'critical'],
+      ['iec', 'Company', 'IEC present', c.iec, 'Compliance', 'critical'],
+      ['pan', 'Company', 'PAN present', c.pan, 'Finance', 'critical'],
+      ['authorized_signatory', 'Company', 'authorized signatory present', c.authorized_signatory, 'Founder Office', 'critical'],
+      ['buyer_address', 'Buyer', 'buyer address present', invoice.buyer_address, 'Sales', 'critical'],
+      ['buyer_country', 'Buyer', 'buyer country present', invoice.buyer_country, 'Sales', 'critical'],
+      ['destination_country', 'Buyer', 'destination country present', invoice.destination_country, 'Operations', 'critical'],
+      ['invoice_number', 'Invoice', 'invoice number present', invoice.invoice_number, 'Finance', 'critical'],
+      ['invoice_date', 'Invoice', 'invoice date present', invoice.invoice_date, 'Finance', 'critical'],
+      ['financial_year', 'Invoice', 'financial year present', invoice.financial_year, 'Finance', 'critical'],
+      ['hsn_code', 'Product', 'HSN code present', item.hsn_code, 'Compliance', 'critical'],
+      ['unit_price', 'Product', 'unit price present', Number(item.unit_price) > 0, 'Finance', 'critical'],
+      ['incoterm', 'Commercial', 'incoterm selected', invoice.incoterm, 'Operations', 'critical'],
+      ['origin', 'Export', 'origin present', invoice.country_of_origin, 'Compliance', 'critical'],
+      ['bank_terms', 'Bank', 'bank/payment terms present', c.default_bank_account_masked && invoice.payment_terms, 'Finance', 'critical'],
+      ['declaration', 'Declaration', 'declaration present', LUT_EXPORT_ENDORSEMENT, 'Documentation', 'critical'],
+      ['founder_approval', 'Approval', 'founder approval required', false, 'Founder Office', 'critical']
+    );
+  }
+  if (isLut) {
+    checks.push(
+      ['lut_arn', 'LUT', 'LUT ARN/reference present', c.lut_arn, 'Founder Office', 'critical'],
+      ['lut_financial_year', 'LUT', 'LUT financial year present', c.lut_financial_year, 'Founder Office', 'critical'],
+      ['lut_validity', 'LUT', 'LUT validity present', c.lut_valid_from && c.lut_valid_to, 'Founder Office', 'critical'],
+      ['lut_active', 'LUT', 'LUT status active/verified', ['Active', 'Verified'].includes(c.lut_status), 'Founder Office', 'critical'],
+      ['lut_founder_verified', 'LUT', 'founder verified', c.lut_founder_verified_status === 'Verified', 'Founder Office', 'critical'],
+      ['export_mode', 'Export', 'export mode selected as LUT/Bond Without IGST', invoice.export_mode === 'LUT/Bond Without IGST', 'Finance', 'critical'],
+      ['endorsement', 'Export', 'LUT endorsement attached', LUT_EXPORT_ENDORSEMENT, 'Documentation', 'critical'],
+      ['no_igst', 'Export', 'IGST is 0% / amount 0 under LUT', invoice.export_mode === 'LUT/Bond Without IGST' && totals.taxTotal === 0 && Number(item.tax_rate || 0) === 0, 'Finance', 'critical']
+    );
+  }
+  if (isPacking) {
+    checks.push(
+      ['package_type', 'Packing', 'package type present', invoice.package_type || item.packing_type, 'Operations', 'critical'],
+      ['package_count', 'Packing', 'number of bags/cartons present', invoice.package_count, 'Operations', 'critical'],
+      ['net_weight', 'Packing', 'net weight present', invoice.net_weight, 'Operations', 'critical'],
+      ['gross_weight', 'Packing', 'gross weight present', invoice.gross_weight, 'Operations', 'critical'],
+      ['shipment_reference', 'Packing', 'shipment reference if available', true, 'Operations', 'info']
+    );
+  }
+  if (invoice.invoice_type === 'Buyer Invoice Copy') {
+    checks.push(
+      ['validation_passed', 'Release', 'validation passed', invoice.status === 'Approved for Release', 'System', 'critical'],
+      ['cfo_done', 'Release', 'CFO review done', false, 'CFO Command', 'critical'],
+      ['coo_done', 'Release', 'COO review done', false, 'COO Command', 'critical'],
+      ['founder_done', 'Release', 'founder approval done', false, 'Founder Office', 'critical']
+    );
+  }
+  if (invoice.invoice_type === 'Revised Invoice') {
+    checks.push(
+      ['revision_number', 'Revision', 'revision number present', invoice.revision_number, 'Documentation', 'critical'],
+      ['revision_reason', 'Revision', 'revision reason present', invoice.revision_reason, 'Documentation', 'critical'],
+      ['revised_by', 'Revision', 'revised by present', invoice.revised_by, 'Documentation', 'critical'],
+      ['revised_date', 'Revision', 'revised date present', invoice.revised_date, 'Documentation', 'critical']
+    );
+  }
+  if (invoice.invoice_type === 'Cancelled/Void Invoice') {
+    checks.push(
+      ['cancellation_reason', 'Void Record', 'cancellation reason present', invoice.cancellation_reason, 'Founder Office', 'critical'],
+      ['cancelled_by', 'Void Record', 'cancelled by present', invoice.cancelled_by, 'Founder Office', 'critical'],
+      ['cancelled_at', 'Void Record', 'date/time present', invoice.cancelled_at, 'System', 'critical'],
+      ['history_kept', 'Void Record', 'invoice history retained', true, 'System', 'critical']
+    );
+  }
+  checks.push(
+    ['coo_review', 'Approval', 'COO operations review required', false, 'COO Command', 'critical'],
+    ['cfo_review', 'Approval', 'CFO commercial/pricing review required', false, 'CFO Command', 'critical'],
+    ['hsn_review', 'Export', 'HSN review flagged', false, 'Founder Office', 'critical'],
+    ['origin_review', 'Export', 'country of origin reviewed', false, 'Founder Office', 'critical'],
+    ['amount_words', 'Commercial', 'amount in words generated', totals.amountInWords, 'System', 'critical']
+  );
+  return checks.map(([key, group, message, pass, owner, severity]) => ({
+    key,
+    group,
+    message,
+    owner,
+    severity,
+    status: pass ? 'Passed' : 'Failed'
+  })).map((check) => {
+    const serviceCheck = serviceChecks.find((item) => item.key === check.key);
+    return serviceCheck || check;
+  });
+}
+
 function getInvoiceActionBlockers(invoice) {
   return buildInvoiceValidation(invoice).filter((check) => check.status === 'Failed' && check.severity === 'critical');
 }
@@ -7367,7 +7576,7 @@ function CompanyDataInjection({ snapshot, navigate }) {
     'default_currency',
     'default_payment_terms',
     'default_bank_account_masked'
-  ].map((key) => <div key={key}><span>{key.replaceAll('_', ' ')}</span><strong>{snapshot[key] || 'Missing'}</strong></div>)}</div><button className="ghost-button" onClick={() => navigate('/export-os/company-master-data')}>Open Company Master Data Vault</button></section>;
+  ].map((key) => <div key={key}><span>{key.replaceAll('_', ' ')}</span><strong>{snapshot[key] || 'Missing'}</strong></div>)}</div><button className="ghost-button" aria-label="Open Company Master Data Vault" onClick={() => navigate('/export-os/company-master-data')}>Open Company Master Data Vault</button></section>;
 }
 
 function LUTInvoicePanel({ snapshot, navigate }) {
@@ -7376,11 +7585,11 @@ function LUTInvoicePanel({ snapshot, navigate }) {
   const inactive = !['Active', 'Verified'].includes(snapshot.lut_status);
   const notVerified = snapshot.lut_founder_verified_status !== 'Verified';
   const message = incomplete
-    ? 'LUT incomplete --ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â invoice release blocked.'
+    ? 'LUT incomplete - invoice release blocked.'
     : expired
-      ? 'LUT expired --ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â invoice release blocked.'
+      ? 'LUT expired - invoice release blocked.'
       : inactive
-        ? 'LUT status needs review --ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â invoice release blocked.'
+        ? 'LUT status needs review - invoice release blocked.'
         : notVerified
           ? 'Founder verification required before invoice release.'
           : 'LUT data available for invoice release validation.';
@@ -7394,7 +7603,7 @@ function LUTInvoicePanel({ snapshot, navigate }) {
         : notVerified
           ? 'Founder verification required before invoice release.'
           : 'LUT data available for invoice release validation.';
-  return <section className="invoice-form-panel"><div className="approval-section-header"><div><span>LUT Status</span><h2>Export under LUT/Bond without IGST</h2></div><StatusBadge label={blocked ? 'Validation Failed' : 'Validation Passed'} state={blocked ? 'error' : 'online'} /></div><div className="lut-block-message">{releaseMessage}</div><div className="snapshot-grid">{['lut_arn', 'lut_financial_year', 'lut_filing_date', 'lut_valid_from', 'lut_valid_to', 'lut_status', 'lut_founder_verified_status'].map((key) => <div key={key}><span>{key.replaceAll('_', ' ')}</span><strong>{snapshot[key] || 'Missing'}</strong></div>)}</div><div className="vault-form-actions"><button className="tactical-button" onClick={() => navigate('/export-os/company-master-data')}>Complete LUT Details</button><button className="ghost-button" onClick={() => navigate('/export-os/director')}>Request Founder Review</button></div></section>;
+  return <section className="invoice-form-panel"><div className="approval-section-header"><div><span>LUT Status</span><h2>Export under LUT/Bond without IGST</h2></div><StatusBadge label={blocked ? 'Validation Failed' : 'Validation Passed'} state={blocked ? 'error' : 'online'} /></div><div className="lut-block-message">{releaseMessage}</div><div className="snapshot-grid">{['lut_arn', 'lut_financial_year', 'lut_filing_date', 'lut_valid_from', 'lut_valid_to', 'lut_status', 'lut_founder_verified_status'].map((key) => <div key={key}><span>{key.replaceAll('_', ' ')}</span><strong>{snapshot[key] || 'Missing'}</strong></div>)}</div><div className="vault-form-actions"><button className="tactical-button" aria-label="Complete LUT Details" onClick={() => navigate('/export-os/company-master-data')}>Complete LUT Details</button><button className="ghost-button" aria-label="Request Founder Review" onClick={() => navigate('/export-os/director')}>Request Founder Review</button></div></section>;
 }
 
 function BuyerDetailsPanel({ invoice, updateInvoice }) {
@@ -7635,11 +7844,11 @@ const paymentRecordsSeed = [];
 const paymentReceiptsSeed = [];
 
 const vendorTrustSeed = [
-  ['OpenAI', 'Trusted Infrastructure', 'Trusted', 'ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¹1,000', 'Allowed under cap', 'Low', 'Pending', 'Usage-based'],
-  ['Supabase', 'Trusted Infrastructure', 'Trusted', 'ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¹1,500', 'Controlled', 'Medium', 'Pending', 'Monthly'],
-  ['Vercel', 'Trusted Infrastructure', 'Trusted', 'ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¹1,000', 'Allowed under cap', 'Low', 'May 24, 2026', 'Monthly'],
-  ['Cloudflare', 'Domain / SSL renewal', 'Review Required', 'ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¹1,500', 'Founder approval over cap', 'High', 'Pending', 'Annual'],
-  ['Unknown SaaS vendor', 'Unknown Vendor', 'Blocked', 'ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¹0', 'Not allowed', 'Critical', 'Never paid', 'Unknown']
+  ['OpenAI', 'Trusted Infrastructure', 'Trusted', 'INR 1,000', 'Allowed under cap', 'Low', 'Pending', 'Usage-based'],
+  ['Supabase', 'Trusted Infrastructure', 'Trusted', 'INR 1,500', 'Controlled', 'Medium', 'Pending', 'Monthly'],
+  ['Vercel', 'Trusted Infrastructure', 'Trusted', 'INR 1,000', 'Allowed under cap', 'Low', 'May 24, 2026', 'Monthly'],
+  ['Cloudflare', 'Domain / SSL renewal', 'Review Required', 'INR 1,500', 'Founder approval over cap', 'High', 'Pending', 'Annual'],
+  ['Unknown SaaS vendor', 'Unknown Vendor', 'Blocked', 'INR 0', 'Not allowed', 'Critical', 'Never paid', 'Unknown']
 ].map(([vendorName, category, trustLevel, monthlyLimit, autoPayEligibility, riskLevel, lastPayment, renewalFrequency], index) => ({ id: `vendor-${index}`, vendorName, category, trustLevel, monthlyLimit, autoPayEligibility, riskLevel, lastPayment, renewalFrequency }));
 
 const paymentForecastSeed = [];
@@ -7700,7 +7909,7 @@ function buildRenewalDashboardItems(payments = paymentRecordsSeed, forecasts = p
 
 const paymentRiskSeed = [
   ['Missing receipt', 'Medium', 'Resend receipt still pending review.', 'CFO Command'],
-  ['Founder approval missing', 'High', 'Cloudflare amount exceeds ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¹1,500 cap.', 'Founder'],
+  ['Founder approval missing', 'High', 'Cloudflare amount exceeds INR 1,500 cap.', 'Founder'],
   ['Duplicate renewal risk', 'Low', 'No duplicate charge detected; monitor next cycle.', 'CFO Command'],
   ['Failed payment retry', 'Medium', 'WhatsApp API payment processing should be checked after OTP step.', 'CFO Command']
 ].map(([title, severity, detail, owner], index) => ({ id: `payment-risk-${index}`, title, severity, detail, owner }));
@@ -7791,6 +8000,15 @@ function isExpiredBillingMethod(method) {
 }
 
 function resolveRenewalDecision(request, method, rule) {
+  if (!request) {
+    return {
+      state: 'Blocked',
+      approvalRequirement: 'Open a payment or renewal request first',
+      autoRenewEligibility: 'Blocked',
+      otpRequirement: 'Not available',
+      riskStatus: 'No renewal request selected'
+    };
+  }
   const amount = Number(request.requiredAmountInr) || 0;
   const normalizedRule = normalizeBillingRule(rule);
   if (!method) return { state: 'Blocked', approvalRequirement: 'Connect payment provider', autoRenewEligibility: 'Blocked', otpRequirement: 'Not available', riskStatus: 'Provider not connected' };
@@ -8092,6 +8310,20 @@ function PaymentVaultWorkspace({ tab, payments, forecasts = paymentForecastSeed,
 }
 
 function RenewalPaymentRequestCard({ request, method, rule, decision, onOpen }) {
+  if (!request) {
+    return (
+      <section className="payment-vault-panel renewal-request-card">
+        <div className="approval-section-header">
+          <div><span>Renewal Request</span><h2>No request selected</h2></div>
+          <CircleDollarSign size={18} />
+        </div>
+        <p>Select a payment or renewal item to prepare the billing rule, token usage, approval path, and receipt controls.</p>
+        <div className="payment-action-row">
+          <button className="ghost-button" onClick={onOpen}>Open Renewal Payment Method</button>
+        </div>
+      </section>
+    );
+  }
   const normalizedRule = normalizeBillingRule(rule);
   return (
     <section className="payment-vault-panel renewal-request-card">
@@ -8109,6 +8341,24 @@ function RenewalPaymentRequestCard({ request, method, rule, decision, onOpen }) 
       </div>
       <div className="payment-action-row">
         <button className="tactical-button" onClick={onOpen}>Open Renewal Payment Method</button>
+      </div>
+    </section>
+  );
+}
+
+function PaymentGovernancePanel({ compact = false }) {
+  return (
+    <section className={`cto-panel payment-governance-panel ${compact ? 'compact' : ''}`}>
+      <div className="approval-section-header"><div><span>Payment Governance</span><h2>CFO execution / Founder OTP authority</h2></div><LockKeyhole size={18} /></div>
+      <div className="payment-limit-grid">
+        <div><span>Safe auto-pay</span><strong>INR 0-1,000</strong><small>Trusted infrastructure only</small></div>
+        <div><span>Controlled cap</span><strong>INR 1,001-1,500</strong><small>CFO + COO confirmation</small></div>
+        <div><span>Founder required</span><strong>Above INR 1,500</strong><small>No auto-pay above cap</small></div>
+        <div><span>OTP owner</span><strong>Founder</strong><small>CFO enters once after founder shares</small></div>
+      </div>
+      <div className="payment-policy-callout">
+        <strong>CTO does not control payments.</strong>
+        <p>CTO creates payment requirements and captures receipts. CFO validates and executes payments. Founder owns OTP authority and high-risk approvals. OTP values are never stored, logged, remembered, or reused.</p>
       </div>
     </section>
   );
@@ -8250,9 +8500,9 @@ function BillingSecurityRulesPanel({ rules = billingVendorRuleSeed }) {
     <section className="payment-vault-panel billing-rules-panel">
       <div className="approval-section-header"><div><span>Auto-Renew Security Rules</span><h2>Limits and OTP policy</h2></div><ShieldCheck size={18} /></div>
       <div className="billing-rule-list">
-        <span>Up to ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¹1,000: safe auto-renew allowed only for trusted infrastructure vendors with approved token and no risk flag.</span>
-        <span>ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¹1,001-ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¹1,500: CFO + COO confirmation required.</span>
-        <span>&gt; ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¹1,500: Director review required.</span>
+        <span>Up to INR 1,000: safe auto-renew allowed only for trusted infrastructure vendors with approved token and no risk flag.</span>
+        <span>INR 1,001-INR 1,500: CFO + COO confirmation required.</span>
+        <span>&gt; INR 1,500: Director review required.</span>
         <span>Unknown vendor or high-risk vendor: blocked.</span>
         <span>OTP is entered once, submitted to provider, then cleared immediately. Audit never records OTP value.</span>
       </div>
@@ -8275,6 +8525,18 @@ function BillingAuditPanel({ audit }) {
 }
 
 function ConnectBillingMethodModal({ request = renewalRequestFromPayment(), billingMethod = null, vendorRule = renewalRuleForRequest(request), decision = resolveRenewalDecision(request, billingMethod, vendorRule), providerConnected = false, onCancel, onTokenize, onUseTokenizedCard = () => {}, onRequestApproval = () => {}, onMarkOtpRequired = () => {}, onSaveRule = () => {} }) {
+  const safeRequest = request || {
+    vendor: 'No renewal selected',
+    serviceType: 'Renewal',
+    renewalReason: 'Open a payment or renewal item first.',
+    requiredAmountInr: 0,
+    currentStatus: 'Selection required',
+    approvalStatus: 'Selection required',
+    receiptStatus: 'No receipt',
+    riskStatus: 'Selection required',
+    billingOwner: 'Founder Office',
+    source: 'Payment Vault'
+  };
   const normalizedRule = normalizeBillingRule(vendorRule);
   const [perRenewalLimitInr, setPerRenewalLimitInr] = useState(String(normalizedRule.per_transaction_limit_inr || 1000));
   const [monthlyVendorLimitInr, setMonthlyVendorLimitInr] = useState(String(normalizedRule.monthly_limit_inr || 5000));
@@ -8283,14 +8545,14 @@ function ConnectBillingMethodModal({ request = renewalRequestFromPayment(), bill
   const approvedLimit = Math.min(moneyNumber(perRenewalLimitInr) || 0, moneyNumber(maxRechargeAmountInr) || 0);
   const canUseToken = providerConnected && billingMethod && decision.state !== 'Blocked';
   const rulePayload = {
-    vendorName: request.vendor,
-    amountInr: approvedLimit || request.requiredAmountInr,
+    vendorName: safeRequest.vendor,
+    amountInr: approvedLimit || safeRequest.requiredAmountInr,
     perRenewalLimitInr,
     monthlyVendorLimitInr,
     maxRechargeAmountInr,
     autoRenewAllowed,
     approvalRequirement: decision.approvalRequirement,
-    cardName: billingMethod?.billing_owner || request.billingOwner || 'Founder Office',
+    cardName: billingMethod?.billing_owner || safeRequest.billingOwner || 'Founder Office',
     bankName: billingMethod?.provider || billingMethodConnectedSeed[0]?.provider || '',
     maskedReference: billingMethod?.masked_reference || billingMethodConnectedSeed[0]?.masked_reference || '',
     expiryMonth: billingMethod?.expiry_month || billingMethodConnectedSeed[0]?.expiry_month || '',
@@ -8306,24 +8568,24 @@ function ConnectBillingMethodModal({ request = renewalRequestFromPayment(), bill
         <p>The renewal request supplies the vendor. GOPU OS stores only token references, masked metadata, limits, approval path, OTP requirement, receipt status, and audit events.</p>
         <div className="renewal-modal-grid">
           {[
-            ['Vendor', request.vendor],
-            ['Service Type', request.serviceType],
-            ['Renewal Reason', request.renewalReason],
-            ['Required Amount', formatInr(request.requiredAmountInr)],
+            ['Vendor', safeRequest.vendor],
+            ['Service Type', safeRequest.serviceType],
+            ['Renewal Reason', safeRequest.renewalReason],
+            ['Required Amount', formatInr(safeRequest.requiredAmountInr)],
             ['Approved Limit', approvedLimit ? formatInr(approvedLimit) : 'Set limit'],
             ['Billing Token', billingMethod?.payment_token_reference || 'Payment provider not connected'],
-            ['Billing Owner', billingMethod?.billing_owner || request.billingOwner],
+            ['Billing Owner', billingMethod?.billing_owner || safeRequest.billingOwner],
             ['Auto-Renew Eligibility', decision.autoRenewEligibility],
             ['Approval Requirement', decision.approvalRequirement],
             ['OTP Requirement', decision.otpRequirement],
-            ['Receipt Status', request.receiptStatus],
+            ['Receipt Status', safeRequest.receiptStatus],
             ['Risk Status', decision.riskStatus]
           ].map(([label, value]) => <div key={label}><span>{label}</span><strong>{value}</strong></div>)}
         </div>
         <div className="connect-billing-fields renewal-rule-fields">
           <label>
             <span>Linked Vendor</span>
-            <input value={`${request.vendor} - ${request.renewalReason}`} readOnly />
+            <input value={`${safeRequest.vendor} - ${safeRequest.renewalReason}`} readOnly />
             <small>Auto-filled from renewal/payment request.</small>
           </label>
           <label><span>Per-Renewal Limit</span><input inputMode="numeric" value={perRenewalLimitInr} onChange={(event) => setPerRenewalLimitInr(event.target.value.replace(/[^\d.]/g, ''))} /></label>
@@ -8754,7 +9016,7 @@ function getPaymentState(status) {
 }
 
 function formatInr(value) {
-  return `ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¹${Number(value || 0).toLocaleString('en-IN')}`;
+  return `INR ${Number(value || 0).toLocaleString('en-IN')}`;
 }
 
 function WorkflowGuidanceEngine({ navigate, onBack, initialView = 'Workflow Guidance' }) {
@@ -9312,6 +9574,9 @@ function FounderMobileHome({ data, navigate, setView }) {
 
 function MobileRiskBanner({ risks }) {
   const topRisk = risks[0];
+  if (!topRisk) {
+    return <section className="mobile-risk-banner"><ShieldCheck size={20} /><div><span>Stable</span><strong>No active risk alerts</strong><small>Critical, high-risk, and attention alerts will appear here.</small></div></section>;
+  }
   return <section className="mobile-risk-banner"><TriangleAlert size={20} /><div><span>{topRisk[1]}</span><strong>{topRisk[0]}</strong><small>{topRisk[2]}</small></div></section>;
 }
 
@@ -9558,7 +9823,7 @@ function CIOGroupedSelect({ label, value, onChange, options }) {
 }
 
 function LiveDataNotice({ summary }) {
-  return <section className="cio-live-notice"><StatusPulse /><strong>{summary.dataMode || 'Live data not connected --ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â using local/sample records.'}</strong><span>No live importer, trade, LinkedIn, Google, APEDA, Spice Board, or CSV source is claimed as connected.</span></section>;
+  return <section className="cio-live-notice"><StatusPulse /><strong>{summary.dataMode || 'Live data not connected - using local/sample records.'}</strong><span>No live importer, trade, LinkedIn, Google, APEDA, Spice Board, or CSV source is claimed as connected.</span></section>;
 }
 
 function CIOOverviewTab({ data, importers, navigate }) {
@@ -9934,12 +10199,12 @@ function CertificationCenter({ certifications, selected, setSelected }) {
 }
 
 function GlobalPresenceMap({ regions, countryFilter, setCountryFilter }) {
-  const filters = ['All', 'Country pending', 'Oman', 'GCC', 'ASEAN', 'Europe', 'Africa', 'USA'];
+  const filters = ['All', 'UAE', 'Oman', 'GCC', 'ASEAN', 'Europe', 'Africa', 'USA'];
   return <section className="trust-panel"><div className="approval-section-header"><div><span>Global Presence</span><h2>Strategic regions and export corridors</h2></div><Route size={18} /></div><div className="trust-filter-row">{filters.map((item) => <button key={item} className={countryFilter === item ? 'active' : ''} onClick={() => setCountryFilter(item)}>{item}</button>)}</div><div className="presence-map">{regions.map(([region, role, products, status, risk], index) => <article key={region} className={`presence-node presence-${index}`}><strong>{region}</strong><span>{role}</span><p>{products}</p><div><StatusBadge label={status} state={status.includes('Active') || status.includes('Strategic') ? 'progress' : 'attention'} /><SeverityBadge severity={risk} /></div></article>)}</div></section>;
 }
 
 function ProductCapabilityCenter({ products, productFilter, setProductFilter }) {
-  const options = ['All', 'Product pending', 'Turmeric', 'Rice', 'APEDA Products', 'Spice Board Products', 'Wood / Timber Pending'];
+  const options = ['All', 'Black pepper', 'Turmeric', 'Rice', 'APEDA Products', 'Spice Board Products', 'Wood / Timber Pending'];
   return <section className="trust-panel"><div className="approval-section-header"><div><span>Product Capability Center</span><h2>Export product readiness and market fit</h2></div><PackageCheck size={18} /></div><div className="trust-filter-row">{options.map((item) => <button key={item} className={productFilter === item ? 'active' : ''} onClick={() => setProductFilter(item)}>{item}</button>)}</div><div className="product-capability-grid">{products.map(([product, packing, mode, leadTime, complexity, markets]) => <article key={product}><div><strong>{product}</strong><StatusBadge label={complexity} state={complexity === 'High' ? 'attention' : 'progress'} /></div><p>{packing}</p><small>Shipment: {mode}</small><small>Lead time: {leadTime}</small><small>Suggested markets: {markets}</small></article>)}</div></section>;
 }
 
@@ -10076,7 +10341,7 @@ function MarketLimitationsPanel() {
 }
 
 function MarketRecommendationPanel({ summary, onGenerate, output, navigate }) {
-  return <section className="market-panel"><div className="approval-section-header"><div><span>Founder Market Recommendations</span><h2>Suggested next moves</h2></div><Sparkles size={18} /></div><div className="approval-memory-list">{['Create Country pending black pepper buyer outreach list.', 'Prepare Oman wholesale campaign draft.', 'Validate turmeric supplier readiness before RFQ response.', 'Ask CFO to monitor freight/margin impact before aggressive pricing.', 'Use CMO content to educate importers on export readiness.'].map((item) => <span key={item}>{item}</span>)}</div><div className="market-action-row"><button className="tactical-button" onClick={onGenerate}>Generate Opportunity Summary</button><button className="ghost-button" onClick={() => navigate('/export-os/campaigns')}>Open Campaigns</button><button className="ghost-button" onClick={() => navigate('/export-os/buyer-crm')}>Open Buyer CRM</button></div>{output && <pre className="market-output">{output}</pre>}<small>Current lead: {summary.topCountry} / {summary.topProduct}</small></section>;
+  return <section className="market-panel"><div className="approval-section-header"><div><span>Founder Market Recommendations</span><h2>Suggested next moves</h2></div><Sparkles size={18} /></div><div className="approval-memory-list">{['Create UAE black pepper buyer outreach list.', 'Prepare Oman wholesale campaign draft.', 'Validate turmeric supplier readiness before RFQ response.', 'Ask CFO to monitor freight/margin impact before aggressive pricing.', 'Use CMO content to educate importers on export readiness.'].map((item) => <span key={item}>{item}</span>)}</div><div className="market-action-row"><button className="tactical-button" onClick={onGenerate}>Generate Opportunity Summary</button><button className="ghost-button" onClick={() => navigate('/export-os/campaigns')}>Open Campaigns</button><button className="ghost-button" onClick={() => navigate('/export-os/buyer-crm')}>Open Buyer CRM</button></div>{output && <pre className="market-output">{output}</pre>}<small>Current lead: {summary.topCountry} / {summary.topProduct}</small></section>;
 }
 
 function MarketTable({ title, subtitle, icon: Icon, columns, rows, compact = false }) {
@@ -10084,6 +10349,29 @@ function MarketTable({ title, subtitle, icon: Icon, columns, rows, compact = fal
 }
 
 const buyerPreferenceSeed = [];
+const buyerDirectorySeed = [];
+const buyerEnquirySeed = [];
+const buyerQuoteSeed = [
+  ['GOPU-QTN-PENDING', 'Black pepper', '2 tons', 'No live amount', '12%', 'CFO Review', 'Founder Approval', 'May 31, 2026'],
+  ['GOPU-QTN-PENDING', 'Black pepper', '5 tons', 'No live amount', '10%', 'Draft', 'CFO Review', 'June 2, 2026'],
+  ['GOPU-QTN-PENDING', 'Black pepper', '1.5 tons', 'No live amount', '14%', 'Revised', 'Monitoring', 'Expired']
+].map(([quoteNumber, product, quantity, price, margin, status, approvalState, expiryDate], index) => ({ id: `buyer-quote-${index}`, quoteNumber, product, quantity, price, margin, status, approvalState, expiryDate }));
+const buyerInvoiceSeed = [
+  ['GOPU-INV-DRAFT', 'Export Tax Invoice under LUT', 'No live amount', 'Draft', 'Founder Review Required', 'Payment pending only'],
+  ['GOPU-PI-DRAFT', 'Proforma Invoice', 'No live amount', 'Draft', 'CFO Review', 'Payment pending only'],
+  ['GOPU-CI-DRAFT', 'Commercial Invoice', 'No live amount', 'Validation Failed', 'Revision Required', 'Payment pending only']
+].map(([invoiceNumber, invoiceType, value, status, approvalState, paymentStatus], index) => ({ id: `buyer-invoice-${index}`, invoiceNumber, invoiceType, value, status, approvalState, paymentStatus }));
+const buyerShipmentSeed = [
+  ['UAE-SHP-001', 'Black pepper', '2 tons', 'UAE', 'Planning', 'June 8, 2026', 'Attention'],
+  ['OMN-SHP-002', 'Black pepper', '5 tons', 'Oman', 'Documentation', 'June 12, 2026', 'Monitoring'],
+  ['VNM-SHP-003', 'Black pepper', '1.5 tons', 'UAE', 'Dispatch Ready', 'June 15, 2026', 'Low']
+].map(([shipmentId, product, quantity, destination, status, eta, riskState], index) => ({ id: `buyer-shipment-${index}`, shipmentId, product, quantity, destination, status, eta, riskState }));
+const buyerFollowupSeed = [
+  ['Gulf Foods LLC', 'Quote follow-up', 'Today 17:00', 'COO Command', 'High', 'Confirm destination port and payment terms', 'Follow-up Due'],
+  ['Oman Gulf Wholesale', 'Payment term clarification', 'Tomorrow 11:00', 'CFO Command', 'Medium', 'Clarify advance payment preference', 'Monitoring'],
+  ['Southern Organics Pty', 'Origin claim review', 'Today 15:30', 'CMO + Founder', 'Critical', 'Route organic/origin claim to Director Queue', 'Risk Review'],
+  ['UAE Spice Distribution', 'Repeat enquiry follow-up', 'This week', 'CMO Command', 'Medium', 'Prepare buyer outreach draft', 'Draft']
+].map(([buyer, reason, dueDate, owner, priority, nextAction, status], index) => ({ id: `buyer-followup-${index}`, buyer, reason, dueDate, owner, priority, nextAction, status }));
 
 function BuyerCRMPage({ navigate, onBack, view = 'buyers', buyerId }) {
   const [buyers, setBuyers] = useState(buyerDirectorySeed);
@@ -10228,7 +10516,7 @@ function BuyerOwnershipPanel() {
 }
 
 function BuyerDirectory({ buyers, selectedId, filter, search, onFilter, onSearch, onOpen }) {
-  const filters = ['All', 'Country pending', 'Oman', 'Country pending', 'Australia', 'Active', 'Follow-up Due', 'Quote Pending', 'Risk Review', 'High'];
+  const filters = ['All', 'UAE', 'Oman', 'Australia', 'Active', 'Follow-up Due', 'Quote Pending', 'Risk Review', 'High'];
   return (
     <section className="buyer-panel">
       <div className="approval-section-header"><div><span>Buyer Directory</span><h2>Export customers</h2></div><UsersRound size={18} /></div>
@@ -10357,7 +10645,7 @@ const analyticsPanelSeed = {
     ['Top buyers', '2 high value', 'Healthy', 80],
     ['Repeat enquiries', '5', 'Monitoring', 62],
     ['Quote conversion', 'Awaiting live data', 'Monitoring', 31],
-    ['Country demand', 'Country pending/Oman lead', 'Healthy', 72],
+    ['Country demand', 'UAE/Oman lead', 'Healthy', 72],
     ['Risky buyers', '1', 'High Risk', 48],
     ['Follow-up delays', '3', 'Attention', 54]
   ],
@@ -10542,7 +10830,7 @@ function FounderIntelligenceDashboard({ navigate, onBack, view = 'analytics' }) 
   const highRiskAlerts = founderRiskSeed.filter((risk) => ['High', 'Critical'].includes(risk.severity)).length;
 
   function generateStrategyReview() {
-    setStrategyReview('Founder Strategy Review\n1. Increase black pepper margin threshold for Country pending shipments until freight stabilizes.\n2. Reduce dependency on delayed or quality-hold suppliers before high-value quotes.\n3. Review API credit usage trend before automation volume increases.\n4. Improve document readiness before shipment planning begins.\n5. Follow up dormant high-value buyers through CMO-owned relationship memory.\n6. Keep invoice, pricing, supplier, and marketing risk routed through Director Command Center.');
+    setStrategyReview('Founder Strategy Review\n1. Increase black pepper margin threshold for UAE shipments until freight stabilizes.\n2. Reduce dependency on delayed or quality-hold suppliers before high-value quotes.\n3. Review API credit usage trend before automation volume increases.\n4. Improve document readiness before shipment planning begins.\n5. Follow up dormant high-value buyers through CMO-owned relationship memory.\n6. Keep invoice, pricing, supplier, and marketing risk routed through Director Command Center.');
   }
 
   return (
@@ -10601,7 +10889,7 @@ function FounderRiskDashboard({ risks, selectedRisk, onSelect }) {
 }
 
 function StrategicRecommendationsPanel({ onGenerate, output }) {
-  return <section className="intelligence-panel"><div className="approval-section-header"><div><span>Strategic Recommendations</span><h2>Founder review</h2></div><Sparkles size={18} /></div><div className="intelligence-rec-list">{['Increase black pepper margin threshold for Country pending shipments', 'Reduce dependency on delayed supplier', 'Review OpenAI credit usage trend', 'Improve document readiness before shipment planning', 'Follow up dormant high-value buyer'].map((item) => <span key={item}>{item}</span>)}</div><div className="intelligence-action-row"><button onClick={onGenerate}>Generate Founder Strategy Review</button></div>{output && <pre className="intelligence-output">{output}</pre>}</section>;
+  return <section className="intelligence-panel"><div className="approval-section-header"><div><span>Strategic Recommendations</span><h2>Founder review</h2></div><Sparkles size={18} /></div><div className="intelligence-rec-list">{['Increase black pepper margin threshold for UAE shipments', 'Reduce dependency on delayed supplier', 'Review OpenAI credit usage trend', 'Improve document readiness before shipment planning', 'Follow up dormant high-value buyer'].map((item) => <span key={item}>{item}</span>)}</div><div className="intelligence-action-row"><button onClick={onGenerate}>Generate Founder Strategy Review</button></div>{output && <pre className="intelligence-output">{output}</pre>}</section>;
 }
 
 function IntelligenceMemoryPanel() {
@@ -11270,9 +11558,9 @@ function IntegrationAuditTimeline({ audit }) {
 const linkedInPipelineItems = [
   {
     id: 'linkedin-uae-buyers',
-    title: 'Why Country pending importers need transparent spice documentation',
+    title: 'Why UAE importers need transparent spice documentation',
     hook: 'Most buyer trust problems start before the shipment leaves India.',
-    audience: 'Country pending spice importers and wholesale buyers',
+    audience: 'UAE spice importers and wholesale buyers',
     objective: 'Educate buyers on documentation discipline and GOPU export reliability.',
     schedule_date: 'Today - Draft window',
     status: 'Ready for Review'
@@ -11323,9 +11611,9 @@ const youtubePlans = [
 ];
 
 const buyerOutreachCampaigns = [
-  { id: 'campaign-uae', campaign_name: 'Country pending spice importers', target_market: 'United Arab Emirates', product_focus: 'Black pepper, cardamom, mixed spices', stage: 'Prospect list building', owner: 'CMO Command', next_action: 'Prepare compliant intro sequence', status: 'Monitoring' },
+  { id: 'campaign-uae', campaign_name: 'UAE spice importers', target_market: 'United Arab Emirates', product_focus: 'Black pepper, cardamom, mixed spices', stage: 'Prospect list building', owner: 'CMO Command', next_action: 'Prepare compliant intro sequence', status: 'Monitoring' },
   { id: 'campaign-oman', campaign_name: 'Oman wholesale buyers', target_market: 'Oman', product_focus: 'Retail-ready spices', stage: 'Message draft', owner: 'CMO Command', next_action: 'Founder review for quality claims', status: 'Ready for Review' },
-  { id: 'campaign-vietnam', campaign_name: 'Country pending distributors', target_market: 'Country pending', product_focus: 'Bulk spice distribution', stage: 'Market scan', owner: 'CMO Command', next_action: 'Map importer categories', status: 'Planned' },
+  { id: 'campaign-vietnam', campaign_name: 'UAE distributors', target_market: 'UAE', product_focus: 'Bulk spice distribution', stage: 'Market scan', owner: 'CMO Command', next_action: 'Map importer categories', status: 'Planned' },
   { id: 'campaign-linkedin', campaign_name: 'LinkedIn exporter network', target_market: 'Global B2B', product_focus: 'Brand authority', stage: 'Content cadence', owner: 'CMO Command', next_action: 'Publish only after approval', status: 'Draft' },
   { id: 'campaign-directory', campaign_name: 'Trade directory outreach', target_market: 'Multi-country', product_focus: 'Qualified importer discovery', stage: 'Directory review', owner: 'CMO Command', next_action: 'Validate source quality', status: 'Monitoring' }
 ];
@@ -11344,7 +11632,7 @@ const brandApprovalItems = [
 ];
 
 const contentCalendarItems = [
-  { id: 'cal-001', platform: 'LinkedIn', title: 'Country pending importer documentation post', scheduled_date: 'Today', status: 'Ready for Review' },
+  { id: 'cal-001', platform: 'LinkedIn', title: 'UAE importer documentation post', scheduled_date: 'Today', status: 'Ready for Review' },
   { id: 'cal-002', platform: 'Instagram', title: 'Black pepper export checklist Reel', scheduled_date: 'Tomorrow', status: 'Draft' },
   { id: 'cal-003', platform: 'YouTube', title: 'Quote-to-invoice risk control video', scheduled_date: 'This week', status: 'Planned' },
   { id: 'cal-004', platform: 'LinkedIn', title: 'LUT invoice safety post', scheduled_date: 'This week', status: 'Founder Approval Required' }
@@ -11409,7 +11697,7 @@ const executiveBriefingSummaries = [
     icon: CircleDollarSign,
     status: 'Review Active',
     points: [
-      'Country pending black pepper quote below preferred margin threshold.',
+      'UAE black pepper quote below preferred margin threshold.',
       'High freight volatility detected for sea shipment.',
       'Pricing approval dependency remains open before buyer-facing quotation.',
       'FX exposure requires attention for AED-linked discussion.'
@@ -11761,7 +12049,7 @@ const whatsappCommandMessages = [
     id: 'wa-001',
     sender: 'Founder',
     timestamp: '08:42',
-    raw_message: 'Buyer: Buyer pending, Product: Product pending, Quantity: 2 tons, Destination: Country pending, Deadline: Friday, Shipping: Sea.',
+    raw_message: 'Buyer: Gulf Foods LLC, Product: Black pepper, Quantity: 2 tons, Destination: UAE, Deadline: Friday, Shipping: Sea.',
     command_type: 'New Buyer Lead',
     parse_status: 'Parsed',
     workflow_status: 'Routing Prepared'
@@ -11779,7 +12067,7 @@ const whatsappCommandMessages = [
     id: 'wa-003',
     sender: 'Founder',
     timestamp: '10:10',
-    raw_message: 'Create LUT invoice for approved Country pending black pepper order.',
+    raw_message: 'Create LUT invoice for approved UAE black pepper order.',
     command_type: 'Invoice Request',
     parse_status: 'Missing Info',
     workflow_status: 'Draft Response Ready'
@@ -11840,12 +12128,12 @@ function parseWhatsAppCommand(rawMessage) {
             ? 'Follow-up Task'
             : 'New Buyer Lead';
 
-  const buyer = text.match(/buyer:\s*([^,]+)/i)?.[1]?.trim() || (lower.includes('al noor') ? 'Buyer pending' : '');
+  const buyer = text.match(/buyer:\s*([^,]+)/i)?.[1]?.trim() || (lower.includes('al noor') ? 'Gulf Foods LLC' : '');
   const product = text.match(/product:\s*([^,]+)/i)?.[1]?.trim()
     || text.match(/(?:tons?|tonne[s]?)\s+([a-z\s]+?)\s+(?:to|for|under)/i)?.[1]?.trim()
-    || (lower.includes('black pepper') ? 'Product pending' : lower.includes('turmeric') ? 'Turmeric' : '');
+    || (lower.includes('black pepper') ? 'Black pepper' : lower.includes('turmeric') ? 'Turmeric' : '');
   const quantity = text.match(/quantity:\s*([^,]+)/i)?.[1]?.trim() || text.match(/(\d+(?:\.\d+)?\s*(?:tons?|tonnes?|kg|bags|cartons))/i)?.[1]?.trim() || '';
-  const destination = text.match(/destination:\s*([^,]+)/i)?.[1]?.trim() || text.match(/\bto\s+([A-Z][a-zA-Z\s]+?)(?:\s+under|\s+for|\.|,|$)/)?.[1]?.trim() || (lower.includes('uae') ? 'Country pending' : lower.includes('oman') ? 'Oman' : '');
+  const destination = text.match(/destination:\s*([^,]+)/i)?.[1]?.trim() || text.match(/\bto\s+([A-Z][a-zA-Z\s]+?)(?:\s+under|\s+for|\.|,|$)/)?.[1]?.trim() || (lower.includes('uae') ? 'UAE' : lower.includes('oman') ? 'Oman' : '');
   const deadline = text.match(/deadline:\s*([^,]+)/i)?.[1]?.trim() || (lower.includes('today') ? 'Today' : lower.includes('friday') ? 'Friday' : '');
   const shippingMode = text.match(/shipping:\s*([^,\.]+)/i)?.[1]?.trim() || (lower.includes('sea') ? 'Sea' : lower.includes('air') ? 'Air' : '');
   const incoterm = text.match(/\b(EXW|FOB|CIF|CFR|DAP|DDP)\b/i)?.[1]?.toUpperCase() || '';

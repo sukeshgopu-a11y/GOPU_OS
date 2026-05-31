@@ -20,6 +20,250 @@ import { ExportOSShell } from '../shared/routeShell.jsx';
 import { Breadcrumb, StatusBadge, TrendIndicator, EmptyState, SkeletonBlock, SkeletonCard, SkeletonTable, SkeletonKpiBar, MetricSkeletonGrid, HBarChart, SortableTableHeader, StatusPulse, PriorityBadge, SeverityBadge, Panel, StatusPill, StateChip, SignalList, MiniBars, BulkActionBar, FilterBar, VirtualList, useSortable } from '../shared/uiPrimitives.jsx';
 
 const ctoDefaultLoginEmail = 'sukeshreddy4.g@gmail.com';
+const integrationServicesSeed = [];
+const integrationAuditSeed = [];
+const integrationModels = ['integration_services', 'integration_audit_logs', 'integration_health'];
+const CTO_FAST_VERIFICATION_TIMEOUT_MS = 12000;
+
+function maskSecretPreview(value = '') {
+  const compact = String(value).trim().replace(/\s+/g, '');
+  if (!compact) return '****';
+  const prefix = compact.slice(0, Math.min(compact.indexOf('-') > 0 ? compact.indexOf('-') + 1 : 4, 8));
+  const suffix = compact.slice(-4).toUpperCase();
+  return `${prefix}****${suffix}`;
+}
+
+function readCtoSavedSecrets() {
+  try {
+    const saved = JSON.parse(window.localStorage.getItem('ctoIntegrationSecrets') || '{}');
+    return Object.fromEntries(
+      Object.entries(saved).filter(([, value]) => !String(value?.apiKey || '').startsWith('sk-test-'))
+    );
+  } catch {
+    return {};
+  }
+}
+
+function cleanCtoLabel(value = '') {
+  const text = String(value || '').trim();
+  if (!text || text === 'N/A') return 'Awaiting integration';
+  if (/Connect Supabase to activate/i.test(text)) return 'Awaiting Connection';
+  if (/monitoring/i.test(text)) return 'Connected';
+  if (/local/i.test(text)) return text.replace(/local/gi, 'preview').trim();
+  return text;
+}
+
+function normalizeConnectionState(status = '') {
+  const text = cleanCtoLabel(status);
+  if (['Connected', 'Live Connected', 'Healthy', 'Online', 'Verification Success', 'Active', 'Passed'].includes(text)) return 'Connected';
+  if (['Disabled', 'Not active'].includes(text)) return 'Disabled';
+  if (['Invalid Key', 'Expired', 'Quota Exceeded', 'Failed', 'Error', 'Critical', 'Failure Detected', 'Degraded'].includes(text)) return 'Failure Detected';
+  if (['Verification Pending', 'Pending', 'Review', 'Review Required'].includes(text)) return 'Verification Pending';
+  if (['Manual Setup Required', 'Backend Verification Required'].includes(text)) return text;
+  if (['Verification Running', 'Sync Delayed', 'Retry Pending', 'Attention', 'Risk', 'Risk Detected', 'Credits Low', 'Waiting Approval'].includes(text)) return 'Sync Delayed';
+  if (['Awaiting Connection', 'Awaiting integration'].includes(text)) return 'Awaiting Connection';
+  return text;
+}
+
+function connectionAction(status = '') {
+  if (status === 'Connected') return 'Open details';
+  if (status === 'Disabled') return 'Enable when required';
+  if (status === 'Failure Detected') return 'Verify credentials';
+  if (status === 'Sync Delayed') return 'Check sync';
+  if (status === 'Manual Setup Required') return 'Open provider setup';
+  if (status === 'Backend Verification Required') return 'Verify from backend';
+  if (status === 'Verification Pending') return 'Verify connection';
+  return 'Connect';
+}
+
+function getLocalIntegrationState(service, liveConnected, savedSecrets = {}) {
+  if (service.id === 'openai' && service.providerStatus) {
+    const providerStatus = service.providerStatus;
+    const status = providerStatus.status === 'live'
+      ? 'Connected'
+      : providerStatus.status === 'pending'
+        ? 'Verification Pending'
+        : 'Failure Detected';
+    return {
+      status,
+      lastCheck: cleanCtoLabel(providerStatus.last_success_at || providerStatus.last_checked_at || 'No recent sync'),
+      action: status === 'Connected' ? 'Live' : status === 'Verification Pending' ? 'Checking now' : 'Fix key',
+      detail: status === 'Connected'
+        ? 'OpenAI live: CTO provider connection active.'
+        : providerStatus.error_message || 'API request failed'
+    };
+  }
+
+  const liveSupabaseVerified = service.id === 'supabase' && (liveConnected || service.status === 'Live Connected');
+  if (liveSupabaseVerified) {
+    return {
+      status: 'Connected',
+      lastCheck: cleanCtoLabel(service.last_verified || 'Live query verified'),
+      action: 'Live',
+      detail: service.connection_message || service.quota_remaining || 'Supabase Data API verified.'
+    };
+  }
+
+  const saved = savedSecrets[service.id];
+  const serviceStatus = normalizeConnectionState(service.status);
+  if (saved?.verificationStatus === 'Disabled') {
+    return {
+      status: 'Disabled',
+      lastCheck: saved.savedAt || 'Saved locally',
+      action: 'Verify connection',
+      detail: saved.verificationMessage || 'Integration disabled locally.'
+    };
+  }
+  if (serviceStatus === 'Connected') {
+    return {
+      status: 'Connected',
+      lastCheck: cleanCtoLabel(service.last_verified || saved?.savedAt || 'Live verification confirmed'),
+      action: 'Live',
+      detail: service.connection_message || service.quota_remaining || saved?.verificationMessage || 'Integration is connected.'
+    };
+  }
+  if (saved) {
+    const status = saved.verificationStatus || 'Verification Pending';
+    return {
+      status,
+      lastCheck: saved.savedAt || 'Saved locally',
+      action: status === 'Connected' ? 'Live' : status === 'Failure Detected' ? 'Fix key' : status === 'Verification Running' ? 'Testing now' : 'Verify connection',
+      detail: saved.verificationMessage || 'Saved locally. Backend verification pending.'
+    };
+  }
+  const status = normalizeConnectionState(liveConnected ? service.status : 'Awaiting Connection');
+  return {
+    status,
+    lastCheck: liveConnected ? cleanCtoLabel(service.last_verified || 'No recent sync') : 'No recent sync',
+    action: connectionAction(status),
+    detail: service.quota_remaining || 'Awaiting integration'
+  };
+}
+
+function extractApiMessage(bodyText = '') {
+  try {
+    const parsed = JSON.parse(bodyText);
+    return parsed?.error?.message || parsed?.message || parsed?.name || bodyText.slice(0, 160);
+  } catch {
+    return bodyText.slice(0, 160);
+  }
+}
+
+async function fastVerificationFetch(url, options = {}, timeoutMs = CTO_FAST_VERIFICATION_TIMEOUT_MS) {
+  const controller = new AbortController();
+  const startedAt = Date.now();
+  const timeoutId = window.setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    const response = await fetch(url, {
+      ...options,
+      cache: 'no-store',
+      signal: controller.signal
+    });
+    const bodyText = await response.text().catch(() => '');
+    return {
+      response,
+      bodyText,
+      elapsedMs: Date.now() - startedAt
+    };
+  } finally {
+    window.clearTimeout(timeoutId);
+  }
+}
+
+async function verifyOpenAIKey(apiKey) {
+  const { response, bodyText, elapsedMs } = await fastVerificationFetch('https://api.openai.com/v1/models', {
+    method: 'GET',
+    headers: { Authorization: `Bearer ${apiKey}` }
+  });
+
+  if (response.ok) {
+    return { status: 'Connected', message: `OpenAI key verified in ${elapsedMs} ms. Live API response received.` };
+  }
+  if (response.status === 401) return { status: 'Failure Detected', message: 'OpenAI rejected the key. Check that the API key is correct and active.' };
+  if (response.status === 429) return { status: 'Sync Delayed', message: 'OpenAI reached, but returned quota/rate-limit response. Retry after checking usage limits.' };
+  return { status: 'Failure Detected', message: `OpenAI verification failed with HTTP ${response.status}: ${extractApiMessage(bodyText) || 'no response message'}.` };
+}
+
+async function verifyResendKey(apiKey) {
+  if (!apiKey.startsWith('re_')) {
+    return { status: 'Failure Detected', message: 'Resend API key format looks wrong. Resend keys normally start with re_.' };
+  }
+
+  const { response, bodyText, elapsedMs } = await fastVerificationFetch('https://api.resend.com/domains', {
+    method: 'GET',
+    headers: {
+      Authorization: `Bearer ${apiKey}`,
+      Accept: 'application/json'
+    }
+  });
+
+  if (response.ok) {
+    return { status: 'Connected', message: `Resend key verified in ${elapsedMs} ms through the domains API. Email sending remains approval-gated.` };
+  }
+  if (response.status === 401 || response.status === 403) {
+    return { status: 'Failure Detected', message: `Resend rejected the key or permission scope (${response.status}). ${extractApiMessage(bodyText) || 'Check API key and domain access.'}` };
+  }
+  if (response.status === 429) {
+    return { status: 'Sync Delayed', message: 'Resend reached, but returned a rate-limit response. Retry after quota/rate-limit check.' };
+  }
+  return { status: 'Failure Detected', message: `Resend verification failed with HTTP ${response.status}: ${extractApiMessage(bodyText) || 'no response message'}.` };
+}
+
+async function verifyIntegrationSecret(serviceId, apiKey) {
+  const trimmedKey = String(apiKey || '').trim();
+  if (!trimmedKey) {
+    return { status: 'Failure Detected', message: 'API key is missing.' };
+  }
+  if (trimmedKey.length < 12) {
+    return { status: 'Failure Detected', message: 'API key is too short to verify.' };
+  }
+
+  try {
+    if (serviceId === 'openai') return await verifyOpenAIKey(trimmedKey);
+    if (serviceId === 'resend') return await verifyResendKey(trimmedKey);
+    if (serviceId === 'supabase') {
+      return {
+        status: 'Backend Verification Required',
+        message: 'Supabase is verified from the CTO Final Check using env configuration, project URL, RLS, and Data API query. Do not verify service-role keys in the browser.'
+      };
+    }
+    if (serviceId === 'vercel') {
+      return {
+        status: 'Backend Verification Required',
+        message: 'Vercel is verified from /api/integrations/vercel/status using server-side VERCEL_TOKEN or Vercel runtime variables. Do not paste Vercel tokens into the browser.'
+      };
+    }
+
+    const provider = ctoProviderCatalog[serviceId] || {};
+    const account = provider.loginAccount || ctoDefaultLoginEmail;
+    const setupType = provider.loginAccount ? 'OAuth/login' : 'backend API verifier';
+    return {
+      status: 'Manual Setup Required',
+      message: `Fast check completed. ${ctoServiceNameFor(serviceId)} requires ${setupType}; use ${account} where login is required, then verify from a backend connector. No browser request was held open.`
+    };
+  } catch (error) {
+    if (error?.name === 'AbortError') {
+      return { status: 'Failure Detected', message: `Verification timed out after ${CTO_FAST_VERIFICATION_TIMEOUT_MS / 1000} seconds. CTO stopped the request before 30 seconds.` };
+    }
+    return { status: 'Failure Detected', message: `Verification failed fast: ${error?.message || 'network request blocked by browser/CORS'}.` };
+  }
+}
+
+async function saveCtoProviderEnvValue(serviceId, apiKey) {
+  if (!ctoEnvTargetMap[serviceId]) {
+    return { ok: false, status: 'unsupported_provider', message: 'No server env mapping exists for this provider.' };
+  }
+  try {
+    const response = await fetch('/api/cto/provider-env/save', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ serviceId, value: apiKey })
+    });
+    return await response.json();
+  } catch {
+    return { ok: false, status: 'api_unavailable', message: `Add ${ctoEnvTargetMap[serviceId]} to .env.local or Vercel env.` };
+  }
+}
 
 function IntegrationsVault({ onBack }) {
   const [savedSecrets, setSavedSecrets] = useState(() => readCtoSavedSecrets());
@@ -223,6 +467,78 @@ function IntegrationsVault({ onBack }) {
         />
       )}
     </ExportOSShell>
+  );
+}
+
+function IntegrationCard({ service, provider = {}, onAction }) {
+  const actions = provider.actions?.length ? provider.actions : ['Add Key', 'Verify Connection', 'Disable Integration'];
+  return (
+    <article className="integration-panel">
+      <div className="approval-section-header">
+        <div><span>{provider.category || 'Integration'}</span><h2>{service.service_name}</h2></div>
+        <StatusBadge label={service.status} state={service.status === 'Connected' ? 'online' : service.status === 'Failure Detected' ? 'error' : 'attention'} />
+      </div>
+      <div className="integration-stat-grid">
+        <div><span>Environment</span><strong>{service.environment || 'Production'}</strong></div>
+        <div><span>Last verified</span><strong>{service.last_verified || 'No recent sync'}</strong></div>
+        <div><span>Masked key</span><strong>{service.masked_key || 'Not connected'}</strong></div>
+        <div><span>Quota / detail</span><strong>{service.quota_remaining || 'Awaiting integration'}</strong></div>
+      </div>
+      <div className="billing-action-row">
+        {actions.slice(0, 3).map((action) => <button key={action} onClick={() => onAction(service, action)}>{action}</button>)}
+      </div>
+    </article>
+  );
+}
+
+function AddIntegrationModal({ services, initialServiceId, onCancel, onSave }) {
+  const [serviceId, setServiceId] = useState(initialServiceId || services[0]?.id || 'openai');
+  const [apiKey, setApiKey] = useState('');
+  const [environment, setEnvironment] = useState('Production');
+  const service = services.find((item) => item.id === serviceId) || services[0] || { id: 'openai', service_name: 'OpenAI' };
+
+  async function handleSave() {
+    const verificationResult = await verifyIntegrationSecret(service.id, apiKey);
+    onSave({
+      serviceId: service.id,
+      serviceName: service.service_name,
+      apiKey,
+      environment,
+      maskedKey: maskSecretPreview(apiKey),
+      verificationResult
+    });
+  }
+
+  return (
+    <div className="article-modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="cto-add-integration-title">
+      <div className="article-modal connect-billing-modal">
+        <button className="login-back" onClick={onCancel}>Cancel</button>
+        <span className="selected-os-badge">CTO Provider Vault</span>
+        <h2 id="cto-add-integration-title">Add Integration</h2>
+        <div className="connect-billing-fields">
+          <label><span>Service</span><select value={serviceId} onChange={(event) => setServiceId(event.target.value)}>{services.map((item) => <option key={item.id} value={item.id}>{item.service_name}</option>)}</select></label>
+          <label><span>Environment</span><select value={environment} onChange={(event) => setEnvironment(event.target.value)}><option>Production</option><option>Staging</option><option>Development</option></select></label>
+          <label><span>API Key / Token</span><input value={apiKey} onChange={(event) => setApiKey(event.target.value)} autoComplete="off" /></label>
+        </div>
+        <div className="approval-confirm-actions">
+          <button className="ghost-button" onClick={onCancel}>Close</button>
+          <button className="tactical-button" disabled={!apiKey.trim()} onClick={handleSave}>Save Integration</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function IntegrationAuditTimeline({ audit }) {
+  return (
+    <section className="integration-panel">
+      <div className="approval-section-header"><div><span>Integration Audit</span><h2>Recent vault actions</h2></div><Activity size={18} /></div>
+      <div className="verification-list">
+        {audit.length === 0
+          ? <span>No integration audit actions recorded.</span>
+          : audit.map((item) => <span key={item.id}>{item.action}<small>{item.actor} / {item.created_at} / {item.status}</small></span>)}
+      </div>
+    </section>
   );
 }
 
@@ -549,10 +865,21 @@ function CTOCommandPage({ navigate, onBack }) {
       return { label: 'NOT SET', tone: 'not-set' };
     }
     if (service.id === 'linkedin') {
-      return providerStatus['linkedin']?.resolved ? { label: 'LIVE', tone: 'live' } : { label: 'NOT SET', tone: 'not-set' };
+      const tokenOk = providerStatus['linkedin']?.resolved;
+      const clientOk = providerStatus['linkedin_client_id']?.resolved;
+      const secretOk = providerStatus['linkedin_client_secret']?.resolved;
+      const redirectOk = providerStatus['linkedin_redirect_uri']?.resolved;
+      if (tokenOk && clientOk && secretOk && redirectOk) return { label: 'LIVE', tone: 'live' };
+      if (tokenOk || clientOk || secretOk || redirectOk) return { label: 'PARTIAL', tone: 'partial' };
+      return { label: 'NOT SET', tone: 'not-set' };
     }
-    if (service.id === 'meta' || service.id === 'instagram') {
-      return providerStatus['meta']?.resolved ? { label: 'LIVE', tone: 'live' } : { label: 'NOT SET', tone: 'not-set' };
+    if (service.id === 'meta') {
+      const tokenOk = providerStatus['meta']?.resolved || providerStatus['meta_access_token']?.resolved || providerStatus['instagram']?.resolved || providerStatus['facebook']?.resolved;
+      const instagramOk = providerStatus['instagram_business_account_id']?.resolved;
+      const facebookOk = providerStatus['facebook_page_id']?.resolved;
+      if (tokenOk && instagramOk && facebookOk) return { label: 'LIVE', tone: 'live' };
+      if (tokenOk || instagramOk || facebookOk) return { label: 'PARTIAL', tone: 'partial' };
+      return { label: 'NOT SET', tone: 'not-set' };
     }
     const anyField = service.fields?.some(f => providerStatus[f.id]?.resolved);
     const allFields = service.fields?.length > 0 && service.fields.every(f => providerStatus[f.id]?.resolved);
@@ -596,6 +923,29 @@ function CTOCommandPage({ navigate, onBack }) {
       name: 'Resend',
       description: 'Transactional buyer email, notifications, receipts, and operational summaries.',
       fields: [{ id: 'resend', label: 'Resend API key', placeholder: 're_...', type: 'password' }]
+    },
+    {
+      id: 'linkedin',
+      logo: 'LI',
+      name: 'LinkedIn',
+      description: 'CMO authority posts through the approved founder personal profile publishing path.',
+      fields: [
+        { id: 'linkedin_client_id', label: 'Client ID', placeholder: 'Paste LinkedIn Client ID', type: 'password' },
+        { id: 'linkedin_client_secret', label: 'Client secret', placeholder: 'Paste LinkedIn Client Secret', type: 'password' },
+        { id: 'linkedin_redirect_uri', label: 'Redirect URI', placeholder: 'https://gopu-os-cmo.vercel.app/api/integrations/linkedin/callback', type: 'text' },
+        { id: 'linkedin', label: 'Access token', placeholder: 'Paste w_member_social access token', type: 'password' }
+      ]
+    },
+    {
+      id: 'meta',
+      logo: 'MT',
+      name: 'Meta',
+      description: 'Facebook Page and Instagram Business publishing for approved CMO content.',
+      fields: [
+        { id: 'meta_access_token', label: 'Meta access token', placeholder: 'Paste Page/Business token', type: 'password' },
+        { id: 'facebook_page_id', label: 'Facebook Page ID', placeholder: 'Paste Page ID', type: 'text' },
+        { id: 'instagram_business_account_id', label: 'Instagram business ID', placeholder: 'Paste IG business account ID', type: 'text' }
+      ]
     },
     {
       id: 'twilio',
@@ -678,7 +1028,7 @@ function CTOCommandPage({ navigate, onBack }) {
     <ExportOSShell
       className="cto-shell"
       liveDataConnected={liveCount > 0}
-      statusMessage={`CTO integrations: ${liveCount}/6 live`}
+      statusMessage={`CTO integrations: ${liveCount}/${integrationCards.length} live`}
     >
       <header className="deck-header cto-header">
         <div className="deck-header-copy">
@@ -694,7 +1044,7 @@ function CTOCommandPage({ navigate, onBack }) {
       </header>
 
       <section className="cto-health-bar">
-        <div><span>Services Live</span><strong>{liveCount}/6</strong></div>
+        <div><span>Services Live</span><strong>{liveCount}/{integrationCards.length}</strong></div>
         <div><span>Overall Status</span><strong>{overallStatus}</strong></div>
         <div><span>Last Checked</span><strong>{lastChecked}</strong></div>
         <p>{notice}</p>
@@ -815,7 +1165,7 @@ function CTOCommandPage({ navigate, onBack }) {
 }
 
 const ctoTabs = ['Overview', 'Integrations', 'Workflows', 'Incidents', 'Payments & Renewals', 'Deployments', 'Audit'];
-const ctoServiceOrder = ['openai', 'google-workspace', 'gmail', 'google-drive', 'google-custom-search', 'heygen', 'descript', 'captions-ai', 'canva', 'figma', 'linkedin', 'instagram', 'facebook', 'youtube', 'metricool', 'buffer', 'supabase', 'whatsapp', 'slack', 'resend', 'vercel', 'cloudflare', 'n8n', 'forex', 'news', 'trademap', 'un-comtrade', 'kompass', 'tradeatlas', 'apeda', 'spice-board'];
+const ctoServiceOrder = ['openai', 'google-workspace', 'gmail', 'google-drive', 'google-custom-search', 'heygen', 'descript', 'captions-ai', 'canva', 'figma', 'linkedin', 'meta', 'instagram', 'facebook', 'youtube', 'metricool', 'buffer', 'supabase', 'whatsapp', 'slack', 'resend', 'vercel', 'cloudflare', 'n8n', 'forex', 'news', 'trademap', 'un-comtrade', 'kompass', 'tradeatlas', 'apeda', 'spice-board'];
 const ctoCoreServiceOrder = ['openai', 'google-workspace', 'gmail', 'google-custom-search', 'supabase', 'whatsapp', 'slack', 'resend', 'vercel', 'cloudflare', 'n8n', 'forex', 'news'];
 const ctoEnvTargetMap = {
   openai: 'CTO_PROVIDER_OPENAI_API_KEY',
@@ -826,9 +1176,16 @@ const ctoEnvTargetMap = {
   whatsapp: 'WHATSAPP_API_TOKEN',
   cloudflare: 'CLOUDFLARE_R2_SECRET_ACCESS_KEY',
   vercel: 'VERCEL_TOKEN',
+  linkedin_client_id: 'LINKEDIN_CLIENT_ID',
+  linkedin_client_secret: 'LINKEDIN_CLIENT_SECRET',
+  linkedin_redirect_uri: 'LINKEDIN_REDIRECT_URI',
   linkedin: 'LINKEDIN_ACCESS_TOKEN',
+  meta: 'META_ACCESS_TOKEN',
+  meta_access_token: 'META_ACCESS_TOKEN',
   instagram: 'META_ACCESS_TOKEN',
+  instagram_business_account_id: 'INSTAGRAM_BUSINESS_ACCOUNT_ID',
   facebook: 'META_ACCESS_TOKEN',
+  facebook_page_id: 'FACEBOOK_PAGE_ID',
   youtube: 'YOUTUBE_API_KEY',
   forex: 'FOREX_API_KEY',
   news: 'NEWS_API_KEY'
@@ -847,6 +1204,7 @@ function ctoServiceNameFor(id = '') {
     canva: 'Canva',
     figma: 'Figma',
     linkedin: 'LinkedIn',
+    meta: 'Meta',
     instagram: 'Instagram',
     facebook: 'Facebook',
     youtube: 'YouTube',
@@ -1055,6 +1413,16 @@ const ctoProviderCatalog = {
     keyLabel: 'LinkedIn OAuth token',
     fields: ['Page ID', 'OAuth app', 'Ad account', 'Approval gate'],
     setup: ['Configure LinkedIn app/page.', 'Request required permissions.', 'Keep posts in approval queue.', 'Do not auto-publish sensitive claims.']
+  },
+  meta: {
+    website: 'https://business.facebook.com',
+    docs: 'https://developers.facebook.com/docs',
+    pricing: 'https://www.facebook.com/business/ads/pricing',
+    recommendedPlan: 'Meta Business integration for Facebook Page and Instagram Business publishing',
+    planReason: 'Meta owns both Facebook Page publishing and Instagram Business publishing, so CTO should store the platform token before CMO morning posting runs.',
+    keyLabel: 'Meta access token',
+    fields: ['Meta access token', 'Facebook Page ID', 'Instagram business ID', 'Approval gate'],
+    setup: ['Verify Meta Business.', 'Connect Facebook Page and Instagram Business account.', 'Save token and account IDs in CTO.', 'Route every publish action through CMO approval rules.']
   },
   instagram: {
     website: 'https://www.instagram.com',
@@ -1878,4 +2246,3 @@ function SecurePaymentConfirmationPanel() {
 
 export { IntegrationsVault };
 export default CTOCommandPage;
-

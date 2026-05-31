@@ -42,15 +42,19 @@ export default async function handler(req: any, res: any) {
     missing_vars: igMissing
   });
 
-  // LinkedIn
+  // LinkedIn Personal
+  const liClientId = env("LINKEDIN_CLIENT_ID");
+  const liClientSecret = env("LINKEDIN_CLIENT_SECRET");
+  const liRedirectUri = env("LINKEDIN_REDIRECT_URI");
   const liToken = env("LINKEDIN_ACCESS_TOKEN");
-  const liOrgId = env("LINKEDIN_ORGANIZATION_ID");
   const liMissing = [
+    !liClientId && "LINKEDIN_CLIENT_ID",
+    !liClientSecret && "LINKEDIN_CLIENT_SECRET",
+    !liRedirectUri && "LINKEDIN_REDIRECT_URI",
     !liToken && "LINKEDIN_ACCESS_TOKEN",
-    !liOrgId && "LINKEDIN_ORGANIZATION_ID"
   ].filter(Boolean) as string[];
   platforms.push({
-    platform: "linkedin",
+    platform: "linkedin_personal",
     configured: liMissing.length === 0,
     missing_vars: liMissing
   });

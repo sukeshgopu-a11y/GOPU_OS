@@ -1,4 +1,4 @@
-import { backendStatus, requireSupabase } from '../lib/supabaseClient.js';
+import { backendStatus, requireSupabaseSession } from '../lib/supabaseClient.js';
 import { DateTime } from 'luxon';
 import {
   CMO_PLATFORM_DEFAULT_SLOTS,
@@ -19,6 +19,7 @@ const CMO_MAX_PUBLISH_ATTEMPTS = 3;
 const isLocalDevRuntime = () => Boolean(import.meta.env?.DEV) || (typeof window !== 'undefined' && ['localhost', '127.0.0.1'].includes(window.location.hostname));
 const connectedIntegrationStates = new Set(['connected', 'healthy', 'active', 'verified', 'verification success']);
 const platformProviderMap = {
+  'LinkedIn Personal': 'linkedin-personal',
   LinkedIn: 'linkedin',
   Facebook: 'facebook',
   Instagram: 'instagram',
@@ -31,6 +32,7 @@ const platformProviderMap = {
 function normalizePublishPlatform(platform = '') {
   const value = String(platform || '').trim().toLowerCase();
   if (value === 'x/twitter' || value === 'twitter') return 'X';
+  if (value === 'linkedin personal' || value === 'linkedin_personal' || value === 'linkedin-personal') return 'LinkedIn Personal';
   if (value === 'linkedin' || value === 'linked in') return 'LinkedIn';
   if (value === 'facebook' || value === 'meta facebook') return 'Facebook';
   if (value === 'instagram' || value === 'meta instagram') return 'Instagram';
@@ -43,6 +45,7 @@ function normalizePublishPlatform(platform = '') {
 function normalizeProviderKey(value = '') {
   const normalized = String(value || '').trim().toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
   if (normalized === 'x-twitter' || normalized === 'twitter') return 'x';
+  if (normalized === 'linkedin-personal' || normalized === 'linkedin-profile') return 'linkedin-personal';
   if (normalized === 'linked-in') return 'linkedin';
   return normalized;
 }
@@ -202,7 +205,7 @@ export async function getVideoScriptStyles() { return serviceResponse(videoScrip
 export async function getDigitalMarketingOptimization() { return serviceResponse(digitalMarketingOptimization); }
 
 async function listAiRows(tableName, orderColumn = 'created_at', limit = 30, columns = '*') {
-  const { client, error } = requireSupabase();
+  const { client, error } = await requireSupabaseSession();
   if (error) return { rows: [], connected: false, error: error.message };
   let query = client.from(tableName).select(columns).limit(limit);
   if (orderColumn) query = query.order(orderColumn, { ascending: false });
@@ -378,7 +381,7 @@ async function getMarketingCampaignControlCenterUncached(tenantId = demoTenantId
     leads: [],
     error: ''
   };
-  const { client, error } = requireSupabase();
+  const { client, error } = await requireSupabaseSession();
   if (error) return serviceResponse({ ...empty, connected: false, error: error.message });
 
   try {
@@ -409,7 +412,7 @@ async function getMarketingCampaignControlCenterUncached(tenantId = demoTenantId
 
 export async function createMarketingCampaignDraft(payload = {}) {
   const tenantId = payload.tenant_id || demoTenantId;
-  const { client, error } = requireSupabase();
+  const { client, error } = await requireSupabaseSession();
   if (error) return serviceErrorResponse(null, error);
 
   const campaignPayload = {
@@ -660,7 +663,7 @@ function normalizeCmoPostingSetting(row = {}) {
 }
 
 async function readCmoIntegrationStatusRows() {
-  const { client, error } = requireSupabase();
+  const { client, error } = await requireSupabaseSession();
   if (error) return { rows: [], source: 'none', error: error.message || 'Supabase client is not configured.' };
 
   try {
@@ -754,7 +757,7 @@ async function readCmoSchedulerHealthSnapshot() {
 }
 
 async function readCmoPostingScheduleRows() {
-  const { client, error } = requireSupabase();
+  const { client, error } = await requireSupabaseSession();
   if (error) return { rows: [], source: 'none', error: error.message || 'Supabase client is not configured.' };
 
   try {
@@ -1093,7 +1096,7 @@ async function readSlackApprovalStatus() {
 
   try {
     if (typeof fetch !== 'function') return null;
-    const relativeStatus = await readStatus('/api/slack/approval');
+    const relativeStatus = await readStatus('/api/integrations/slack/status');
     if (relativeStatus) return relativeStatus;
   } catch {
     // Fall through to the local API server fallback below.
@@ -1189,7 +1192,7 @@ export async function getCmoTimezonePreference() {
     country: getCmoTimezoneOption(fallbackTimezone).country,
     source: 'fallback'
   };
-  const { client, error } = requireSupabase();
+  const { client, error } = await requireSupabaseSession();
   if (error) return serviceResponse(fallback);
 
   const readPreference = async (tableName) => client
@@ -1227,7 +1230,7 @@ export async function getCmoTimezonePreference() {
 export async function saveCmoTimezonePreference({ tenant_id, timezone, country }) {
   const selectedTimezone = getSelectedCmoTimezone({ timezone });
   const selectedCountry = country || getCmoTimezoneOption(selectedTimezone).country;
-  const { client, error } = requireSupabase();
+  const { client, error } = await requireSupabaseSession();
   if (error) return serviceResponse({ timezone: selectedTimezone, country: selectedCountry, source: 'local-fallback' });
 
   try {
@@ -1262,7 +1265,7 @@ export async function saveCmoPostingSettings({ tenant_id, timezone, country, sch
     time: item.time || postingTime
   })) : [];
   const fallbackTime = scheduleDays[0]?.time || postingTime || CMO_PLATFORM_DEFAULT_SLOTS.LinkedIn;
-  const { client, error } = requireSupabase();
+  const { client, error } = await requireSupabaseSession();
   if (error) return serviceResponse({ source: 'local-fallback', saved: 0, error: error.message });
 
   const rows = selectedPlatforms.map((platform) => ({
@@ -1385,7 +1388,7 @@ export async function guardCmoPublishAttempt(payload = {}) {
     return blocked('missing_platform_credentials', provider?.message || `Publishing blocked: missing ${platform} platform credentials.`, { provider_status: provider || null });
   }
 
-  const { client, error } = requireSupabase();
+  const { client, error } = await requireSupabaseSession();
   if (error) {
     return blocked('supabase_unavailable', `Publishing blocked: ${error.message}`, { provider_status: provider });
   }
@@ -1543,7 +1546,7 @@ export async function saveGeneratedContentPackage(payload = {}) {
   if (!runId) return serviceErrorResponse({ saved: false }, new Error('run_id is required for content memory.'));
   if (!caption || !imagePrompt || !posterUrl) return serviceErrorResponse({ saved: false }, new Error('Generated caption, image prompt, and poster URL are required for content memory.'));
 
-  const { client, error } = requireSupabase();
+  const { client, error } = await requireSupabaseSession();
   if (error) return serviceErrorResponse({ saved: false }, error);
 
   const historyPayload = {
@@ -1723,7 +1726,7 @@ async function getContentMemoryArchiveUncached(filters = {}, selectedTimezone = 
     timezone: selectedTimezone,
     loadedAt: getCmoNowUtc()
   };
-  const { client, error } = requireSupabase();
+  const { client, error } = await requireSupabaseSession();
   if (error) return serviceResponse({ ...emptyArchive, connected: false, error: error.message });
 
   try {
@@ -1783,7 +1786,7 @@ export async function getCmoLearningCentreDashboard(tenantId = demoTenantId) {
     },
     error: ''
   };
-  const { client, error } = requireSupabase();
+  const { client, error } = await requireSupabaseSession();
   if (error) return serviceResponse({ ...emptyDashboard, connected: false, error: error.message });
 
   try {
@@ -1891,7 +1894,7 @@ function normalizeFounderDecisionAction(action = '') {
 export async function updateFounderContentDecision(contentHistoryId, action, options = {}) {
   const id = String(contentHistoryId || '').trim();
   if (!id) return serviceErrorResponse({ updated: false }, new Error('No content item is selected for founder decision.'));
-  const { client, error } = requireSupabase();
+  const { client, error } = await requireSupabaseSession();
   if (error) return serviceErrorResponse({ updated: false }, error);
 
   const decision = normalizeFounderDecisionAction(action);
@@ -2081,7 +2084,7 @@ export async function createStep6TestContentPackage() {
 
 export async function cleanupLatestStep6TestContentPackage() {
   if (!isLocalDevRuntime()) return serviceErrorResponse({ deleted: false }, new Error('Step 6 cleanup is available only in local development.'));
-  const { client, error } = requireSupabase();
+  const { client, error } = await requireSupabaseSession();
   if (error) return serviceErrorResponse({ deleted: false }, error);
   try {
     const { data: rows, error: readError } = await client
@@ -2349,7 +2352,7 @@ function buildGrowthDiagnosis(summaryCards, platforms, currentBucket, dataWarnin
 export async function getSocialGrowthAnalytics(filters = {}) {
   const timezone = getSelectedCmoTimezone({ timezone: filters.timezone || DEFAULT_CMO_TIMEZONE });
   const empty = emptyGrowthAnalytics(timezone);
-  const { client, error } = requireSupabase();
+  const { client, error } = await requireSupabaseSession();
   if (error) return serviceResponse({ ...empty, connected: false, dataWarnings: [error.message] });
 
   const periods = getPeriodBoundaries(filters);
@@ -2440,6 +2443,35 @@ export async function getSocialGrowthAnalytics(filters = {}) {
     });
   } catch (error) {
     return serviceErrorResponse(empty, error);
+  }
+}
+
+export async function generateReferenceLearningContent(payload = {}) {
+  try {
+    const response = await fetch('/api/cmo/content-quality/generate', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+      body: JSON.stringify({
+        tenant_id: payload.tenant_id || demoTenantId,
+        mode: payload.mode || 'premium',
+        platform: payload.platform || 'LinkedIn',
+        topic: payload.topic || '',
+        tone: payload.tone || '',
+        reference_type: payload.reference_type || payload.referenceType || '',
+        reference_links: payload.reference_links || payload.referenceLinks || [],
+        reference_post: payload.reference_post || payload.referencePost || '',
+        reference_recommendations: payload.reference_recommendations || payload.referenceRecommendations || '',
+        image_direction: payload.image_direction || payload.imageDirection || '',
+        generate_image: payload.generate_image === true || payload.generateImage === true
+      })
+    });
+    const json = await response.json().catch(() => ({}));
+    if (!response.ok) {
+      return serviceErrorResponse(json, new Error(json.message || `Reference generation failed with HTTP ${response.status}.`));
+    }
+    return json?.ok ? serviceResponse(json) : serviceErrorResponse(json, new Error(json?.message || json?.status || 'Reference generation failed.'));
+  } catch (error) {
+    return serviceErrorResponse({ ok: false, status: 'api_unavailable' }, error);
   }
 }
 

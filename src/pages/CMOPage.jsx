@@ -15,7 +15,7 @@ import { supabase, isSupabaseConfigured, backendStatus } from '../lib/supabaseCl
 import { demoTenantId } from '../services/companyService.js';
 import { createApprovalRequest as createCmoApprovalRequest } from '../services/approvalService.js';
 import { DEFAULT_CMO_TIMEZONE, CMO_PLATFORM_DEFAULT_SLOTS, CMO_TIMEZONE_OPTIONS, formatInCmoTimezone, getCmoDateRangeUtc, getCmoLocalIsoDate, getCmoNowUtc, getCmoRollingRangeStartUtc, getCmoTimezoneLabel, getCmoTimezoneOption, getNextPlatformSlot, getSelectedCmoTimezone, isUtcOnOrAfter, isUtcOnOrBefore } from '../lib/cmoTimezone.js';
-import { generateDailyGrowthRunbook, generateCMOReport, generateFounderMarketingSummary, createMarketingCampaignDraft, cleanupLatestStep6TestContentPackage, createStep6TestContentPackage, getAIBudgetAnalysis, getAICampaignForecasts, getAICmoOperatingSystem, getAIGrowthInsights, getAILeadScores, getAIRecommendations, getAIScheduleOptimizations, getBrandRisks, getBuyerOutreach, getCMOSummary, getCampaigns, getContentApprovalQueue, getCompetitorReviews, getContentMemoryArchive, getCmoTimezonePreference, getCmoAutomationFlow, getCmoLearningCentreDashboard, getMarketingCampaignControlCenter, getCmoProviderConnectionStatus, saveCmoPostingSettings, saveCmoTimezonePreference, getContentCalendar, getContentPerformance, getCrossExecutiveContentIdeas, getFacebookPipeline, getGrowthOptimizationInsights, getGrowthTargets, getInstagramPipeline, getLinkedInPipeline, getContentToolchain, getDigitalMarketingOptimization, getGlobalTargetingStrategy, getOpenAIContentBrain, getOpenAIContentMemory, getTenglishVoiceRules, getThumbnailDirections, getVideoScriptStyles, getSocialGrowthAnalytics, getSocialGrowthMetrics, getYouTubePlans, updateFounderContentDecision } from '../services/cmoService.js';
+import { generateDailyGrowthRunbook, generateCMOReport, generateFounderMarketingSummary, createMarketingCampaignDraft, cleanupLatestStep6TestContentPackage, createStep6TestContentPackage, generateReferenceLearningContent, getAIBudgetAnalysis, getAICampaignForecasts, getAICmoOperatingSystem, getAIGrowthInsights, getAILeadScores, getAIRecommendations, getAIScheduleOptimizations, getBrandRisks, getBuyerOutreach, getCMOSummary, getCampaigns, getContentApprovalQueue, getCompetitorReviews, getContentMemoryArchive, getCmoTimezonePreference, getCmoAutomationFlow, getCmoLearningCentreDashboard, getMarketingCampaignControlCenter, getCmoProviderConnectionStatus, saveCmoPostingSettings, saveCmoTimezonePreference, getContentCalendar, getContentPerformance, getCrossExecutiveContentIdeas, getFacebookPipeline, getGrowthOptimizationInsights, getGrowthTargets, getInstagramPipeline, getLinkedInPipeline, getContentToolchain, getDigitalMarketingOptimization, getGlobalTargetingStrategy, getOpenAIContentBrain, getOpenAIContentMemory, getTenglishVoiceRules, getThumbnailDirections, getVideoScriptStyles, getSocialGrowthAnalytics, getSocialGrowthMetrics, getYouTubePlans, updateFounderContentDecision } from '../services/cmoService.js';
 import { ExportOSShell } from '../shared/routeShell.jsx';
 import { Breadcrumb, StatusBadge, TrendIndicator, EmptyState, SkeletonBlock, SkeletonCard, SkeletonTable, SkeletonKpiBar, MetricSkeletonGrid, HBarChart, SortableTableHeader, StatusPulse, PriorityBadge, SeverityBadge, Panel, StatusPill, StateChip, SignalList, MiniBars, BulkActionBar, FilterBar, VirtualList, useSortable } from '../shared/uiPrimitives.jsx';
 
@@ -218,7 +218,7 @@ function CMOCommandPage({ view = 'command', navigate, onBack }) {
     navigate('/export-os/director');
   }
 
-  const tabs = ['Overview', 'Content Queue', 'Published Posts', 'Platforms', 'LinkedIn Composer', 'Digital Marketing'];
+  const tabs = ['Overview', 'Content Queue', 'Published Posts', 'Platforms', 'Reference Lab', 'LinkedIn Composer', 'Digital Marketing'];
   const scheduledCount = data.summary?.scheduledContent ?? 'Awaiting analytics';
   const approvalCount = data.summary?.pendingApprovals ?? 'Verification pending';
   const realRunStatus = getCmoRealRunStatus(data);
@@ -677,6 +677,7 @@ function CMOFocusedCommandTabs({ activeTab, data, output, navigate, realRunStatu
   if (activeTab === 'Content Queue') return <CMOContentQueueTab items={getCmoPendingContentItems(data)} onContentDecision={onContentDecision} />;
   if (activeTab === 'Published Posts') return <CMOPublishedPostsTab items={getCmoPublishedContentItems(data)} />;
   if (activeTab === 'Platforms') return <CMOPlatformsTab connectedCount={getCmoConnectedPlatformCount(data)} navigate={navigate} />;
+  if (activeTab === 'Reference Lab') return <CMOReferenceLearningTab />;
   if (activeTab === 'LinkedIn Composer') return <CMOLinkedInComposerTab onCreateApprovalRequest={onCreateApprovalRequest} />;
   if (activeTab === 'Digital Marketing') return <CMODigitalMarketingTab />;
   return (
@@ -882,6 +883,279 @@ const linkedInComposerHashtags = {
   Facebook: '#IndianSpices #SpiceExporter #BulkSpices #FoodExport #HalalCertified #IndianExports #APEDAIndia #FSSAIApproved #ISOCertified #ExportFromIndia',
   'Trade Offer': '#ChilliPowder #TurmericPowder #BlackPepper #CuminSeeds #CorianderPowder #IndianSpices #SpiceExporter #HalalCertified #BulkSpices #ExportFromIndia #APEDAIndia #FSSAIApproved #ISOCertified #WholesaleSpices #B2BImporter'
 };
+
+const referenceLearningPlatforms = [
+  {
+    platform: 'YouTube',
+    icon: RadioTower,
+    format: 'Title, description, script plan, thumbnail',
+    topic: 'Founder-led YouTube video on Indian spice export trust and buyer documentation',
+    placeholder: 'Paste YouTube video links, channel links, or Shorts links that show the style you want.'
+  },
+  {
+    platform: 'Instagram',
+    icon: Palette,
+    format: 'Reel, carousel, caption, visual prompt',
+    topic: 'Instagram reel or carousel for export-grade spices and importer trust',
+    placeholder: 'Paste Instagram post, reel, or profile links that match the visual and caption style.'
+  },
+  {
+    platform: 'Facebook',
+    icon: UsersRound,
+    format: 'Trade post, group post, spec card',
+    topic: 'Facebook trade post for importer groups and product availability',
+    placeholder: 'Paste Facebook post, group post, or page links with the trade style you prefer.'
+  },
+  {
+    platform: 'LinkedIn',
+    icon: Network,
+    format: 'Founder authority post, carousel direction',
+    topic: 'LinkedIn founder authority post for global spice importers',
+    placeholder: 'Paste LinkedIn posts, competitor posts, or founder posts to learn structure and tone.'
+  }
+];
+
+const referenceTypeOptions = [
+  'Reference post',
+  'Competitor post',
+  'Founder post',
+  'Product showcase',
+  'Educational breakdown',
+  'Shipment milestone',
+  'Market intelligence',
+  'Video script',
+  'Thumbnail / image style'
+];
+
+function createReferenceLearningForm(platformConfig = {}) {
+  return {
+    topic: platformConfig.topic || '',
+    tone: 'premium, founder-led, practical, export authority, clear for international buyers',
+    reference_type: 'Reference post',
+    reference_links: '',
+    reference_post: '',
+    reference_recommendations: '',
+    image_direction: '',
+    generate_image: true
+  };
+}
+
+function getReferenceOutputForPlatform(generated = {}, platform = '') {
+  const key = String(platform || '').toLowerCase();
+  if (key.includes('youtube')) return generated.youtube_version || generated.caption || generated.linkedin_version || '';
+  if (key.includes('instagram')) return generated.instagram_version || generated.caption || '';
+  if (key.includes('facebook')) return generated.facebook_version || generated.caption || '';
+  if (key.includes('linkedin')) return generated.linkedin_version || generated.caption || '';
+  return generated.caption || generated.linkedin_version || generated.instagram_version || generated.facebook_version || generated.youtube_version || '';
+}
+
+function normalizeHashtagList(hashtags) {
+  if (Array.isArray(hashtags)) return hashtags.filter(Boolean).slice(0, 18);
+  return String(hashtags || '')
+    .split(/\s+/)
+    .map((tag) => tag.trim())
+    .filter((tag) => tag.startsWith('#'))
+    .slice(0, 18);
+}
+
+function CMOReferenceLearningTab() {
+  const [forms, setForms] = useState(() => Object.fromEntries(referenceLearningPlatforms.map((config) => [config.platform, createReferenceLearningForm(config)])));
+  const [results, setResults] = useState({});
+  const [messages, setMessages] = useState({});
+  const [loadingPlatform, setLoadingPlatform] = useState('');
+
+  function updatePlatformField(platform, field, value) {
+    setForms((current) => ({
+      ...current,
+      [platform]: {
+        ...(current[platform] || createReferenceLearningForm(referenceLearningPlatforms.find((item) => item.platform === platform))),
+        [field]: value
+      }
+    }));
+  }
+
+  async function generatePlatform(platform) {
+    const form = forms[platform] || createReferenceLearningForm(referenceLearningPlatforms.find((item) => item.platform === platform));
+    setLoadingPlatform(platform);
+    setMessages((current) => ({ ...current, [platform]: 'OpenAI is generating the post package.' }));
+    try {
+      const response = await generateReferenceLearningContent({
+        tenant_id: demoTenantId,
+        mode: 'premium',
+        platform,
+        topic: form.topic,
+        tone: form.tone,
+        reference_type: form.reference_type,
+        reference_links: form.reference_links,
+        reference_post: form.reference_post,
+        reference_recommendations: form.reference_recommendations,
+        image_direction: form.image_direction,
+        generate_image: form.generate_image
+      });
+
+      if (!response.ok || !response.data?.ok) {
+        setMessages((current) => ({ ...current, [platform]: response.error || response.data?.message || 'Reference generation failed.' }));
+        return;
+      }
+
+      setResults((current) => ({ ...current, [platform]: response.data }));
+      setMessages((current) => ({ ...current, [platform]: 'Generated. Founder approval is still required before publishing.' }));
+    } finally {
+      setLoadingPlatform('');
+    }
+  }
+
+  function copyGeneratedOutput(platform) {
+    const generated = results[platform]?.generated_content || {};
+    const output = getReferenceOutputForPlatform(generated, platform);
+    if (!output) {
+      setMessages((current) => ({ ...current, [platform]: 'No generated output to copy yet.' }));
+      return;
+    }
+    navigator.clipboard?.writeText(output);
+    setMessages((current) => ({ ...current, [platform]: 'Generated post copied.' }));
+  }
+
+  const completedCount = Object.values(results).filter((item) => item?.generated_content).length;
+
+  return (
+    <section className="cmo-reference-lab">
+      <div className="cmo-reference-stage-grid">
+        {[
+          ['Reference Knowledge', 'Links, sample posts, scripts, and recommendations become the platform brief.', UploadCloud],
+          ['OpenAI Generation', 'The CMO creates channel-specific copy, hashtags, image prompt, and optional preview image.', Sparkles],
+          ['Founder Gate', 'Generated content is saved as not published until approval and platform credentials are ready.', ShieldCheck]
+        ].map(([title, detail, Icon]) => (
+          <div key={title} className="cmo-reference-stage">
+            <Icon size={17} />
+            <div>
+              <strong>{title}</strong>
+              <span>{detail}</span>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      <section className="cmo-panel cmo-reference-summary">
+        <div className="approval-section-header">
+          <div><span>CMO Reference Lab</span><h2>Learn from samples, then generate platform-ready content.</h2></div>
+          <Sparkles size={18} />
+        </div>
+        <div className="cmo-reference-summary-grid">
+          <div><span>Platforms</span><strong>YouTube / Instagram / Facebook / LinkedIn</strong></div>
+          <div><span>OpenAI Output</span><strong>Copy, hashtags, image prompt, preview image</strong></div>
+          <div><span>Completed</span><strong>{completedCount} of {referenceLearningPlatforms.length}</strong></div>
+        </div>
+      </section>
+
+      <div className="cmo-reference-grid">
+        {referenceLearningPlatforms.map((config) => {
+          const Icon = config.icon;
+          const form = forms[config.platform] || createReferenceLearningForm(config);
+          const result = results[config.platform] || {};
+          const generated = result.generated_content || {};
+          const postOutput = getReferenceOutputForPlatform(generated, config.platform);
+          const hashtags = normalizeHashtagList(generated.hashtags);
+          const imageUrl = generated.generated_image_url || result.image_url || '';
+          const busy = loadingPlatform === config.platform;
+
+          return (
+            <article key={config.platform} className="cmo-reference-card">
+              <div className="cmo-reference-card-head">
+                <div>
+                  <Icon size={18} />
+                  <div>
+                    <span>{config.platform}</span>
+                    <strong>{config.format}</strong>
+                  </div>
+                </div>
+                <StatusBadge label={result.ok ? 'Generated' : 'Ready'} state={result.ok ? 'progress' : 'idle'} />
+              </div>
+
+              <div className="cmo-reference-fields">
+                <label>
+                  <span>Content goal</span>
+                  <input value={form.topic} onChange={(event) => updatePlatformField(config.platform, 'topic', event.target.value)} />
+                </label>
+                <label>
+                  <span>Reference type</span>
+                  <select value={form.reference_type} onChange={(event) => updatePlatformField(config.platform, 'reference_type', event.target.value)}>
+                    {referenceTypeOptions.map((option) => <option key={option} value={option}>{option}</option>)}
+                  </select>
+                </label>
+                <label>
+                  <span>Reference links</span>
+                  <textarea rows={3} value={form.reference_links} onChange={(event) => updatePlatformField(config.platform, 'reference_links', event.target.value)} placeholder={config.placeholder} />
+                </label>
+                <label>
+                  <span>Sample post / script</span>
+                  <textarea rows={5} value={form.reference_post} onChange={(event) => updatePlatformField(config.platform, 'reference_post', event.target.value)} placeholder="Paste the exact caption, script, hook, thumbnail words, or post structure you want the CMO to learn from." />
+                </label>
+                <label>
+                  <span>Recommendations</span>
+                  <textarea rows={4} value={form.reference_recommendations} onChange={(event) => updatePlatformField(config.platform, 'reference_recommendations', event.target.value)} placeholder="Write what to follow, what to avoid, tone rules, CTA rules, hashtag style, and buyer focus." />
+                </label>
+                <label>
+                  <span>Image direction</span>
+                  <textarea rows={3} value={form.image_direction} onChange={(event) => updatePlatformField(config.platform, 'image_direction', event.target.value)} placeholder="Describe the visual style, product angle, text overlay, colors, and image references." />
+                </label>
+                <label>
+                  <span>Tone</span>
+                  <input value={form.tone} onChange={(event) => updatePlatformField(config.platform, 'tone', event.target.value)} />
+                </label>
+              </div>
+
+              <div className="cmo-reference-actions">
+                <label className="cmo-reference-toggle">
+                  <input type="checkbox" checked={form.generate_image} onChange={(event) => updatePlatformField(config.platform, 'generate_image', event.target.checked)} />
+                  <span>Generate image preview</span>
+                </label>
+                <button className="tactical-button" type="button" disabled={busy} onClick={() => generatePlatform(config.platform)}>
+                  {busy ? 'Generating...' : `Generate ${config.platform}`}
+                </button>
+              </div>
+
+              {messages[config.platform] ? <p className="cmo-posting-message">{messages[config.platform]}</p> : null}
+
+              {postOutput ? (
+                <div className="cmo-reference-output">
+                  <div className="cmo-reference-output-head">
+                    <span>{config.platform} output</span>
+                    <button className="ghost-button" type="button" onClick={() => copyGeneratedOutput(config.platform)}>Copy Post</button>
+                  </div>
+                  <pre>{postOutput}</pre>
+                  {hashtags.length ? (
+                    <div className="cmo-reference-hashtags">
+                      {hashtags.map((tag) => <span key={tag}>{tag}</span>)}
+                    </div>
+                  ) : null}
+                  {generated.image_prompt ? (
+                    <div className="cmo-reference-image-prompt">
+                      <span>Image prompt</span>
+                      <p>{generated.image_prompt}</p>
+                    </div>
+                  ) : null}
+                  {imageUrl ? (
+                    <figure className="cmo-reference-image-preview">
+                      <img src={imageUrl} alt={`${config.platform} generated OpenAI preview`} />
+                      <figcaption>OpenAI image preview for founder review.</figcaption>
+                    </figure>
+                  ) : null}
+                  {result.image_generation_warning ? <p className="cmo-posting-message">{result.image_generation_warning}</p> : null}
+                  <div className="cmo-reference-meta">
+                    <span>Model: {result.model || 'OpenAI'}</span>
+                    <span>Status: {result.publish_status || 'not_published'}</span>
+                    <span>Approval: {result.founder_approval_required ? 'Founder required' : 'Pending policy'}</span>
+                  </div>
+                </div>
+              ) : null}
+            </article>
+          );
+        })}
+      </div>
+    </section>
+  );
+}
 
 function CMOLinkedInComposerTab({ onCreateApprovalRequest }) {
   const [postType, setPostType] = useState('Product Showcase');
@@ -3358,13 +3632,13 @@ function CMOPostingTimeSettings({ preference }) {
   const [postingTime, setPostingTime] = useState(CMO_PLATFORM_DEFAULT_SLOTS.LinkedIn);
   const [selectedDays, setSelectedDays] = useState(() => new Set(['Monday']));
   const [dayTimes, setDayTimes] = useState(() => postingWeekdays.reduce((acc, day) => ({ ...acc, [day]: CMO_PLATFORM_DEFAULT_SLOTS.LinkedIn }), {}));
-  const [platforms, setPlatforms] = useState(() => new Set(['LinkedIn']));
+  const [platforms, setPlatforms] = useState(() => new Set(['LinkedIn Personal']));
   const [saveState, setSaveState] = useState(preference?.source || 'fallback');
   const [message, setMessage] = useState('');
   const [providerStatuses, setProviderStatuses] = useState([]);
   const selectedOption = getCmoTimezoneOption(timezone);
   const timezoneOptions = CMO_TIMEZONE_OPTIONS;
-  const postingPlatforms = ['LinkedIn', 'Facebook', 'Instagram', 'YouTube', 'X/Twitter', 'Blog', 'Email'];
+  const postingPlatforms = ['LinkedIn Personal', 'Facebook', 'Instagram', 'YouTube', 'X/Twitter', 'Blog', 'Email'];
 
   useEffect(() => {
     let active = true;
@@ -4173,11 +4447,11 @@ function CampaignBudgetPanel({ control, navigate }) {
       <section className="campaign-control-grid">
         <article className="cmo-panel">
           <div className="approval-section-header"><div><span>Marketing Calendar</span><h2>Campaign dates, scheduled posts, launches, approvals</h2></div><CalendarDays size={18} /></div>
-          <div className="approval-memory-list">{(campaignControl.schedule?.length ? campaignControl.schedule.map((item) => `${String(item.scheduled_at || '').slice(0, 10)} -- ${item.title || item.campaign_name || item.schedule_type} / ${item.status}`) : ['No campaign calendar rows connected yet.']).map((item) => <span key={item}>{item}</span>)}</div>
+          <div className="approval-memory-list">{(campaignControl.schedule?.length ? campaignControl.schedule.map((item) => `${String(item.scheduled_at || '').slice(0, 10)} - ${item.title || item.campaign_name || item.schedule_type} / ${item.status}`) : ['No campaign calendar rows connected yet.']).map((item) => <span key={item}>{item}</span>)}</div>
         </article>
         <article className="cmo-panel">
           <div className="approval-section-header"><div><span>Lead Tracking</span><h2>Inquiries, WhatsApp clicks, visits, importer responses</h2></div><UsersRound size={18} /></div>
-          <div className="approval-memory-list">{(campaignControl.leads?.length ? campaignControl.leads.map((item) => `${item.lead_name || item.importer_name || 'Campaign lead'} -- ${item.source || item.lead_source || 'source pending'} / ${item.status || 'New'}`) : ['No campaign leads connected yet.']).map((item) => <span key={item}>{item}</span>)}</div>
+          <div className="approval-memory-list">{(campaignControl.leads?.length ? campaignControl.leads.map((item) => `${item.lead_name || item.importer_name || 'Campaign lead'} - ${item.source || item.lead_source || 'source pending'} / ${item.status || 'New'}`) : ['No campaign leads connected yet.']).map((item) => <span key={item}>{item}</span>)}</div>
         </article>
       </section>
 
@@ -4463,7 +4737,7 @@ function CMOCalendarWorkspace({ data }) {
 function CMOReportsWorkspace({ output, onGenerate, onFounderSummary }) {
   const rows = [
     ['Content pipeline', 'Draft report', 'LinkedIn, Instagram, YouTube'],
-    ['Campaign summary', 'Draft report', 'Country pending, Oman, distributors, trade leads'],
+    ['Campaign summary', 'Draft report', 'UAE, Oman, distributors, trade leads'],
     ['Outreach activity', 'Draft report', 'Buyer CRM follow-ups and dormant buyers'],
     ['Approval report', 'Draft report', 'Claims and founder review queue'],
     ['Competitor summary', 'Draft report', 'Positioning and market observations'],
