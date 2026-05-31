@@ -26,7 +26,22 @@ function missingEnv() {
     .filter((name) => !env(name));
 }
 
-async function saveAccessToken(accessToken: string, expiresIn: number | null, scope: string) {
+async function fetchLinkedInProfile(accessToken: string) {
+  try {
+    const response = await fetch("https://api.linkedin.com/v2/userinfo", {
+      method: "GET",
+      headers: { Authorization: `Bearer ${accessToken}` },
+      signal: AbortSignal.timeout(10000)
+    });
+    const profile = await response.json().catch(() => ({}));
+    if (!response.ok) return { ok: false, profile: {}, status: response.status };
+    return { ok: true, profile, status: response.status };
+  } catch {
+    return { ok: false, profile: {}, status: 0 };
+  }
+}
+
+async function saveAccessToken(accessToken: string, expiresIn: number | null, scope: string, profile: Record<string, unknown> = {}) {
   const client = getSupabaseClient();
   if (!client) return { ok: false, status: "supabase_not_configured" };
 
@@ -38,6 +53,9 @@ async function saveAccessToken(accessToken: string, expiresIn: number | null, sc
     .eq("platform_key", "linkedin_personal")
     .maybeSingle();
 
+  const linkedinUserId = String(profile.sub || profile.id || "").trim();
+  const linkedinName = String(profile.name || [profile.given_name, profile.family_name].filter(Boolean).join(" ") || "").trim();
+  const linkedinEmail = String(profile.email || "").trim();
   const config = {
     ...(existing?.config || {}),
     access_token: accessToken,
@@ -51,7 +69,11 @@ async function saveAccessToken(accessToken: string, expiresIn: number | null, sc
     required_scope: "w_member_social",
     token_saved_at: now.toISOString(),
     token_expires_at: expiresAt,
-    scope
+    scope,
+    linkedin_user_id: linkedinUserId || existing?.metadata?.linkedin_user_id || "",
+    linkedin_name: linkedinName || existing?.metadata?.linkedin_name || "",
+    linkedin_email: linkedinEmail || existing?.metadata?.linkedin_email || "",
+    connected_at: now.toISOString()
   };
 
   const { error } = await client.from("platform_integrations").upsert({
@@ -60,19 +82,20 @@ async function saveAccessToken(accessToken: string, expiresIn: number | null, sc
     platform_key: "linkedin_personal",
     platform_name: "LinkedIn Personal",
     logo_key: "linkedin",
-    provider: "linkedin",
-    status: "pending",
+    provider: "linkedin_personal",
+    status: "live",
     runtime: "cmo_publishing",
-    connection_status: "token_saved",
+    connection_status: "connected",
     access_token_present: true,
     configured_at: now.toISOString(),
+    verified_at: now.toISOString(),
     last_checked_at: now.toISOString(),
     config,
     metadata,
     updated_at: now.toISOString()
   }, { onConflict: "platform_key" });
 
-  return error ? { ok: false, status: "storage_failed", message: error.message } : { ok: true, status: "saved" };
+  return error ? { ok: false, status: "storage_failed", message: error.message } : { ok: true, status: "saved", profile_saved: Boolean(linkedinUserId || linkedinName || linkedinEmail) };
 }
 
 export default async function handler(req: any, res: any) {
@@ -116,17 +139,21 @@ export default async function handler(req: any, res: any) {
     }
 
     process.env.LINKEDIN_ACCESS_TOKEN = String(result.access_token || "");
+    const profileResult = await fetchLinkedInProfile(String(result.access_token || ""));
     const storage = await saveAccessToken(
       String(result.access_token || ""),
       result.expires_in ? Number(result.expires_in) : null,
-      String(result.scope || "")
+      String(result.scope || ""),
+      profileResult.profile || {}
     );
 
     return res.status(200).json({
-      access_token: result.access_token,
+      ok: true,
       expires_in: result.expires_in || null,
       scope: result.scope || "",
-      storage
+      connected: storage.ok === true,
+      profile_saved: storage.profile_saved === true,
+      storage: { ok: storage.ok, status: storage.status }
     });
   } catch (error: any) {
     return res.status(200).json({
