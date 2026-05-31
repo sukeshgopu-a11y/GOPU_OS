@@ -43,6 +43,47 @@ export function requireSupabase() {
   return { client: supabase, error: null };
 }
 
+export async function requireSupabaseSession() {
+  const { client, error } = requireSupabase();
+  if (error) return { client: null, session: null, error };
+
+  try {
+    const { data, error: sessionError } = await client.auth.getSession();
+    if (sessionError) {
+      return {
+        client: null,
+        session: null,
+        error: {
+          code: sessionError.code || 'SUPABASE_SESSION_ERROR',
+          message: sessionError.message || 'Unable to verify the Supabase session.'
+        }
+      };
+    }
+
+    if (!data?.session) {
+      return {
+        client: null,
+        session: null,
+        error: {
+          code: 'SUPABASE_SESSION_REQUIRED',
+          message: 'Supabase credentials are configured, but no Supabase session is active.'
+        }
+      };
+    }
+
+    return { client, session: data.session, error: null };
+  } catch (sessionError) {
+    return {
+      client: null,
+      session: null,
+      error: {
+        code: 'SUPABASE_SESSION_ERROR',
+        message: sessionError?.message || 'Unable to verify the Supabase session.'
+      }
+    };
+  }
+}
+
 export async function checkSupabaseConnection(tableName = 'platform_health') {
   if (!supabaseUrl) {
     return {
