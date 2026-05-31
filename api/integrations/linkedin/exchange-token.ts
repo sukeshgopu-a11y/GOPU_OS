@@ -1,10 +1,24 @@
 // @ts-nocheck
-import { getSupabaseClient, normalizeBody } from "../../_shared/linkedinPersonalPublish";
+import { createClient } from "@supabase/supabase-js";
 
 const DEMO_TENANT_ID = "11111111-1111-1111-1111-111111111111";
 
 function env(name: string): string {
   return process.env[name]?.trim() || "";
+}
+
+function normalizeBody(req: any) {
+  if (typeof req.body === "string") {
+    try { return JSON.parse(req.body || "{}"); } catch { return {}; }
+  }
+  return req.body || {};
+}
+
+function getSupabaseClient() {
+  const url = env("SUPABASE_URL") || env("VITE_SUPABASE_URL") || env("NEXT_PUBLIC_SUPABASE_URL");
+  const key = env("SUPABASE_SERVICE_ROLE_KEY");
+  if (!url || !key) return null;
+  return createClient(url, key, { auth: { persistSession: false, autoRefreshToken: false } });
 }
 
 function missingEnv() {
