@@ -24,12 +24,7 @@ import { SeverityBadge, StatusBadge } from '../shared/uiPrimitives.jsx';
 import { demoTenantId } from '../services/companyService.js';
 import { createAuditLog, listAuditLogs } from '../services/auditService.js';
 import { createSecurityAuditEvent, loadSecurityDashboard } from '../services/securityService.js';
-
-function formatDisplayDate(dateValue) {
-  const date = dateValue instanceof Date ? dateValue : new Date(dateValue);
-  if (Number.isNaN(date.getTime())) return 'Live feed';
-  return date.toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' });
-}
+import { formatDisplayDate } from '../utils/dateFormat.js';
 
 function getSecurityState(status) {
   if (status === 'Critical' || status === 'Access Revoked' || status === 'Suspended') return 'error';

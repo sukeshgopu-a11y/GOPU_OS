@@ -12,12 +12,8 @@ import {
   startLearningCentreRun,
   stopLearningCentreRun
 } from '../services/learningCentreService.js';
+import { formatDisplayDate } from '../utils/dateFormat.js';
 
-function formatDisplayDate(dateValue) {
-  const date = dateValue instanceof Date ? dateValue : new Date(dateValue);
-  if (Number.isNaN(date.getTime())) return 'Live feed';
-  return date.toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' });
-}
 function LearningCentrePage({ navigate, onBack, reportMode = false }) {
   const [status, setStatus] = useState({ run: null, cards: null, debug: null });
   const [findings, setFindings] = useState([]);

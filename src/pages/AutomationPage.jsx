@@ -19,12 +19,7 @@ import { ExportOSShell } from '../shared/routeShell.jsx';
 import { SeverityBadge, StatusBadge } from '../shared/uiPrimitives.jsx';
 import { demoTenantId } from '../services/companyService.js';
 import { createAutomationLogEntry, loadAutomationCenter } from '../services/automationService.js';
-
-function formatDisplayDate(dateValue) {
-  const date = dateValue instanceof Date ? dateValue : new Date(dateValue);
-  if (Number.isNaN(date.getTime())) return 'Live feed';
-  return date.toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' });
-}
+import { formatDisplayDate } from '../utils/dateFormat.js';
 
 function getAutomationState(status) {
   if (status === 'Failed' || status === 'Blocked' || status === 'Critical') return 'error';

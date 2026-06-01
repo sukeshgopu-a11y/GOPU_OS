@@ -18,13 +18,8 @@ import { addApprovalComment, approveRequest, createApprovalRequest, getApprovalQ
 import { createAuditLog, listAuditLogs } from '../services/auditService.js';
 import { ExportOSShell } from '../shared/routeShell.jsx';
 import { Breadcrumb, StatusBadge, TrendIndicator, EmptyState, SkeletonBlock, SkeletonCard, SkeletonTable, SkeletonKpiBar, MetricSkeletonGrid, HBarChart, SortableTableHeader, StatusPulse, PriorityBadge, SeverityBadge, Panel, StatusPill, StateChip, SignalList, MiniBars, BulkActionBar, FilterBar, VirtualList, useSortable } from '../shared/uiPrimitives.jsx';
+import { formatDisplayDate } from '../utils/dateFormat.js';
 
-
-function formatDisplayDate(dateValue) {
-  const date = dateValue instanceof Date ? dateValue : new Date(dateValue);
-  if (Number.isNaN(date.getTime())) return 'Live feed';
-  return date.toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' });
-}
 
 const pricingForexFallbackRates = [
   { pair: 'USD/INR', rate: 83.25, change: 'Manual', direction: 'flat' },

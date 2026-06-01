@@ -103,6 +103,7 @@ import {
   VirtualList,
   useSortable
 } from './components/shared/Primitives.jsx';
+import { formatDisplayDate } from './utils/dateFormat.js';
 import { announceToSR, getRouteAnnouncement, highlightMatch } from './utils/ui.jsx';
 import { cachedRead } from './services/performanceCache.js';
 
@@ -571,12 +572,6 @@ function getCommandRuntimeStatus(commandId) {
     return { label: 'In Progress', state: 'progress' };
   }
   return { label: 'Online', state: 'online' };
-}
-
-function formatDisplayDate(dateValue) {
-  const date = dateValue instanceof Date ? dateValue : new Date(dateValue);
-  if (Number.isNaN(date.getTime())) return 'Live feed';
-  return date.toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' });
 }
 
 async function fetchJson(url) {
