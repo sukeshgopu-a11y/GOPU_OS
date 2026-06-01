@@ -18,8 +18,8 @@ import { createPaymentRequirement, generateFounderTechnicalSummary, getCTODashbo
 import { getPaymentVaultRenewals } from '../services/renewalService.js';
 import { ExportOSShell } from '../shared/routeShell.jsx';
 import { Breadcrumb, StatusBadge, TrendIndicator, EmptyState, SkeletonBlock, SkeletonCard, SkeletonTable, SkeletonKpiBar, MetricSkeletonGrid, HBarChart, SortableTableHeader, StatusPulse, PriorityBadge, SeverityBadge, Panel, StatusPill, StateChip, SignalList, MiniBars, BulkActionBar, FilterBar, VirtualList, useSortable } from '../shared/uiPrimitives.jsx';
+import { ctoDefaultLoginEmail } from '../config/defaultLogins.js';
 
-const ctoDefaultLoginEmail = 'sukeshreddy4.g@gmail.com';
 const integrationServicesSeed = [];
 const integrationAuditSeed = [];
 const integrationModels = ['integration_services', 'integration_audit_logs', 'integration_health'];

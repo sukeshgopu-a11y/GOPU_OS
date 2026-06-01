@@ -104,6 +104,7 @@ import {
   useSortable
 } from './components/shared/Primitives.jsx';
 import { formatDisplayDate } from './utils/dateFormat.js';
+import { ctoDefaultLoginEmail } from './config/defaultLogins.js';
 import { announceToSR, getRouteAnnouncement, highlightMatch } from './utils/ui.jsx';
 import { cachedRead } from './services/performanceCache.js';
 
@@ -7772,7 +7773,6 @@ const integrationServicesSeed = [];
 const integrationAuditSeed = [];
 
 const integrationModels = ['integration_services', 'integration_audit_logs', 'integration_health'];
-const ctoDefaultLoginEmail = 'sukeshreddy4.g@gmail.com';
 const CTO_FAST_VERIFICATION_TIMEOUT_MS = 12000;
 
 function maskSecretPreview(value = '') {
