@@ -1,4 +1,4 @@
-import { backendStatus, requireSupabase } from '../lib/supabaseClient.js';
+import { backendStatus, requireSupabase, requireSupabaseSession } from '../lib/supabaseClient.js';
 import { demoTenantId } from './demoData.js';
 import { sendSlackNotification } from './slackNotificationService.js';
 import { createAuditLog } from './auditService.js';
@@ -31,7 +31,7 @@ function safeNum(value) {
 // ─── Recurring Payments ────────────────────────────────────────────────────
 
 export async function getRecurringPayments(tenantId = demoTenantId) {
-  const { client, error } = requireSupabase();
+  const { client, error } = await requireSupabaseSession();
   if (error) return { ok: true, data: RECURRING_PAYMENTS, error: null, backend: backendStatus };
 
   try {
@@ -71,7 +71,7 @@ export async function getRecurringPayments(tenantId = demoTenantId) {
 // ─── P&L ──────────────────────────────────────────────────────────────────
 
 async function calcProfitAndLoss(tenantId, startDate, endDate) {
-  const { client, error } = requireSupabase();
+  const { client, error } = await requireSupabaseSession();
   if (error) return { revenue: 0, cogs: 0, infrastructure: 0, gross_profit: 0, net_profit: 0 };
 
   try {
@@ -349,7 +349,7 @@ export async function submitOtp(paymentId, otp, tenantId = demoTenantId) {
 // ─── Payment Status ────────────────────────────────────────────────────────
 
 export async function getPaymentStatus(paymentId, tenantId = demoTenantId) {
-  const { client, error } = requireSupabase();
+  const { client, error } = await requireSupabaseSession();
   if (error) return { ok: true, data: { paymentId, status: 'Unknown', backend: 'disconnected' }, error: null };
 
   try {
@@ -380,11 +380,11 @@ async function getCFODashboardUncached(tenantId = demoTenantId) {
     getRecurringPayments(tenantId),
   ]);
 
-  const { client } = requireSupabase();
+  const { client, error } = await requireSupabaseSession();
   let recentPayments = [];
   let receivables = [];
 
-  if (client) {
+  if (!error && client) {
     try {
       const [paymentsResult, receivablesResult] = await Promise.all([
         client

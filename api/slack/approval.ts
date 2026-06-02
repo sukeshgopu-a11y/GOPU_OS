@@ -1,6 +1,8 @@
 import crypto from "node:crypto";
 import { createClient } from "@supabase/supabase-js";
 import { advanceStage } from "../export/stages.js";
+import { buyerReleaseEmail, createApprovedLeadProformaInvoice, proformaInvoiceTestEmail } from "../_shared/approvedLeadProformaInvoice.js";
+import { cleanSlackText } from "../../lib/slackTextClean.js";
 
 const demoTenantId = "11111111-1111-1111-1111-111111111111";
 
@@ -237,13 +239,13 @@ export default async function handler(req: any, res: any) {
       // 1. Update founder_approvals status
       await client
         .from("founder_approvals")
-        .update({ approval_status: decision === "approved" ? "Approved" : "Rejected", updated_at: new Date().toISOString() })
+        .update({ status: decision === "approved" ? "Approved" : "Rejected", approval_status: decision === "approved" ? "Approved" : "Rejected", updated_at: new Date().toISOString() })
         .eq("id", approvalId);
 
       // 2. Fetch approval record for buyer email details
       const { data: approval } = await client
         .from("founder_approvals")
-        .select("buyer_name, amount, related_record_id, metadata")
+        .select("*")
         .eq("id", approvalId)
         .maybeSingle()
         .then(r => r, () => ({ data: null }));
@@ -251,10 +253,13 @@ export default async function handler(req: any, res: any) {
       if (decision === "approved" && approval) {
         const meta: any = approval.metadata || {};
         const buyerEmail = meta.buyer_email || meta.email || "";
+        const releaseEmail = buyerReleaseEmail(buyerEmail);
+        const outboundBuyerEmail = releaseEmail.email;
         const resendKey = env("RESEND_API_KEY");
+        let stageResult: any = null;
 
         // 3. Send quotation email to buyer if email is known
-        if (resendKey && buyerEmail && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(buyerEmail)) {
+        if (resendKey && outboundBuyerEmail && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(outboundBuyerEmail)) {
           const subject = `Quotation from GOPU Exports — ${meta.product || "Spices"}`;
           const html = `
             <div style="font-family:sans-serif;max-width:600px;margin:0 auto;padding:32px;background:#f9f9f9">
@@ -281,13 +286,20 @@ export default async function handler(req: any, res: any) {
             headers: { Authorization: `Bearer ${resendKey}`, "Content-Type": "application/json" },
             body: JSON.stringify({
               from: env("FROM_EMAIL") || "exports@gopuexports.com",
-              to: [buyerEmail],
+              to: [outboundBuyerEmail],
               subject,
               html,
             }),
           }).then(r => r.json()).catch(() => ({ error: "fetch_failed" } as any));
 
-          postApprovalResult = { ok: !(emailRes as any).error, email_sent_to: buyerEmail, resend_id: (emailRes as any).id };
+          postApprovalResult = {
+            ok: !(emailRes as any).error,
+            email_sent_to: outboundBuyerEmail,
+            original_buyer_email: releaseEmail.original || null,
+            buyer_email_override: releaseEmail.overridden,
+            release_reason: releaseEmail.reason,
+            resend_id: (emailRes as any).id
+          };
 
           // 4. Update lead_intake status to "Quotation Sent"
           if (meta.lead_id) {
@@ -299,9 +311,10 @@ export default async function handler(req: any, res: any) {
 
           // 5. Notify COO — advance export order to Stage 2 if exists
           if (meta.export_order_id) {
-            await advanceStage(client, meta.export_order_id, 2, "Director Approval", {
+            stageResult = await advanceStage(client, meta.export_order_id, 2, "Director Approval", {
               buyer_reply_sent_at: new Date().toISOString(),
-              buyer_email: buyerEmail,
+              buyer_email: outboundBuyerEmail,
+              original_buyer_email: releaseEmail.original || null,
             });
           }
 
@@ -309,27 +322,44 @@ export default async function handler(req: any, res: any) {
           const slackToken = env("SLACK_BOT_TOKEN");
           const slackChannel = env("SLACK_CHANNEL_ID");
           if (slackToken && slackChannel) {
-            const msg = `✅ *Director Approved — Quotation Sent*\nBuyer: *${approval.buyer_name || "Buyer"}*\nAmount: *${approval.amount || "USD TBD"}*\nProduct: ${meta.product || ""} ${meta.quantity || ""}\n📧 Quotation emailed to ${buyerEmail}\n⚙️ COO: Export order advanced to Stage 2 — Order Confirmation`;
+            const msg = `✅ *Director Approved — Quotation Sent*\nBuyer: *${approval.buyer_name || "Buyer"}*\nAmount: *${approval.amount || "USD TBD"}*\nProduct: ${meta.product || ""} ${meta.quantity || ""}\n📧 Buyer-facing quotation emailed to ${outboundBuyerEmail}\nOriginal buyer email: ${releaseEmail.original || "not provided"}\n⚙️ COO: Export order advanced to Stage 2 — Order Confirmation`;
             await fetch("https://slack.com/api/chat.postMessage", {
               method: "POST",
               headers: { Authorization: `Bearer ${slackToken}`, "Content-Type": "application/json" },
-              body: JSON.stringify({ channel: slackChannel, text: msg }),
+              body: JSON.stringify({ channel: slackChannel, text: cleanSlackText(msg) }),
             }).catch(() => null);
           }
         } else if (decision === "approved") {
-          postApprovalResult = { ok: false, reason: "no_buyer_email", note: "Approval recorded. Add buyer email in lead to auto-send quotation." };
+          postApprovalResult = { ok: false, reason: resendKey ? "invalid_release_email" : "resend_not_configured", note: "Approval recorded. Buyer-facing email was not sent." };
           // Still notify Slack
           const slackToken = env("SLACK_BOT_TOKEN");
           const slackChannel = env("SLACK_CHANNEL_ID");
           if (slackToken && slackChannel) {
-            const msg = `✅ *Director Approved — ${approval?.buyer_name || "Buyer"}*\n⚠️ No buyer email on file — please send quotation manually\nAmount: ${approval?.amount || "TBD"}`;
+            const msg = `✅ *Director Approved — ${approval?.buyer_name || "Buyer"}*\n⚠️ Buyer-facing email not sent — ${postApprovalResult.reason}\nAmount: ${approval?.amount || "TBD"}`;
             await fetch("https://slack.com/api/chat.postMessage", {
               method: "POST",
               headers: { Authorization: `Bearer ${slackToken}`, "Content-Type": "application/json" },
-              body: JSON.stringify({ channel: slackChannel, text: msg }),
+              body: JSON.stringify({ channel: slackChannel, text: cleanSlackText(msg) }),
             }).catch(() => null);
           }
         }
+
+        if (!stageResult && meta.export_order_id) {
+          stageResult = await advanceStage(client, meta.export_order_id, 2, "Director Approval", {
+            buyer_reply_sent_at: new Date().toISOString(),
+            buyer_email: outboundBuyerEmail || proformaInvoiceTestEmail(),
+            original_buyer_email: releaseEmail.original || null,
+            proforma_invoice_test_email: proformaInvoiceTestEmail(),
+          });
+        }
+
+        const invoiceResult = await createApprovedLeadProformaInvoice(client, {
+          ...approval,
+          id: approval.id || approvalId,
+          status: "Approved",
+          approval_status: "Approved",
+        }, { approved_at: new Date().toISOString(), quote_email_result: postApprovalResult, stage_result: stageResult });
+        postApprovalResult = { ...postApprovalResult, stage: stageResult, invoice: invoiceResult };
       }
 
       // 7. If rejected — notify Slack with reason
@@ -341,7 +371,7 @@ export default async function handler(req: any, res: any) {
           await fetch("https://slack.com/api/chat.postMessage", {
             method: "POST",
             headers: { Authorization: `Bearer ${slackToken}`, "Content-Type": "application/json" },
-            body: JSON.stringify({ channel: slackChannel, text: msg }),
+            body: JSON.stringify({ channel: slackChannel, text: cleanSlackText(msg) }),
           }).catch(() => null);
         }
         postApprovalResult = { ok: true, rejected: true };
@@ -357,7 +387,7 @@ export default async function handler(req: any, res: any) {
     integration: integrationResult,
     post_approval: postApprovalResult,
     message: decision === "approved"
-      ? `Approved. Quotation sent to buyer.`
+      ? `Approved. Proforma invoice generated and sent after Director approval.`
       : `Rejected. COO notified.`,
   });
 }

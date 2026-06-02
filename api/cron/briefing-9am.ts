@@ -1,7 +1,7 @@
 // @ts-nocheck
 /**
  * Morning Intelligence Briefing — 9:00 AM IST (3:30 AM UTC)
- * Runs AFTER morning-price-fetch (which runs at same time)
+ * Runs after morning-price-fetch, which refreshes CFO market prices at 8:00 AM IST.
  *
  * Compiles a full business intelligence briefing from all 5 agents:
  * - CIO: new leads overnight, lead quality scores
@@ -13,6 +13,7 @@
  */
 
 import { createClient } from "@supabase/supabase-js";
+import { cleanSlackText } from "../../lib/slackTextClean.js";
 
 const TENANT_ID = "11111111-1111-1111-1111-111111111111";
 
@@ -86,7 +87,7 @@ async function fetchLivePrices(client: any) {
     .select("product_label, price_inr_per_kg, updated_at, source")
     .eq("tenant_id", TENANT_ID)
     .order("product_label")
-    .limit(13));
+    .limit(300));
   return data || [];
 }
 
@@ -252,7 +253,7 @@ async function sendSlack(text: string) {
   const res = await fetch("https://slack.com/api/chat.postMessage", {
     method: "POST",
     headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
-    body: JSON.stringify({ channel, text }),
+    body: JSON.stringify({ channel, text: cleanSlackText(text) }),
   });
   const body = await res.json().catch(() => ({}));
   return { ok: body.ok === true, ts: body.ts };

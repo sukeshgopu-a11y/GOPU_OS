@@ -103,7 +103,11 @@ import {
   VirtualList,
   useSortable
 } from './components/shared/Primitives.jsx';
-import { formatDisplayDate } from './utils/dateFormat.js';
+import {
+  formatDisplayDate,
+  formatDisplayDateTime as displayDateTime,
+  formatDisplayTime as displayTime
+} from './utils/dateFormat.js';
 import { ctoDefaultLoginEmail } from './config/defaultLogins.js';
 import { announceToSR, getRouteAnnouncement, highlightMatch } from './utils/ui.jsx';
 import { cachedRead } from './services/performanceCache.js';
@@ -364,6 +368,8 @@ const IntegrationsVault       = React.lazy(() => import('./pages/CTOPage.jsx').t
 const CMOCommandPage          = React.lazy(() => import('./pages/CMOPage.jsx'));
 const CompanyMasterDataVault  = React.lazy(() => import('./pages/CompanyMasterDataPage.jsx'));
 const COOCommandPage          = React.lazy(() => import('./pages/COOPage.jsx'));
+const COOLeadExecutionPage    = React.lazy(() => import('./pages/COOLeadExecutionPage.jsx'));
+const TemporaryCRMHome        = React.lazy(() => import('./pages/TemporaryCRMHome.jsx'));
 const LearningCentrePage      = React.lazy(() => import('./pages/LearningCentrePage.jsx'));
 const ShipmentsPage           = React.lazy(() => import('./pages/ShipmentsPage.jsx'));
 const TasksPage               = React.lazy(() => import('./pages/TasksPage.jsx'));
@@ -560,7 +566,16 @@ const founderReviewQueue = [];
 
 const executiveActivityTimeline = [];
 
-const forexTickerItems = [];
+const FOREX_REFRESH_INTERVAL_MS = 30 * 60 * 1000;
+const FOREX_STORAGE_KEY = 'gopu-forex-rates-v1';
+
+const forexTickerItems = [
+  { pair: 'USD/INR', rate: '94.99', rawRate: 94.9877, change: '0.00', direction: 'flat', source: 'GOPU FX reference fallback' },
+  { pair: 'EUR/INR', rate: '110.75', rawRate: 110.7526, change: '0.00', direction: 'flat', source: 'GOPU FX reference fallback' },
+  { pair: 'AED/INR', rate: '25.86', rawRate: 25.8646, change: '0.00', direction: 'flat', source: 'GOPU FX reference fallback' },
+  { pair: 'AUD/INR', rate: '68.24', rawRate: 68.2433, change: '0.00', direction: 'flat', source: 'GOPU FX reference fallback' },
+  { pair: 'GBP/INR', rate: '127.83', rawRate: 127.8258, change: '0.00', direction: 'flat', source: 'GOPU FX reference fallback' }
+];
 
 const exportNewsItems = [];
 
@@ -575,54 +590,67 @@ function getCommandRuntimeStatus(commandId) {
   return { label: 'Online', state: 'online' };
 }
 
+function forexCadenceLabel(ms = FOREX_REFRESH_INTERVAL_MS) {
+  return `${Math.round(ms / 60000)}m cycle`;
+}
+
+function formatForexStatus(snapshot) {
+  const checkedAt = snapshot?.checked_at || snapshot?.rates?.[0]?.updated_at || new Date().toISOString();
+  const cadence = forexCadenceLabel(snapshot?.refresh_interval_ms || FOREX_REFRESH_INTERVAL_MS);
+  if (snapshot?.status === 'stale') return `Using cached FX ${formatDisplayDate(checkedAt)} - ${cadence}`;
+  if (snapshot?.ok === false || snapshot?.status === 'fallback') return `FX fallback ${formatDisplayDate(checkedAt)} - ${cadence}`;
+  return `FX checked ${formatDisplayDate(checkedAt)} - ${cadence}`;
+}
+
+function readStoredForexSnapshot() {
+  if (typeof window === 'undefined') return null;
+  try {
+    const parsed = JSON.parse(window.localStorage.getItem(FOREX_STORAGE_KEY) || 'null');
+    if (!parsed?.rates?.length) return null;
+    return parsed;
+  } catch {
+    return null;
+  }
+}
+
+function storeForexSnapshot(snapshot) {
+  if (typeof window === 'undefined' || !snapshot?.rates?.length) return;
+  try {
+    window.localStorage.setItem(FOREX_STORAGE_KEY, JSON.stringify(snapshot));
+  } catch {
+    // Local storage can be disabled; the ticker can still run from memory.
+  }
+}
+
+function getInitialForexSnapshot() {
+  const stored = readStoredForexSnapshot();
+  if (stored?.rates?.length) {
+    return {
+      rates: stored.rates,
+      status: formatForexStatus(stored),
+      checked_at: stored.checked_at
+    };
+  }
+  return {
+    rates: forexTickerItems,
+    status: `Connecting live FX - ${forexCadenceLabel()}`
+  };
+}
+
 async function fetchJson(url) {
   const response = await fetch(url, { cache: 'no-store' });
   if (!response.ok) throw new Error(`Request failed: ${response.status}`);
   return response.json();
 }
 
-async function fetchForexRates(previousRates = []) {
-  const pairs = [
-    { pair: 'USD/INR', base: 'usd' },
-    { pair: 'EUR/INR', base: 'eur' },
-    { pair: 'AED/INR', base: 'aed' },
-    { pair: 'AUD/INR', base: 'aud' },
-    { pair: 'GBP/INR', base: 'gbp' }
-  ];
-
-  const updatedAt = new Date().toISOString();
-  const results = await Promise.all(pairs.map(async (item) => {
-    const endpoints = [
-      `https://cdn.jsdelivr.net/npm/@fawazahmed0/currency-api@latest/v1/currencies/${item.base}.json`,
-      `https://latest.currency-api.pages.dev/v1/currencies/${item.base}.json`
-    ];
-    let payload;
-    for (const endpoint of endpoints) {
-      try {
-        payload = await fetchJson(endpoint);
-        break;
-      } catch {
-        payload = null;
-      }
-    }
-    if (!payload?.[item.base]?.inr) throw new Error(`Missing INR rate for ${item.base}`);
-    const rate = Number(payload[item.base].inr);
-    const previous = previousRates.find((rateItem) => rateItem.pair === item.pair);
-    const parsedPreviousRate = previous ? Number(previous.rawRate ?? previous.rate) : rate;
-    const previousRate = Number.isFinite(parsedPreviousRate) ? parsedPreviousRate : rate;
-    const diff = rate - previousRate;
-    return {
-      pair: item.pair,
-      rate: rate.toFixed(2),
-      rawRate: rate,
-      change: diff === 0 ? '0.00' : `${diff > 0 ? '+' : ''}${diff.toFixed(2)}`,
-      direction: diff >= 0 ? 'up' : 'down',
-      updated_at: updatedAt,
-      source: 'Currency API'
-    };
-  }));
-
-  return results;
+async function fetchForexRates(force = false) {
+  const query = new URLSearchParams({ ts: String(Date.now()) });
+  if (force) query.set('force', 'true');
+  const snapshot = await fetchJson(`/api/forex/rates?${query.toString()}`);
+  if (!Array.isArray(snapshot?.rates) || snapshot.rates.length === 0) {
+    throw new Error(snapshot?.message || 'No FX rates returned');
+  }
+  return snapshot;
 }
 
 function parseGdeltDate(value) {
@@ -743,31 +771,62 @@ async function fetchLatestExportNews() {
 }
 
 function useLiveForexRates() {
-  const [rates, setRates] = useState(forexTickerItems);
-  const [status, setStatus] = useState('Rates load when live refresh completes');
+  const initialSnapshot = getInitialForexSnapshot();
+  const [rates, setRates] = useState(initialSnapshot.rates);
+  const [status, setStatus] = useState(initialSnapshot.status);
 
   useEffect(() => {
     let disposed = false;
-    let currentRates = rates;
+    let inFlight = false;
+    let currentSnapshot = readStoredForexSnapshot() || initialSnapshot;
 
-    async function refreshRates() {
+    async function refreshRates({ force = false } = {}) {
+      if (inFlight) return;
+      inFlight = true;
       try {
-        const nextRates = await fetchForexRates(currentRates);
+        const nextSnapshot = await fetchForexRates(force);
         if (!disposed) {
-          currentRates = nextRates;
-          setRates(nextRates);
-          setStatus(`Live rates refreshed ${formatDisplayDate(new Date())}`);
+          currentSnapshot = nextSnapshot;
+          setRates(nextSnapshot.rates);
+          setStatus(formatForexStatus(nextSnapshot));
+          storeForexSnapshot(nextSnapshot);
         }
       } catch {
-        if (!disposed) setStatus('Live forex unavailable');
+        if (!disposed) {
+          const stored = readStoredForexSnapshot();
+          if (stored?.rates?.length) {
+            currentSnapshot = stored;
+            setRates(stored.rates);
+            setStatus(`Using cached FX ${formatDisplayDate(stored.checked_at)} - retrying on ${forexCadenceLabel()}`);
+          } else {
+            currentSnapshot = { ...currentSnapshot, rates: currentSnapshot.rates?.length ? currentSnapshot.rates : forexTickerItems };
+            setRates(currentSnapshot.rates);
+            setStatus(`FX refresh pending - retrying on ${forexCadenceLabel()}`);
+          }
+        }
+      } finally {
+        inFlight = false;
       }
     }
 
     refreshRates();
-    const timer = window.setInterval(refreshRates, 60000);
+    const refreshIfDue = () => {
+      const checkedAt = currentSnapshot?.checked_at ? new Date(currentSnapshot.checked_at).getTime() : 0;
+      if (!checkedAt || Date.now() - checkedAt >= FOREX_REFRESH_INTERVAL_MS) {
+        refreshRates({ force: true });
+      }
+    };
+    const visibilityRefresh = () => {
+      if (document.visibilityState === 'visible') refreshIfDue();
+    };
+    const timer = window.setInterval(refreshRates, FOREX_REFRESH_INTERVAL_MS);
+    window.addEventListener('focus', refreshIfDue);
+    document.addEventListener('visibilitychange', visibilityRefresh);
     return () => {
       disposed = true;
       window.clearInterval(timer);
+      window.removeEventListener('focus', refreshIfDue);
+      document.removeEventListener('visibilitychange', visibilityRefresh);
     };
   }, []);
 
@@ -2957,6 +3016,16 @@ function App() {
     return <BuyerCRMPage navigate={navigate} onBack={() => navigate('/export-os')} view={route.split('/').pop()} />;
   }
 
+  if (route.startsWith('/export-os/coo/leads/')) {
+    const leadId = route.split('/').pop();
+    return withSessionWarning(<COOLeadExecutionPage leadId={leadId} navigate={navigate} onBack={() => navigate('/export-os/executives/coo')} />);
+  }
+
+  if (route.startsWith('/export-os/leads/') && route !== '/export-os/leads/new') {
+    const leadId = route.split('/').pop();
+    return withSessionWarning(<COOLeadExecutionPage leadId={leadId} navigate={navigate} onBack={() => navigate('/export-os/executives/coo')} />);
+  }
+
   if (route === '/export-os/lead-intake' || route === '/export-os/leads' || route === '/export-os/leads/new') {
     return <LeadIntakeFormPage navigate={navigate} onBack={() => navigate('/export-os/director')} />;
   }
@@ -3032,7 +3101,7 @@ function App() {
 
   return withSessionWarning(
     <>
-      <ExecutiveCommandDeck navigate={navigate} showSearch={showSearch} setShowSearch={setShowSearch} setShowShortcuts={setShowShortcuts} session={authState.session} onLogout={async () => {
+      <TemporaryCRMHome navigate={navigate} onLogout={async () => {
         if (isSupabaseConfigured && supabase) {
           await supabase.auth.signOut();
         }
@@ -3043,7 +3112,6 @@ function App() {
         setAuthState({ ready: true, session: null });
         navigate('/login/export');
       }} />
-      {showTour && <OnboardingTour onDone={() => setShowTour(false)} />}
     </>
   );
 }
@@ -4181,9 +4249,9 @@ function LiveClock() {
     <time
       className="live-clock"
       dateTime={time.toISOString()}
-      aria-label={`Current time: ${time.toLocaleTimeString()}`}
+      aria-label={`Current time: ${displayTime(time)}`}
     >
-      {time.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+      {displayTime(time)}
     </time>
   );
 }
@@ -5923,7 +5991,7 @@ function CommandDeckHeader({ navigate, onLogout, showSearch = false, setShowSear
           <StatusPulse /><strong>{systemStatus}</strong>
         </button>
         <button className="coo-time top-command-control" onClick={() => togglePanel('clock')} aria-expanded={activePanel === 'clock'}>
-          <CalendarClock size={16} /><span>{now.toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' })}</span>
+          <CalendarClock size={16} /><span>{displayDateTime(now)}</span>
         </button>
         <Tooltip text="Notifications">
           <button className="icon-button top-icon-button notification-button" aria-label="Notifications" onClick={() => togglePanel('notifications')} aria-expanded={activePanel === 'notifications'}>
@@ -6120,7 +6188,7 @@ function SessionSecurityPanel({ now, navigate }) {
         {[
           ['Active role', 'Director / Executive operator'],
           ['Current device', 'Codex desktop session'],
-          ['Login time', loginTime.toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' })],
+          ['Login time', displayDateTime(loginTime)],
           ['MFA pending', 'Monitoring'],
           ['Session security', 'Verified'],
           ['Executive access level', 'Elevated Access']
@@ -6179,7 +6247,7 @@ function GlobalOperationsClock({ now }) {
         {zones.map(([label, timeZone]) => (
           <div key={label}>
             <span>{label}</span>
-            <strong>{now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', timeZone })}</strong>
+            <strong>{displayTime(now, { timeZone })}</strong>
             <small>{now.toLocaleDateString([], { weekday: 'short', month: 'short', day: 'numeric', timeZone })}</small>
           </div>
         ))}
@@ -6759,7 +6827,8 @@ function ExecutiveSyncSummary({ updates }) {
 }
 
 function ForexTicker({ items, status }) {
-  const tickerItems = [...items, ...items];
+  const visibleItems = items?.length ? items : forexTickerItems;
+  const tickerItems = [...visibleItems, ...visibleItems];
 
   return (
     <section className="forex-ticker" aria-label="Live foreign exchange rates" aria-live="polite">
@@ -7156,7 +7225,7 @@ function InvoiceSystemShell({ children, onBack, onOpenTasks, title, subtitle }) 
         <div className="deck-header-controls">
           <div className="coo-verified"><ShieldCheck size={16} /><span>Founder session verified</span></div>
           <div className="coo-status"><FileCheck2 size={15} /><strong>Default Mode: LUT/Bond Without IGST</strong></div>
-          <div className="coo-time"><CalendarClock size={16} /><span>{now.toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' })}</span></div>
+          <div className="coo-time"><CalendarClock size={16} /><span>{displayDateTime(now)}</span></div>
           {onOpenTasks && <button className="ghost-button deck-logout" onClick={onOpenTasks}><Workflow size={15} />Task Engine</button>}
           <button className="ghost-button deck-logout" onClick={onBack}><ArrowLeft size={15} />Back</button>
         </div>
@@ -9082,7 +9151,7 @@ function WorkflowGuidanceEngine({ navigate, onBack, initialView = 'Workflow Guid
           <div className="coo-verified"><ShieldCheck size={16} /><span>Founder session verified</span></div>
           <StatusBadge label={data?.summary?.buyerStatus || 'Guidance Loading'} state="attention" />
           <StatusBadge label={`${data?.summary?.missingDependencies || 0} Missing Dependencies`} state="attention" />
-          <div className="coo-time"><CalendarClock size={16} /><span>{now.toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' })}</span></div>
+          <div className="coo-time"><CalendarClock size={16} /><span>{displayDateTime(now)}</span></div>
           <button className="ghost-button deck-logout" onClick={onBack}><ArrowLeft size={15} /> Command Deck</button>
         </div>
       </header>
@@ -9197,7 +9266,7 @@ function ExecutiveWarRoom({ navigate, onBack, mode = 'Sync' }) {
           <StatusBadge label={mode} state="progress" />
           <StatusBadge label={`${data?.warRoom?.criticalAlerts || 0} critical alerts`} state={(data?.warRoom?.criticalAlerts || 0) ? 'error' : 'progress'} />
           <StatusBadge label={`${data?.warRoom?.operationalReadiness || 0}% readiness`} state={(data?.warRoom?.operationalReadiness || 0) < 55 ? 'attention' : 'progress'} />
-          <div className="coo-time"><CalendarClock size={16} /><span>{now.toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' })}</span></div>
+          <div className="coo-time"><CalendarClock size={16} /><span>{displayDateTime(now)}</span></div>
           <button className="ghost-button deck-logout" onClick={onBack}><ArrowLeft size={15} /> Command Deck</button>
         </div>
       </header>
@@ -9368,7 +9437,7 @@ function NotificationCenter({ navigate, onBack }) {
           <div className="coo-verified"><ShieldCheck size={16} /><span>Founder session verified</span></div>
           <StatusBadge label={`${data?.counts?.critical || 0} Critical Alerts`} state="error" />
           <StatusBadge label={`${data?.counts?.pendingReviews || 0} Pending Reviews`} state="attention" />
-          <div className="coo-time"><CalendarClock size={16} /><span>{now.toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' })}</span></div>
+          <div className="coo-time"><CalendarClock size={16} /><span>{displayDateTime(now)}</span></div>
           <button className="ghost-button deck-logout" onClick={onBack}><ArrowLeft size={15} /> Command Deck</button>
         </div>
       </header>
@@ -9725,7 +9794,7 @@ function CIOCommandPage({ navigate, onBack, view = 'overview', importerId }) {
           <div className="coo-verified"><ShieldCheck size={16} /><span>Founder session verified</span></div>
           <StatusBadge label={`SAMPLE IMPORTERS: ${summary.activeImporterRecords || 0}`} state="progress" />
           <StatusBadge label="Live data not connected" state="attention" />
-          <div className="coo-time"><CalendarClock size={16} /><span>{now.toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' })}</span></div>
+          <div className="coo-time"><CalendarClock size={16} /><span>{displayDateTime(now)}</span></div>
           <button className="ghost-button deck-logout" onClick={onBack}><ArrowLeft size={15} /> Command Deck</button>
         </div>
       </header>
@@ -10123,7 +10192,7 @@ function TrustCenterDashboard({ navigate, onBack, view = 'overview' }) {
           <div className="coo-verified"><ShieldCheck size={16} /><span>Founder session verified</span></div>
           <StatusBadge label={`${data?.summary?.markets || 0} market regions`} state="progress" />
           <StatusBadge label={`${data?.summary?.certificationsUnderReview || 0} verification items`} state="attention" />
-          <div className="coo-time"><CalendarClock size={16} /><span>{now.toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' })}</span></div>
+          <div className="coo-time"><CalendarClock size={16} /><span>{displayDateTime(now)}</span></div>
           <button className="ghost-button deck-logout" onClick={onBack}><ArrowLeft size={15} /> Command Deck</button>
         </div>
       </header>
@@ -10268,7 +10337,7 @@ function MarketIntelligenceDashboard({ navigate, onBack }) {
           <div className="coo-verified"><ShieldCheck size={16} /><span>Founder session verified</span></div>
           <StatusBadge label={`${data?.summary?.activeSignals || 0} market signals`} state="progress" />
           <StatusBadge label={`${data?.summary?.highOpportunityAlerts || 0} high opportunities`} state="attention" />
-          <div className="coo-time"><CalendarClock size={16} /><span>{now.toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' })}</span></div>
+          <div className="coo-time"><CalendarClock size={16} /><span>{displayDateTime(now)}</span></div>
           <button className="ghost-button deck-logout" onClick={onBack}><ArrowLeft size={15} /> Command Deck</button>
         </div>
       </header>
@@ -11851,7 +11920,7 @@ function BriefingHeader({ now, status, onBack }) {
       <div className="deck-header-controls">
         <div className="coo-verified"><ShieldCheck size={16} /><span>Founder session verified</span></div>
         <div className="coo-status"><CalendarClock size={16} /><strong>{now.toLocaleDateString([], { dateStyle: 'full' })}</strong></div>
-        <div className="coo-time"><TimerReset size={16} /><span>{now.toLocaleTimeString([], { timeStyle: 'short' })}</span></div>
+        <div className="coo-time"><TimerReset size={16} /><span>{displayTime(now)}</span></div>
         <StatusBadge label={`Briefing Status: ${status}`} state={status === 'Attention' ? 'attention' : status === 'Generating' ? 'progress' : 'online'} />
         <button className="ghost-button deck-logout" onClick={onBack}><ArrowLeft size={15} /> Command Deck</button>
       </div>

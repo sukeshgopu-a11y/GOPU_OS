@@ -1,4 +1,4 @@
-import { backendStatus, isSupabaseConfigured, requireSupabase } from '../lib/supabaseClient.js';
+import { backendStatus, isSupabaseConfigured, requireSupabase, requireSupabaseSession } from '../lib/supabaseClient.js';
 import { demoTenantId } from './demoData.js';
 import { createTableService } from './serviceHelpers.js';
 import { cachedRead, clearCache } from './performanceCache.js';
@@ -105,7 +105,7 @@ export async function getTasks(tenantId = demoTenantId, filters = {}) {
 }
 
 async function getTasksUncached(tenantId = demoTenantId, filters = {}) {
-  const { client, error } = requireSupabase();
+  const { client, error } = await requireSupabaseSession();
   if (error) {
     hydrateLocalTasks();
     return { ok: true, data: localTasks.map(normalizeTask), error: null, backend: backendStatus };
@@ -126,7 +126,7 @@ async function getTasksUncached(tenantId = demoTenantId, filters = {}) {
 }
 
 export async function getTaskById(tenantId = demoTenantId, taskId) {
-  const { client, error } = requireSupabase();
+  const { client, error } = await requireSupabaseSession();
   if (error) {
     const local = findLocalTask(taskId);
     return { ok: true, data: local ? normalizeTask(local) : null, error: null, backend: backendStatus };

@@ -20,6 +20,7 @@ import { addTaskComment, createTaskFromWorkflow, getTasks, updateTaskStatus as u
 import { createAuditLog, listAuditLogs } from '../services/auditService.js';
 import { ExportOSShell } from '../shared/routeShell.jsx';
 import { Breadcrumb, StatusBadge, TrendIndicator, EmptyState, SkeletonBlock, SkeletonCard, SkeletonTable, SkeletonKpiBar, MetricSkeletonGrid, HBarChart, SortableTableHeader, StatusPulse, PriorityBadge, SeverityBadge, Panel, StatusPill, StateChip, SignalList, MiniBars, BulkActionBar, FilterBar, VirtualList, useSortable } from '../shared/uiPrimitives.jsx';
+import { displayDateTime } from '../utils/dateTime.js';
 import { Pagination } from '../shared/dashboardPrimitives.jsx';
 import { approvalAuditEvents, approvalFilters, approvalMemoryPatterns, approvalModels, exportCSV, urgentExecutiveAlerts, useConfirm, useRowSelection, useToast } from '../shared/runtimeHelpers.jsx';
 
@@ -317,7 +318,7 @@ function DirectorCommandCenter({ navigate, onBack, onOpenTasks }) {
                       <td className="dir-td-title">
                         <strong className="dir-table-title">{item.title}</strong>
                         {item.buyer_name && <span className="dir-table-buyer">{item.buyer_name}</span>}
-                        {(item.lead_number || item.product) && <span className="dir-table-buyer">{item.lead_number || 'Lead'} / {item.product || 'Product pending'}</span>}
+                        {(item.lead_number || item.product) && <span className="dir-table-buyer">{item.lead_number || 'Lead'} / {item.product || 'Black pepper'}</span>}
                       </td>
                       <td className="dir-td-agent">
                         <span className="dir-agent-chip" style={{ color: agentColours[role], borderColor: agentColours[role] + '44' }}>{role}</span>
@@ -408,7 +409,7 @@ function DirectorExecutiveHeader({ now, summary, onBack, onOpenTasks }) {
         <div className="director-session-pill"><ShieldCheck size={15} /><span>Session verified</span></div>
         <StatusBadge label={`${summary.critical} critical`} state={summary.critical ? 'error' : 'progress'} />
         <StatusBadge label={`${summary.escalated} escalated`} state={summary.escalated ? 'attention' : 'progress'} />
-        <div className="director-date-pill"><CalendarClock size={15} /><span>{now.toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' })}</span></div>
+        <div className="director-date-pill"><CalendarClock size={15} /><span>{displayDateTime(now)}</span></div>
         <button className="tactical-button" onClick={onOpenTasks}><Workflow size={15} />Tasks</button>
       </div>
     </header>
@@ -531,7 +532,7 @@ function DirectorReviewDrawer({ item, note, setNote, onClose, onApprove, onClari
         </section>
         <section className="director-review-section">
           <span>Lead and price evidence</span>
-          <p>{item.lead_number || 'Lead number pending'} / {item.buyer_name || 'Buyer pending'} / {item.product || 'Product pending'}</p>
+          <p>{item.lead_number || 'Lead number pending'} / {item.buyer_name || 'Gulf Foods LLC'} / {item.product || 'Black pepper'}</p>
           <small>Quote: {item.quotation_amount || item.amount || 'Pending'} · Source: {item.price_source_type || 'Internal Estimate'} · Confidence: {item.source_confidence || 'Estimate'}</small>
         </section>
         <section className="director-review-section recommended">
@@ -644,7 +645,7 @@ function DirectorSupportIntelligence({ opportunities, delays, insights, recommen
 }
 
 function DirectorExecutiveFooter({ message, commandInput, setCommandInput, commandResponse, commandHistory, onRunCommand, navigate }) {
-  const suggestions = ['Open new lead form', 'What is blocking invoices?', 'Show delayed shipments.', 'What payments are pending?', 'Any Country pending opportunities?'];
+  const suggestions = ['Open new lead form', 'What is blocking invoices?', 'Show delayed shipments.', 'What payments are pending?', 'Any UAE opportunities?'];
   return (
     <footer className="director-executive-footer">
       <div className="director-footer-status"><StatusPulse /><span>{message}</span></div>
@@ -965,6 +966,15 @@ function normalizeDirectorStatus(status) {
   return status || 'Pending';
 }
 
+function getApprovalState(status = '') {
+  const text = String(status || '').toLowerCase();
+  if (text.includes('reject') || text.includes('blocked') || text.includes('critical') || text.includes('failed') || text.includes('error')) return 'error';
+  if (text.includes('approve') || text.includes('complete') || text.includes('released') || text.includes('success')) return 'success';
+  if (text.includes('pending') || text.includes('waiting') || text.includes('review') || text.includes('clarification') || text.includes('high') || text.includes('urgent') || text.includes('attention')) return 'attention';
+  if (text.includes('progress') || text.includes('escalated') || text.includes('medium')) return 'progress';
+  return 'idle';
+}
+
 function getDirectorDirectOpenRoute(query) {
   const q = query.toLowerCase();
   if ((q.includes('open') || q.includes('create') || q.includes('new')) && q.includes('lead') && (q.includes('form') || q.includes('intake') || q.includes('new'))) {
@@ -1019,7 +1029,7 @@ function buildDirectorCommandResponse(query, items = [], directorData = {}) {
   let summary = 'Director reviewed the operational queue and routed the question to the relevant executive systems.';
   if (q.includes('marketing') && q.includes('budget')) summary = 'Marketing budget questions route through CMO for campaign context and CFO for budget/spend control.';
   else if (q.includes('shipment') || q.includes('dispatch')) summary = 'Shipment questions route through COO, warehouse, invoice readiness, and supplier follow-up signals.';
-  else if (q.includes('uae') || q.includes('opportun')) summary = 'Country pending and opportunity questions route through CIO market intelligence, CMO outreach, and CFO pricing viability.';
+  else if (q.includes('uae') || q.includes('opportun')) summary = 'UAE and opportunity questions route through CIO market intelligence, CMO outreach, and CFO pricing viability.';
   else if (q.includes('delay') || q.includes('pending')) summary = 'Pending and delayed workflow questions route across tasks, invoices, shipments, suppliers, payments, and Director queue items.';
   else if (q.includes('invoice')) summary = 'Invoice blockers route through CFO validation, company/LUT data, document readiness, and operational release status.';
   else if (q.includes('payment')) summary = 'Payment questions route through CFO controls, Payment Vault, CTO renewal triggers, and Director decision rules.';
@@ -1040,12 +1050,12 @@ function buildDirectorCommandResponse(query, items = [], directorData = {}) {
 }
 
 function DirectorCommandConsole({ value, setValue, onRun, response, history, navigate, onEscalate, onCreateFollowup }) {
-  const suggestions = ['What is pending this month?', 'How much marketing budget pending?', 'Show delayed shipments.', 'Any high-risk buyers?', 'What is blocking invoices?', 'What payments are pending?', 'Any Country pending opportunities?', "Show todays priorities."];
+  const suggestions = ['What is pending this month?', 'How much marketing budget pending?', 'Show delayed shipments.', 'Any high-risk buyers?', 'What is blocking invoices?', 'What payments are pending?', 'Any UAE opportunities?', "Show todays priorities."];
   return (
     <section className="director-panel director-command-console">
       <div className="approval-section-header"><div><span>Director Command Input</span><h2>Ask GOPU OS anything operational</h2></div><Bot size={18} /></div>
       <div className="director-input-row">
-        <textarea aria-label="Command prompt" value={value} onChange={(event) => setValue(event.target.value)} onKeyDown={(event) => { if ((event.ctrlKey || event.metaKey) && event.key === 'Enter') onRun(); }} placeholder="What is pending this month?  -  Show delayed shipments.  -  Any Country pending opportunities?  -  What is blocking invoices?" />
+        <textarea aria-label="Command prompt" value={value} onChange={(event) => setValue(event.target.value)} onKeyDown={(event) => { if ((event.ctrlKey || event.metaKey) && event.key === 'Enter') onRun(); }} placeholder="What is pending this month?  -  Show delayed shipments.  -  Any UAE opportunities?  -  What is blocking invoices?" />
         <button className="tactical-button" onClick={() => onRun()}>Ask Director</button>
       </div>
       <div className="director-suggestion-row">
@@ -1081,7 +1091,7 @@ function ExecutiveResponsePanel({ response, navigate, onEscalate, onCreateFollow
         <button className="ghost-button">Approve</button>
         <button className="ghost-button">Request Clarification</button>
         <button className="ghost-button" onClick={onCreateFollowup}>Create Follow-up</button>
-        <button className="ghost-button" onClick={() => navigate('/export-os/security-audit')}>Open Audit</button>
+        <button className="ghost-button" onClick={() => navigate('/export-os/access-audit')}>Open Audit</button>
       </div>
     </section>
   );
@@ -1190,7 +1200,7 @@ function ExecutivePerformanceInsights({ insights = [] }) {
 function DirectorAIRecommendations({ recommendations = [] }) {
   return (
     <section className="director-panel">
-      <div className="approval-section-header"><div><span>AI Operational Recommendations</span><h2>AI Recommendation -- Human Review Advised</h2></div><BrainCircuit size={18} /></div>
+      <div className="approval-section-header"><div><span>AI Operational Recommendations</span><h2>AI Recommendation - Human Review Advised</h2></div><BrainCircuit size={18} /></div>
       <div className="director-card-list">
         {recommendations.map((item) => <article key={item.recommendation}><div><strong>{item.recommendation}</strong><SeverityBadge severity={item.risk_level} /></div><span>Confidence: {item.confidence}</span><p>{item.next_action}</p></article>)}
       </div>
@@ -1366,11 +1376,11 @@ function FounderApprovalWall({ onBack, onOpenTasks }) {
         setApprovalStatusMessage('Founder note saved to approval comments.');
       } else {
         setApprovalStatusMessage(result?.error?.message || 'Approval action failed.');
-        show('Action failed -- please retry', 'error');
+        show('Action failed - please retry', 'error');
       }
     } catch (error) {
       setApprovalStatusMessage(error?.message || 'Approval action failed.');
-      show('Action failed -- please retry', 'error');
+      show('Action failed - please retry', 'error');
     }
     setModalAction(null);
   }, [founderNote, replaceRequest, selectedRequest, show]);
@@ -1506,7 +1516,7 @@ function ApprovalWallHeader({ onBack, onOpenTasks, pendingCount, highRiskCount }
         <div className="coo-verified"><ShieldCheck size={16} /><span>Founder session verified</span></div>
         <div className="coo-status"><FileCheck2 size={15} /><strong>Pending Approvals: {pendingCount}</strong></div>
         <div className="coo-status"><TriangleAlert size={15} /><strong>High-Risk Alerts: {highRiskCount}</strong></div>
-        <div className="coo-time"><CalendarClock size={16} /><span>{now.toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' })}</span></div>
+        <div className="coo-time"><CalendarClock size={16} /><span>{displayDateTime(now)}</span></div>
         <button className="icon-button" aria-label="Notifications"><Bell size={18} /></button>
         <button className="ghost-button deck-logout" onClick={onOpenTasks}><Workflow size={15} />Task Engine</button>
         <button className="ghost-button deck-logout" onClick={onBack}><ArrowLeft size={15} /> Command Deck</button>
@@ -1647,9 +1657,29 @@ const ApprovalQueueCard = React.memo(function ApprovalCard({ request, selected, 
   );
 });
 
+function formatApprovalDetailValue(value) {
+  if (value === null || value === undefined || value === '') return '-';
+  if (Array.isArray(value)) {
+    const names = value.map((item) => item?.name || item?.title || item?.id || item).filter(Boolean).slice(0, 4);
+    const suffix = value.length > names.length ? ` +${value.length - names.length} more` : '';
+    return names.length ? `${names.join(', ')}${suffix}` : `${value.length} items`;
+  }
+  if (typeof value === 'object') {
+    const preferred = value.title || value.name || value.lead_number || value.amountDisplay || value.status || value.key;
+    if (preferred) return preferred;
+    const keys = Object.keys(value).slice(0, 5);
+    return keys.length ? keys.map((key) => `${key}: ${value[key]}`).join(', ') : 'Attached details';
+  }
+  return String(value);
+}
+
 function ApprovalDetailPanel({ request, onAction }) {
   if (!request) return null;
   const entries = Object.entries(request.details || {});
+  const gate = request.metadata?.gate || request.details?.gate;
+  const lead = request.metadata?.lead || request.details?.lead || {};
+  const shipment = request.metadata?.shipment || request.details?.shipment || {};
+  const documents = request.metadata?.documents || request.details?.documents || [];
   return (
     <section className="approval-panel approval-detail-panel">
       <div className="approval-detail-top">
@@ -1677,11 +1707,17 @@ function ApprovalDetailPanel({ request, onAction }) {
         <div><span>Linked Record</span><strong>{request.details?.linked_invoice || request.details?.linked_quote || request.related_workflow_id || 'Not linked'}</strong></div>
       </div>
       <div className="approval-warning whatsapp-approval-status"><Mail size={16} />WhatsApp approval request: {request.whatsapp_status || 'Pending'} via {request.whatsapp_provider || 'provider-ready layer'}.</div>
+      {(gate || lead.lead_number || documents.length > 0) && (
+        <div className="approval-warning whatsapp-approval-status">
+          <ClipboardCheck size={16} />
+          COO gate: {gate?.title || request.title}. Lead {lead.lead_number || request.related_record || 'pending'} / {lead.product || request.product || 'product pending'} / {shipment.container || lead.container_load || 'shipment pending'} / documents {documents.length || 'pending'}.
+        </div>
+      )}
       <div className="approval-detail-grid">
         {entries.map(([key, value]) => (
           <div key={key}>
             <span>{key.replaceAll('_', ' ')}</span>
-            <p>{value}</p>
+            <p>{formatApprovalDetailValue(value)}</p>
           </div>
         ))}
       </div>
@@ -2173,4 +2209,3 @@ function DirectorDecisionDetailPage({ decisionId, navigate, onBack }) {
 
 export default DirectorCommandCenter;
 export { DirectorDecisionDetailPage };
-

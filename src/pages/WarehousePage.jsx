@@ -20,17 +20,17 @@ import { SeverityBadge, StatusBadge } from '../shared/uiPrimitives.jsx';
 const warehouseInventorySeed = [];
 
 const stockMovementSeed = [
-  ['Inward Stock', 'Product pending', 'BP2401', '1,200 KG', 'Warehouse Manager', 'Pending shipment allocation', 'Today 08:50', 'Monitoring'],
-  ['Dispatch Allocation', 'Product pending', 'TF2408', '600 KG', 'COO Command', 'Country pending-SHP-001', 'Today 09:30', 'Reserved'],
+  ['Inward Stock', 'Black pepper', 'BP2401', '1,200 KG', 'Warehouse Manager', 'Pending shipment allocation', 'Today 08:50', 'Monitoring'],
+  ['Dispatch Allocation', 'Black pepper', 'TF2408', '600 KG', 'COO Command', 'UAE-SHP-001', 'Today 09:30', 'Reserved'],
   ['Quality Hold', 'Cumin Seeds', 'CS2404', '300 KG', 'Quality Control', 'Shipment blocked', 'Today 10:00', 'Blocked'],
-  ['Packing Material Issue', 'Export Bags', 'BAG-EXP-01', '500 pcs demand', 'Warehouse Staff', 'Country pending-SHP-001', 'Today 10:20', 'Attention'],
-  ['Warehouse Transfer', 'Product pending', 'CP2402', '240 KG', 'Operations', 'Packing zone transfer', 'Yesterday 15:10', 'Dispatch Ready']
+  ['Packing Material Issue', 'Export Bags', 'BAG-EXP-01', '500 pcs demand', 'Warehouse Staff', 'UAE-SHP-001', 'Today 10:20', 'Attention'],
+  ['Warehouse Transfer', 'Black pepper', 'CP2402', '240 KG', 'Operations', 'Packing zone transfer', 'Yesterday 15:10', 'Dispatch Ready']
 ].map(([type, product, batch, quantity, owner, linkedShipment, timestamp, status], index) => ({ id: `movement-${index}`, type, product, batch, quantity, owner, linkedShipment, timestamp, status }));
 
 const shipmentAllocationSeed = [
-  ['Country pending-SHP-001', 'Product pending / BP2401', '400 KG', '800 KG', 'Packing in progress', 'Invoice draft linked', 'Attention'],
-  ['OMN-SHP-002', 'Product pending / TF2408', '600 KG', '250 KG', 'Dispatch dependency: bags', 'Pricing approved / invoice pending', 'Review Required'],
-  ['VNM-SHP-003', 'Product pending / CP2402', '240 KG', '400 KG', 'Ready', 'Document Factory linked', 'Dispatch Ready']
+  ['UAE-SHP-001', 'Black pepper / BP2401', '400 KG', '800 KG', 'Packing in progress', 'Invoice draft linked', 'Attention'],
+  ['OMN-SHP-002', 'Black pepper / TF2408', '600 KG', '250 KG', 'Dispatch dependency: bags', 'Pricing approved / invoice pending', 'Review Required'],
+  ['VNM-SHP-003', 'Black pepper / CP2402', '240 KG', '400 KG', 'Ready', 'Document Factory linked', 'Dispatch Ready']
 ].map(([shipment, allocatedStock, allocated, remaining, packingReadiness, invoiceLinkage, status], index) => ({ id: `allocation-${index}`, shipment, allocatedStock, allocated, remaining, packingReadiness, invoiceLinkage, status }));
 
 const batchTrackingSeed = [];
@@ -38,12 +38,12 @@ const batchTrackingSeed = [];
 const qualityHoldSeed = [
   ['Damaged stock', 'Medium', 'Outer bag damage found in receiving bay.', 'Review Required'],
   ['Quality review', 'High', 'Cumin Seeds batch CS2404 on quality hold before allocation.', 'Blocked'],
-  ['Packaging issue', 'Medium', 'Export bags below reorder threshold for Country pending shipment cycle.', 'Attention'],
+  ['Packaging issue', 'Medium', 'Export bags below reorder threshold for UAE shipment cycle.', 'Attention'],
   ['Batch mismatch', 'Low', 'Label check needed before packing list is finalized.', 'Monitoring']
 ].map(([issueType, severity, description, status], index) => ({ id: `quality-${index}`, issueType, severity, description, status }));
 
 const packingMaterialSeed = [
-  ['Export bags', '850 pcs', '1,000 pcs', '1,200 pcs for Country pending cycle', 'Low Stock'],
+  ['Export bags', '850 pcs', '1,000 pcs', '1,200 pcs for UAE cycle', 'Low Stock'],
   ['Cartons', '1,900 pcs', '700 pcs', '400 pcs for retail packs', 'Healthy'],
   ['Labels', '4,200 pcs', '1,500 pcs', '800 pcs for current dispatch', 'Healthy'],
   ['Pallets', '26 pcs', '20 pcs', '18 pcs booked', 'Monitoring'],
@@ -52,7 +52,7 @@ const packingMaterialSeed = [
 
 const warehouseTimelineSeed = [
   ['Warehouse Manager', '08:40', 'stock inward recorded for BP2401', 'Monitoring'],
-  ['COO Command', '09:15', 'shipment allocation prepared for Country pending-SHP-001', 'Reserved'],
+  ['COO Command', '09:15', 'shipment allocation prepared for UAE-SHP-001', 'Reserved'],
   ['Quality Control', '10:00', 'quality hold created for CS2404', 'Blocked'],
   ['Warehouse Staff', '10:20', 'packing material shortage flagged', 'Attention'],
   ['COO Command', '10:45', 'shortage escalation draft prepared', 'Review Required']
@@ -99,7 +99,7 @@ function WarehouseDashboard({ navigate, onBack, view = 'warehouse', inventoryId 
   }
 
   function generateDispatchPlan() {
-    setDispatchPlan('1. Prioritize Country pending-SHP-001 packing bags reorder.\n2. Keep CS2404 blocked until quality review closes.\n3. Allocate BP2401 only after packing confirmation.\n4. Prepare COO follow-up for export bags and carton readiness.\n5. Escalate shortage if bags are not confirmed by evening.');
+    setDispatchPlan('1. Prioritize UAE-SHP-001 packing bags reorder.\n2. Keep CS2404 blocked until quality review closes.\n3. Allocate BP2401 only after packing confirmation.\n4. Prepare COO follow-up for export bags and carton readiness.\n5. Escalate shortage if bags are not confirmed by evening.');
     setActionNotice('COO dispatch plan generated in Connect Supabase to activate.');
     setTimeline((current) => [['COO Command', 'Now', 'dispatch plan generated for warehouse review', 'Monitoring'], ...current]);
   }
@@ -225,7 +225,7 @@ function ShipmentAllocationPanel({ allocations, navigate, onAllocate }) {
     <section className="warehouse-panel">
       <div className="approval-section-header"><div><span>Shipment Allocation</span><h2>Dispatch stock linkage</h2></div><Route size={18} /></div>
       <div className="shipment-allocation-list">{allocations.map((allocation) => <article key={allocation.id}><div><strong>{allocation.shipment}</strong><StatusBadge label={allocation.status} state={getWarehouseState(allocation.status)} /></div><span>{allocation.allocatedStock} / allocated {allocation.allocated} / remaining {allocation.remaining}</span><small>{allocation.packingReadiness} / {allocation.invoiceLinkage}</small></article>)}</div>
-      <div className="warehouse-action-row"><button onClick={onAllocate}>Allocate Stock</button><button onClick={onAllocate}>Reserve Batch</button><button onClick={onAllocate}>Escalate Shortage</button><button onClick={() => navigate('/export-os/export-execution')}>Open Shipment Workflow</button></div>
+      <div className="warehouse-action-row"><button onClick={onAllocate}>Allocate Stock</button><button onClick={onAllocate}>Reserve Batch</button><button onClick={onAllocate}>Escalate Shortage</button><button onClick={() => navigate('/export-os/workflows')}>Open Shipment Workflow</button></div>
     </section>
   );
 }

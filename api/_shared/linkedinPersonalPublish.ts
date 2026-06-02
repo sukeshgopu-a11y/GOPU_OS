@@ -1,6 +1,7 @@
 // @ts-nocheck
 import { createClient } from "@supabase/supabase-js";
 import { getLinkedInPersonalEnvStatus, publishLinkedInPersonalPost } from "../../src/server/integrations/linkedinPersonal";
+import { ensureLinkedInPostRules, validateLinkedInPublishText } from "../../lib/cmoLinkedInRules.mjs";
 
 const BLOCKED_MESSAGE = "LinkedIn personal publish blocked: Founder/Director approval required";
 const DEMO_TENANT_ID = "11111111-1111-1111-1111-111111111111";
@@ -112,7 +113,8 @@ export async function publishApprovedLinkedInPersonal(payload: any) {
 
   const gate = await resolveApprovedPublishPayload(client, payload);
   if (!gate.ok) return gate;
-  if (!gate.text) {
+  const preparedText = ensureLinkedInPostRules(gate.text, { platform: "LinkedIn Personal" }).text;
+  if (!preparedText) {
     await logLinkedInPersonalPublish(client, {
       tenant_id: gate.tenant_id,
       content_history_id: gate.content?.id || null,
@@ -122,24 +124,26 @@ export async function publishApprovedLinkedInPersonal(payload: any) {
     });
     return { ok: false, status: "missing_content", message: "LinkedIn personal publish failed: content text is empty." };
   }
+  const validation = validateLinkedInPublishText(preparedText);
+  if (!validation.ok) return { ok: false, status: validation.status, message: validation.error };
 
   await logLinkedInPersonalPublish(client, {
     tenant_id: gate.tenant_id,
     content_history_id: gate.content?.id || null,
     founder_approval_id: gate.approval?.id || null,
-    content_text: gate.text,
+    content_text: preparedText,
     media_url: gate.mediaUrl || null,
     status: "pending",
     metadata: { approval_guard: "passed" }
   });
 
-  const result = await publishLinkedInPersonalPost({ text: gate.text, mediaUrl: gate.mediaUrl });
+  const result = await publishLinkedInPersonalPost({ text: preparedText, mediaUrl: gate.mediaUrl });
   const status = result.ok ? "published" : "failed";
   await logLinkedInPersonalPublish(client, {
     tenant_id: gate.tenant_id,
     content_history_id: gate.content?.id || null,
     founder_approval_id: gate.approval?.id || null,
-    content_text: result.text || gate.text,
+    content_text: result.text || preparedText,
     media_url: gate.mediaUrl || null,
     status,
     linkedin_post_id: result.post_id || null,

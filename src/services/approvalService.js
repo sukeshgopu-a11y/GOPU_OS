@@ -1,10 +1,11 @@
-import { backendStatus, isSupabaseConfigured, requireSupabase } from '../lib/supabaseClient.js';
+import { backendStatus, isSupabaseConfigured, requireSupabase, requireSupabaseSession } from '../lib/supabaseClient.js';
 import { demoTenantId } from './demoData.js';
 import { createAuditLog } from './auditService.js';
 import { createTableService } from './serviceHelpers.js';
 import { sendSlackNotification } from './slackNotificationService.js';
 import { createTaskFromWorkflow } from './taskService.js';
 import { cachedRead, clearCache } from './performanceCache.js';
+import { cleanSlackText } from '../../lib/slackTextClean.js';
 import {
   sendWhatsAppApprovalRequest,
   syncFounderApproval,
@@ -48,6 +49,21 @@ function toLegacyReleaseStatus(status) {
   if (status === 'Approved') return 'Approved for Release';
   if (status === 'Needs Review') return 'Revision Requested';
   return status;
+}
+
+function isLeadReleaseApproval(request = {}) {
+  const metadata = request.metadata || {};
+  const details = request.details || metadata.details || {};
+  const type = String(request.request_type || metadata.request_type || details.request_type || '').toLowerCase();
+  const releaseAction = String(metadata.release_action || details.release_action || '').toLowerCase();
+  if (releaseAction === 'buyer_quote_proforma_release' || releaseAction === 'buyer_email_release') return true;
+  if (releaseAction && releaseAction !== 'buyer_quote_proforma_release' && releaseAction !== 'buyer_email_release') return false;
+  return (
+    type.includes('slack lead quote') ||
+    type.includes('quotation send') ||
+    type.includes('lead quote') ||
+    type.includes('proforma invoice send')
+  );
 }
 
 export function requiresFounderApproval(actionType) {
@@ -231,7 +247,7 @@ export async function getApprovalQueue(tenantId = demoTenantId) {
 }
 
 async function getApprovalQueueUncached(tenantId = demoTenantId) {
-  const { client, error } = requireSupabase();
+  const { client, error } = await requireSupabaseSession();
   if (error) return { ok: true, data: localApprovals.map(normalizeApproval), error: null, backend: backendStatus };
 
   const { data, error: queryError } = await client
@@ -285,6 +301,7 @@ export async function createApprovalRequest(payload = {}) {
     whatsapp_status: 'Pending',
     whatsapp_provider: 'meta-cloud-api',
     metadata: {
+      ...(payload.metadata || {}),
       details: requestDetails,
       request_type: requestType,
       title: payload.title || requestType,
@@ -586,7 +603,7 @@ async function updateApprovalStatus(tenantId, request, nextStatus, actionType, n
   });
   const founderDecision = actionType === 'Approve' ? 'Approve' : actionType === 'Reject' ? 'Reject' : 'Needs Review';
   await updateFounderApprovalDecision(tenantId, request.id, founderDecision, note || `${previousStatus} -> ${normalizedNextStatus}`);
-  if (normalizedNextStatus === 'Approved' && request.request_type === 'Slack Lead Quote Approval') {
+  if (normalizedNextStatus === 'Approved' && isLeadReleaseApproval(request)) {
     try {
       const response = await fetch('/api/director/approve-lead', {
         method: 'POST',
@@ -655,10 +672,11 @@ async function updateApprovalStatus(tenantId, request, nextStatus, actionType, n
           : `*Reason:* ${note || 'Rejected by Director'}`,
         note && normalizedNextStatus === 'Approved' ? `*Note:* ${note}` : '',
       ].filter(Boolean).join('\n');
+      const cleanSlackMsg = cleanSlackText(slackMsg);
       fetch('https://slack.com/api/chat.postMessage', {
         method: 'POST',
         headers: { Authorization: `Bearer ${botToken}`, 'Content-Type': 'application/json' },
-        body: JSON.stringify({ channel: channelId, text: slackMsg }),
+        body: JSON.stringify({ channel: channelId, text: cleanSlackMsg }),
       }).catch(() => null);
     }
   }

@@ -24,6 +24,7 @@ import {
 } from 'lucide-react';
 import { ExportOSShell } from '../shared/routeShell.jsx';
 import { SeverityBadge, StatusBadge, StatusPulse } from '../shared/uiPrimitives.jsx';
+import { displayDateTime } from '../utils/dateTime.js';
 import { demoTenantId } from '../services/companyService.js';
 import {
   escalateWorkflowBlocker,
@@ -91,7 +92,7 @@ export default function WorkflowDependencyEngine({ navigate, onBack }) {
           <div className="coo-verified"><ShieldCheck size={16} /><span>Founder session verified</span></div>
           <StatusBadge label={`${summary?.blockerCount || 0} blockers`} state={(summary?.criticalCount || 0) ? 'error' : 'attention'} />
           <StatusBadge label={`${summary?.averageHealth || 0}% health`} state={(summary?.averageHealth || 0) < 55 ? 'attention' : 'progress'} />
-          <div className="coo-time"><CalendarClock size={16} /><span>{now.toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' })}</span></div>
+          <div className="coo-time"><CalendarClock size={16} /><span>{displayDateTime(now)}</span></div>
           <button className="ghost-button deck-logout" onClick={onBack}><ArrowLeft size={15} /> Command Deck</button>
         </div>
       </header>
@@ -350,7 +351,7 @@ export function WorkflowJourneyDashboard({ navigate, onBack }) {
           <div className="coo-verified"><ShieldCheck size={16} /><span>Founder session verified</span></div>
           <StatusBadge label={`${data?.summary?.blockedStages || 0} blocked stages`} state={(data?.summary?.blockedStages || 0) ? 'attention' : 'progress'} />
           <StatusBadge label={`${data?.summary?.approvalsRequired || 0} approvals`} state="attention" />
-          <div className="coo-time"><CalendarClock size={16} /><span>{now.toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' })}</span></div>
+          <div className="coo-time"><CalendarClock size={16} /><span>{displayDateTime(now)}</span></div>
           <button className="ghost-button deck-logout" onClick={onBack}><ArrowLeft size={15} /> Command Deck</button>
         </div>
       </header>
@@ -608,4 +609,3 @@ function TimelinePanel({ title, icon: Icon, rows }) {
     </section>
   );
 }
-

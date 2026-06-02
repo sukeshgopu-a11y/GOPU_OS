@@ -24,22 +24,22 @@ const supplierDirectorySeed = [];
 const supplierProductsSeed = [];
 
 const procurementRequestSeed = [
-  ['Product pending', '900 KG', 'May 30, 2026', 'Country pending-SHP-001', 'Malabar Spice Supplier', 'Quote Requested', 'COO Command', 'High'],
+  ['Black pepper', '900 KG', 'May 30, 2026', 'UAE-SHP-001', 'Malabar Spice Supplier', 'Quote Requested', 'COO Command', 'High'],
   ['Export Bags', '1,200 pcs', 'May 28, 2026', 'Warehouse Shortage', 'Packaging vendor pending', 'Supplier Contact Needed', 'Operations', 'Critical'],
-  ['Product pending', '500 KG', 'May 31, 2026', 'OMN-SHP-002', 'Nizam Agro', 'Confirmation Pending', 'COO Command', 'High'],
+  ['Black pepper', '500 KG', 'May 31, 2026', 'OMN-SHP-002', 'Nizam Agro', 'Confirmation Pending', 'COO Command', 'High'],
   ['Cumin Seeds', '300 KG', 'June 2, 2026', 'Quality Hold Replacement', 'Gujarat Seeds Co', 'Blocked', 'COO Command', 'Medium']
 ].map(([product, quantityNeeded, requiredDate, linkedWorkflow, suggestedSupplier, status, owner, priority], index) => ({ id: `procurement-${index}`, product, quantityNeeded, requiredDate, linkedWorkflow, suggestedSupplier, status, owner, priority }));
 
 const supplierFollowupSeed = [
-  ['Nizam Agro', 'Product pending', 'Confirm current price and ready date', 'Today 16:00', 'COO Command', 'Level 1', 'Pending Confirmation'],
+  ['Nizam Agro', 'Black pepper', 'Confirm current price and ready date', 'Today 16:00', 'COO Command', 'Level 1', 'Pending Confirmation'],
   ['Packaging vendor pending', 'Export Bags', 'Confirm packing availability', 'Today 13:00', 'Operations', 'Level 2', 'Delayed'],
   ['Gujarat Seeds Co', 'Cumin Seeds', 'Confirm quality grade correction', 'Tomorrow 10:00', 'COO Command', 'Founder if unresolved', 'Quality Issue'],
-  ['Malabar Spice Supplier', 'Product pending', 'Confirm dispatch-ready quantity', 'Today 18:00', 'COO Command', 'Level 1', 'Monitoring']
+  ['Malabar Spice Supplier', 'Black pepper', 'Confirm dispatch-ready quantity', 'Today 18:00', 'COO Command', 'Level 1', 'Monitoring']
 ].map(([supplier, product, confirmation, deadline, owner, escalation, status], index) => ({ id: `followup-${index}`, supplier, product, confirmation, deadline, owner, escalation, status }));
 
 const supplierPriceHistorySeed = [
-  ['Product pending', 'Malabar Spice Supplier', 'Grade A', 'INR 612 / KG', '900 KG', 'May 25, 2026', 'Stable supplier rate'],
-  ['Product pending', 'Nizam Agro', 'Premium', 'INR 146 / KG', '500 KG', 'May 22, 2026', 'Price revision expected'],
+  ['Black pepper', 'Malabar Spice Supplier', 'Grade A', 'INR 612 / KG', '900 KG', 'May 25, 2026', 'Stable supplier rate'],
+  ['Black pepper', 'Nizam Agro', 'Premium', 'INR 146 / KG', '500 KG', 'May 22, 2026', 'Price revision expected'],
   ['Cumin Seeds', 'Gujarat Seeds Co', 'Sortex', 'INR 248 / KG', '300 KG', 'May 20, 2026', 'Quality hold affected quote confidence'],
   ['Red Chilli', 'Deccan Chilli Traders', 'Export Grade', 'INR 198 / KG', '700 KG', 'May 19, 2026', 'Availability seasonal']
 ].map(([product, supplier, grade, price, quantity, date, notes], index) => ({ id: `price-history-${index}`, product, supplier, grade, price, quantity, date, notes }));
@@ -51,9 +51,9 @@ const supplierQualityIssueSeed = [
 ].map(([product, batch, issue, severity, response, status], index) => ({ id: `supplier-quality-${index}`, product, batch, issue, severity, response, status }));
 
 const purchasePlanningSeed = [
-  ['Country pending black pepper shipment', '900 KG Product pending', 'Malabar Spice Supplier', 'Low', '2 days', 'Confirm dispatch-ready quantity'],
+  ['UAE black pepper shipment', '900 KG Black pepper', 'Malabar Spice Supplier', 'Low', '2 days', 'Confirm dispatch-ready quantity'],
   ['Packing shortage forecast', '1,200 export bags', 'Packaging vendor pending', 'High', '1 day', 'Create procurement follow-up'],
-  ['Oman turmeric enquiry', '500 KG Product pending', 'Nizam Agro', 'Medium', '3 days', 'Confirm price before CFO quote review'],
+  ['Oman turmeric enquiry', '500 KG Black pepper', 'Nizam Agro', 'Medium', '3 days', 'Confirm price before CFO quote review'],
   ['Cumin replacement option', '300 KG Cumin Seeds', 'Alternate supplier needed', 'High', '4 days', 'Do not allocate quality-hold batch']
 ].map(([demand, requiredProcurement, supplierOptions, priceRisk, leadTimeRisk, action], index) => ({ id: `purchase-plan-${index}`, demand, requiredProcurement, supplierOptions, priceRisk, leadTimeRisk, action }));
 
@@ -124,7 +124,7 @@ function SupplierProcurementDashboard({ navigate, onBack, view = 'suppliers', su
   }
 
   function linkProcurementToShipment() {
-    setNotice('Procurement linked to Country pending-SHP-001 in Connect Supabase to activate. Shipment dispatch was not confirmed.');
+    setNotice('Procurement linked to UAE-SHP-001 in Connect Supabase to activate. Shipment dispatch was not confirmed.');
   }
 
   return (
@@ -202,7 +202,7 @@ function SupplierDetailPage({ supplier }) {
           ['Phone / WhatsApp', `${supplier.phone} / ${supplier.whatsapp}`],
           ['Email', supplier.email],
           ['Past orders', 'Order history available when connected'],
-          ['Linked shipments', 'Country pending-SHP-001 / OMN-SHP-002'],
+          ['Linked shipments', 'UAE-SHP-001 / OMN-SHP-002'],
           ['Pending follow-ups', supplier.status === 'Active' ? '1 monitoring item' : 'Action required']
         ].map(([label, value]) => <div key={label}><span>{label}</span><strong>{value}</strong></div>)}
       </div>
@@ -263,9 +263,9 @@ const buyerDirectorySeed = [];
 const buyerEnquirySeed = [];
 
 const buyerQuoteSeed = [
-  ['GOPU-QTN-PENDING', 'Product pending', '2 tons', 'No live amount', '12%', 'CFO Review', 'Founder Approval', 'May 31, 2026'],
-  ['GOPU-QTN-PENDING', 'Product pending', '5 tons', 'No live amount', '10%', 'Draft', 'CFO Review', 'June 2, 2026'],
-  ['GOPU-QTN-PENDING', 'Product pending', '1.5 tons', 'No live amount', '14%', 'Revised', 'Monitoring', 'Expired']
+  ['GOPU-QTN-PENDING', 'Black pepper', '2 tons', 'No live amount', '12%', 'CFO Review', 'Founder Approval', 'May 31, 2026'],
+  ['GOPU-QTN-PENDING', 'Black pepper', '5 tons', 'No live amount', '10%', 'Draft', 'CFO Review', 'June 2, 2026'],
+  ['GOPU-QTN-PENDING', 'Black pepper', '1.5 tons', 'No live amount', '14%', 'Revised', 'Monitoring', 'Expired']
 ].map(([quoteNumber, product, quantity, price, margin, status, approvalState, expiryDate], index) => ({ id: `buyer-quote-${index}`, quoteNumber, product, quantity, price, margin, status, approvalState, expiryDate }));
 
 const buyerInvoiceSeed = [
@@ -275,16 +275,16 @@ const buyerInvoiceSeed = [
 ].map(([invoiceNumber, invoiceType, value, status, approvalState, paymentStatus], index) => ({ id: `buyer-invoice-${index}`, invoiceNumber, invoiceType, value, status, approvalState, paymentStatus }));
 
 const buyerShipmentSeed = [
-  ['Country pending-SHP-001', 'Product pending', '2 tons', 'Country pending', 'Planning', 'June 8, 2026', 'Attention'],
-  ['OMN-SHP-002', 'Product pending', '5 tons', 'Oman', 'Documentation', 'June 12, 2026', 'Monitoring'],
-  ['VNM-SHP-003', 'Product pending', '1.5 tons', 'Country pending', 'Dispatch Ready', 'June 15, 2026', 'Low']
+  ['UAE-SHP-001', 'Black pepper', '2 tons', 'UAE', 'Planning', 'June 8, 2026', 'Attention'],
+  ['OMN-SHP-002', 'Black pepper', '5 tons', 'Oman', 'Documentation', 'June 12, 2026', 'Monitoring'],
+  ['VNM-SHP-003', 'Black pepper', '1.5 tons', 'UAE', 'Dispatch Ready', 'June 15, 2026', 'Low']
 ].map(([shipmentId, product, quantity, destination, status, eta, riskState], index) => ({ id: `buyer-shipment-${index}`, shipmentId, product, quantity, destination, status, eta, riskState }));
 
 const buyerFollowupSeed = [
-  ['Buyer pending', 'Quote follow-up', 'Today 17:00', 'COO Command', 'High', 'Confirm destination port and payment terms', 'Follow-up Due'],
+  ['Gulf Foods LLC', 'Quote follow-up', 'Today 17:00', 'COO Command', 'High', 'Confirm destination port and payment terms', 'Follow-up Due'],
   ['Oman Gulf Wholesale', 'Payment term clarification', 'Tomorrow 11:00', 'CFO Command', 'Medium', 'Clarify advance payment preference', 'Monitoring'],
   ['Southern Organics Pty', 'Origin claim review', 'Today 15:30', 'CMO + Founder', 'Critical', 'Route organic/origin claim to Director Queue', 'Risk Review'],
-  ['Country pending Spice Distribution', 'Repeat enquiry follow-up', 'This week', 'CMO Command', 'Medium', 'Prepare buyer outreach draft', 'Draft']
+  ['UAE Spice Distribution', 'Repeat enquiry follow-up', 'This week', 'CMO Command', 'Medium', 'Prepare buyer outreach draft', 'Draft']
 ].map(([buyer, reason, dueDate, owner, priority, nextAction, status], index) => ({ id: `buyer-followup-${index}`, buyer, reason, dueDate, owner, priority, nextAction, status }));
 
 

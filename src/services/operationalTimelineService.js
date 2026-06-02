@@ -10,7 +10,27 @@ function wait() {
   return new Promise((resolve) => setTimeout(resolve, demoDelay));
 }
 
-const journeyTemplates = [];
+const journeyTemplates = [
+  {
+    id: 'mwf-uae-black-pepper-001',
+    workflow_type: 'UAE Black Pepper Export Journey',
+    buyer: 'Gulf Foods LLC',
+    country: 'UAE',
+    products: 'Black pepper',
+    quantity: '12 MT',
+    shipment_type: 'CIF Jebel Ali',
+    current_stage: 'Invoice Validation',
+    owner: 'COO Command',
+    shipment_id: 'SHP-UAE-001',
+    relatedWorkflowIds: [
+      'pricing-gx-qtn-1042',
+      'invoice-gopu-draft-001',
+      'shipment-uae-001',
+      'warehouse-bp-2401',
+      'supplier-malabar-confirmation'
+    ]
+  }
+];
 
 const stageBlueprint = [
   ['Lead Created', 'Ready', 'CMO Command', '/export-os/buyer-crm', 'Buyer enquiry captured and ready for verification.'],
@@ -90,9 +110,9 @@ function buildMasterWorkflow(template, dependencyWorkflows) {
   blockers.forEach((blocker) => dependencyMap.set(blocker.workflow_type, blocker));
 
   const timeline = stageBlueprint.map((stage, index) => buildEvent(template, stage, index, dependencyMap));
-  const completion = Math.round((timeline.reduce((sum, event) => sum + statusToScore(event.status), 0) / timeline.length) * 100);
+  const completion = timeline.length ? Math.round((timeline.reduce((sum, event) => sum + statusToScore(event.status), 0) / timeline.length) * 100) : 0;
   const dependencyCompletion = related.length ? Math.round(related.reduce((sum, workflow) => sum + workflow.health.dependencyCompletion, 0) / related.length) : 0;
-  const approvalCompletion = Math.round((timeline.filter((event) => event.status !== 'Approval Required').length / timeline.length) * 100);
+  const approvalCompletion = timeline.length ? Math.round((timeline.filter((event) => event.status !== 'Approval Required').length / timeline.length) * 100) : 0;
   const shipmentReadiness = Math.round((timeline.filter((event) => ['Shipment Planning', 'Container Booking', 'CHA Coordination', 'Dispatch Ready', 'Shipment Released'].includes(event.stage_name) && event.status !== 'Blocked').length / 5) * 100);
   const documentationReadiness = Math.round((timeline.filter((event) => ['Invoice Drafted', 'Invoice Validation', 'QC Review', 'Shipment Released'].includes(event.stage_name) && event.status !== 'Blocked').length / 4) * 100);
   const risk_level = blockers.some((blocker) => blocker.severity === 'Critical') ? 'Critical' : healthFromPercent(Math.min(completion, dependencyCompletion));
@@ -149,17 +169,18 @@ export async function getWorkflowJourneyDashboard() {
   await wait();
   const dependencyEngine = await getWorkflowDependencyEngineData();
   const workflows = journeyTemplates.map((template) => buildMasterWorkflow(template, dependencyEngine.data.workflows));
+  const timelineEvents = workflows.flatMap((workflow) => workflow.timeline);
   return {
     ok: true,
     backend: backendStatus,
     data: {
       workflows,
-      timelineEvents: workflows.flatMap((workflow) => workflow.timeline),
+      timelineEvents,
       summary: {
         workflowCount: workflows.length,
-        blockedStages: workflows.flatMap((workflow) => workflow.timeline).filter((event) => event.status === 'Blocked').length,
-        approvalsRequired: workflows.flatMap((workflow) => workflow.timeline).filter((event) => event.status === 'Approval Required').length,
-        averageHealth: Math.round(workflows.reduce((sum, workflow) => sum + workflow.scores.workflowCompletion, 0) / workflows.length),
+        blockedStages: timelineEvents.filter((event) => event.status === 'Blocked').length,
+        approvalsRequired: timelineEvents.filter((event) => event.status === 'Approval Required').length,
+        averageHealth: workflows.length ? Math.round(workflows.reduce((sum, workflow) => sum + workflow.scores.workflowCompletion, 0) / workflows.length) : 0,
         nextAction: 'Open blocked stages, resolve dependency tasks, and rerun journey scan before buyer-facing release.'
       }
     },

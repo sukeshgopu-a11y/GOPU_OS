@@ -19,6 +19,7 @@ import {
 } from 'lucide-react';
 import { ExportOSShell } from '../shared/routeShell.jsx';
 import { StatusBadge, StatusPulse } from '../shared/uiPrimitives.jsx';
+import { displayDateTime } from '../utils/dateTime.js';
 import { backendStatus } from '../lib/supabaseClient.js';
 import {
   demoTenantId,
@@ -405,7 +406,7 @@ function VaultHeader({ onBack, dataMode }) {
         <div className="coo-verified"><ShieldCheck size={16} /><span>Founder session verified</span></div>
         <div className="coo-status"><StatusPulse /><strong>Vault Status: Online</strong></div>
         <div className="coo-status"><Database size={15} /><strong>{dataMode === 'Connected' ? 'Data Mode: Backend Connected' : 'Connect Supabase to activate - Backend not connected'}</strong></div>
-        <div className="coo-time"><CalendarClock size={16} /><span>{now.toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' })}</span></div>
+        <div className="coo-time"><CalendarClock size={16} /><span>{displayDateTime(now)}</span></div>
         <button className="ghost-button deck-logout" onClick={onBack}><ArrowLeft size={15} /> Command Deck</button>
       </div>
     </header>
@@ -602,8 +603,8 @@ const lutFieldList = [
   ];
 
 function getLutBlockMessage(lut) {
-  if (!lut?.lut_arn || !lut?.financial_year || !lut?.valid_from || !lut?.valid_to || !lut?.document_url) return 'LUT incomplete -- invoice release blocked.';
-  if (new Date(lut.valid_to) < new Date()) return 'LUT expired -- invoice release blocked.';
+  if (!lut?.lut_arn || !lut?.financial_year || !lut?.valid_from || !lut?.valid_to || !lut?.document_url) return 'LUT incomplete - invoice release blocked.';
+  if (new Date(lut.valid_to) < new Date()) return 'LUT expired - invoice release blocked.';
   if (!lut.founder_verified) return 'Founder verification required before invoice release.';
   return 'LUT data ready for draft invoice validation.';
 }
@@ -778,4 +779,3 @@ function SaaSTenantReadiness({ items }) {
 
 
 export default CompanyMasterDataVault;
-

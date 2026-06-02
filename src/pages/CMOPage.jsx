@@ -18,6 +18,7 @@ import { DEFAULT_CMO_TIMEZONE, CMO_PLATFORM_DEFAULT_SLOTS, CMO_TIMEZONE_OPTIONS,
 import { generateDailyGrowthRunbook, generateCMOReport, generateFounderMarketingSummary, createMarketingCampaignDraft, cleanupLatestStep6TestContentPackage, createStep6TestContentPackage, generateReferenceLearningContent, getAIBudgetAnalysis, getAICampaignForecasts, getAICmoOperatingSystem, getAIGrowthInsights, getAILeadScores, getAIRecommendations, getAIScheduleOptimizations, getBrandRisks, getBuyerOutreach, getCMOSummary, getCampaigns, getContentApprovalQueue, getCompetitorReviews, getContentMemoryArchive, getCmoTimezonePreference, getCmoAutomationFlow, getCmoLearningCentreDashboard, getMarketingCampaignControlCenter, getCmoProviderConnectionStatus, saveCmoPostingSettings, saveCmoTimezonePreference, getContentCalendar, getContentPerformance, getCrossExecutiveContentIdeas, getFacebookPipeline, getGrowthOptimizationInsights, getGrowthTargets, getInstagramPipeline, getLinkedInPipeline, getContentToolchain, getDigitalMarketingOptimization, getGlobalTargetingStrategy, getOpenAIContentBrain, getOpenAIContentMemory, getTenglishVoiceRules, getThumbnailDirections, getVideoScriptStyles, getSocialGrowthAnalytics, getSocialGrowthMetrics, getYouTubePlans, updateFounderContentDecision } from '../services/cmoService.js';
 import { ExportOSShell } from '../shared/routeShell.jsx';
 import { Breadcrumb, StatusBadge, TrendIndicator, EmptyState, SkeletonBlock, SkeletonCard, SkeletonTable, SkeletonKpiBar, MetricSkeletonGrid, HBarChart, SortableTableHeader, StatusPulse, PriorityBadge, SeverityBadge, Panel, StatusPill, StateChip, SignalList, MiniBars, BulkActionBar, FilterBar, VirtualList, useSortable } from '../shared/uiPrimitives.jsx';
+import { displayDateTime } from '../utils/dateTime.js';
 
 function CMOCommandPage({ view = 'command', navigate, onBack }) {
   const [now, setNow] = useState(() => new Date());
@@ -259,7 +260,7 @@ function CMOCommandPage({ view = 'command', navigate, onBack }) {
           <div className="coo-status"><StatusPulse /><strong>Growth monitoring</strong></div>
           <div className="coo-status"><ClipboardList size={16} /><strong>{scheduledCount} scheduled</strong></div>
           <div className="coo-status"><TriangleAlert size={16} /><strong>{approvalCount} approvals</strong></div>
-          <div className="coo-time"><CalendarClock size={16} /><span>{now.toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' })}</span></div>
+          <div className="coo-time"><CalendarClock size={16} /><span>{displayDateTime(now)}</span></div>
           <button className="ghost-button deck-logout" onClick={onBack}><ArrowLeft size={15} /> Command Deck</button>
         </div>
       </header>

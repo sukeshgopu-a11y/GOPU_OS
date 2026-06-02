@@ -18,7 +18,8 @@ import { addApprovalComment, approveRequest, createApprovalRequest, getApprovalQ
 import { createAuditLog, listAuditLogs } from '../services/auditService.js';
 import { ExportOSShell } from '../shared/routeShell.jsx';
 import { Breadcrumb, StatusBadge, TrendIndicator, EmptyState, SkeletonBlock, SkeletonCard, SkeletonTable, SkeletonKpiBar, MetricSkeletonGrid, HBarChart, SortableTableHeader, StatusPulse, PriorityBadge, SeverityBadge, Panel, StatusPill, StateChip, SignalList, MiniBars, BulkActionBar, FilterBar, VirtualList, useSortable } from '../shared/uiPrimitives.jsx';
-import { formatDisplayDate } from '../utils/dateFormat.js';
+import { formatDisplayDate, formatDisplayDateTime as displayDateTime } from '../utils/dateFormat.js';
+import { cfoExportProducts as pricingProducts, marketPriceProducts } from '../../lib/exportProductCatalog.mjs';
 
 
 const pricingForexFallbackRates = [
@@ -45,116 +46,6 @@ const pricingAuditEvents = [
 ].map(([time, event, actor, status], index) => ({ id: `pricing-audit-${index}`, time, event, actor, status }));
 
 const otherPricingOption = 'Others';
-const apedaScheduledProductCategories = [
-  'Alcoholic Beverages',
-  'Non-Alcoholic Beverages',
-  'Basmati Rice',
-  'Cashew Kernels',
-  'Cashew Nuts and Products',
-  'Cashewnut Shell Liquid',
-  'Cardanol',
-  'Cereal and Cereal Products',
-  'Cocoa Products',
-  'Chocolates',
-  'Confectionery Products',
-  'Biscuits',
-  'Bakery Products',
-  'Dairy Products',
-  'De-oiled Rice Bran',
-  'Floriculture Products',
-  'Seeds',
-  'Fresh Fruits',
-  'Processed Fruit Products',
-  'Fresh Vegetables',
-  'Processed Vegetable Products',
-  'Green Pepper in Brine',
-  'Groundnuts',
-  'Peanuts',
-  'Walnuts',
-  'Guar Gum',
-  'Herbal Plants',
-  'Medicinal Plants',
-  'Honey',
-  'Jaggery',
-  'Sugar Products',
-  'Meat Products',
-  'Poultry Products',
-  'Pickles',
-  'Papads',
-  'Chutneys',
-  'Organic Products'
-];
-
-const spiceBoardProducts = [
-  'Ajowan',
-  'Allspice',
-  'Aniseed',
-  'Asafoetida',
-  'Basil',
-  'Bay Leaf',
-  'Birds Eye Chilli',
-  'Bishops Weed',
-  'Product pending',
-  'Camboge',
-  'Caper',
-  'Capsicum',
-  'Caraway',
-  'Cardamom Large',
-  'Cardamom Small',
-  'Cassia',
-  'Celery',
-  'Chilli',
-  'Cinnamon',
-  'Clove',
-  'Coriander',
-  'Coriander Seeds',
-  'Cumin',
-  'Cumin Seeds',
-  'Curry Leaf',
-  'Dill',
-  'Fennel',
-  'Fenugreek',
-  'Fenugreek Seeds',
-  'Garlic',
-  'Ginger',
-  'Greater Galanga',
-  'Guntur Red Chilli',
-  'Horse Radish',
-  'Hyssop',
-  'Juniper Berry',
-  'Kokam',
-  'Long Pepper',
-  'Lovage',
-  'Mace',
-  'Marjoram',
-  'Mint',
-  'Mustard',
-  'Mustard Seeds',
-  'Nutmeg',
-  'Nutmeg and Mace',
-  'Oregano',
-  'Paprika',
-  'Parsley',
-  'Pomegranate Seed',
-  'Poppy Seed',
-  'Red Chilli Powder',
-  'Rosemary',
-  'Saffron',
-  'Sage',
-  'Savory',
-  'Star Anise',
-  'Sweet Flag',
-  'Tamarind',
-  'Tarragon',
-  'Tejpat',
-  'Thyme',
-  'Turmeric',
-  'Product pending',
-  'Turmeric Powder',
-  'Vanilla'
-];
-
-const pricingProducts = Array.from(new Set([...spiceBoardProducts, ...apedaScheduledProductCategories])).sort((a, b) => a.localeCompare(b));
 const pricingCountries = [
   'Afghanistan',
   'Albania',
@@ -348,7 +239,7 @@ const pricingCountries = [
   'Vanuatu',
   'Vatican City',
   'Venezuela',
-  'Country pending',
+  'UAE',
   'Yemen',
   'Zambia',
   'Zimbabwe'
@@ -482,7 +373,7 @@ const pricingCountryFreightProfiles = {
   Japan: { zone: 'East Asia', complexity: 1.28, seaInrPerKg: 12, airInrPerKg: 220, lead: '18-30 days by sea depending cut-off.' },
   'Saudi Arabia': { zone: 'GCC', complexity: 1.1, seaInrPerKg: 7.5, airInrPerKg: 165, lead: '10-20 days by sea to GCC after booking.' },
   Singapore: { zone: 'ASEAN', complexity: 1.05, seaInrPerKg: 8.5, airInrPerKg: 155, lead: '8-18 days by sea depending sailing.' },
-  'United Arab Emirates': { zone: 'GCC', complexity: 1, seaInrPerKg: 6.5, airInrPerKg: 150, lead: '7-16 days by sea to Country pending after vessel cut-off.' },
+  'United Arab Emirates': { zone: 'GCC', complexity: 1, seaInrPerKg: 6.5, airInrPerKg: 150, lead: '7-16 days by sea to UAE after vessel cut-off.' },
   'United Kingdom': { zone: 'Europe', complexity: 1.48, seaInrPerKg: 15.5, airInrPerKg: 245, lead: '24-40 days by sea depending UK port.' },
   'United States': { zone: 'North America', complexity: 1.6, seaInrPerKg: 18, airInrPerKg: 275, lead: '28-45 days by sea depending US coast.' }
 };
@@ -1042,7 +933,7 @@ function parsePricingChannelMessage(message) {
   else if (lower.includes('red chilli') || lower.includes('red chili')) updates.product_name = 'Red Chilli Powder';
   else if (lower.includes('cumin') || lower.includes('cummin') || lower.includes('jeera')) updates.product_name = 'Cumin Seeds';
   else if (lower.includes('coriander') || lower.includes('dhania')) updates.product_name = 'Coriander Seeds';
-  else if (lower.includes('black pepper')) updates.product_name = 'Product pending';
+  else if (lower.includes('black pepper')) updates.product_name = 'Black pepper';
   else if (lower.includes('turmeric')) updates.product_name = 'Turmeric Powder';
   else if (lower.includes('rice')) updates.product_name = 'Rice';
 
@@ -1287,7 +1178,7 @@ function cfoValueForColumn(row, column) {
   if (label.includes('note')) return row.safe_notes || row.notes || row.description || 'Receipt pending';
   if (label.includes('risk')) return row.type || row.risk_type || row.risk_level || 'Financial Risk';
   if (label.includes('description') || label.includes('reason')) return row.description || row.reason || 'No description recorded.';
-  if (label.includes('product')) return row.product || row.product_name || 'Product pending';
+  if (label.includes('product')) return row.product || row.product_name || 'Black pepper';
   if (label.includes('margin')) return row.margin_percent || row.margin || '0%';
   if (label.includes('target')) return row.target_margin || row.target || 'Target pending';
   return row[column] ?? row[label] ?? Object.values(row).find((value) => value !== undefined && value !== null) ?? '';
@@ -1703,7 +1594,7 @@ function getCfoApprovalReasons(inputs, calc, risk, costRows, productIntel) {
 
 function PricingEnginePage({ onBack, onOpenApprovalWall, onOpenTasks }) {
   const { rates, status: forexStatus } = useLiveForexRates();
-  const [activeTab, setActiveTab] = useState('Quotations');
+  const [activeTab, setActiveTab] = useState('Overview');
   const [inputs, setInputs] = useState(defaultPricingInputs);
   const [costRows, setCostRows] = useState(() => buildAiAssistedCostRows(defaultPricingInputs));
   const [errors, setErrors] = useState({});
@@ -1732,6 +1623,15 @@ function PricingEnginePage({ onBack, onOpenApprovalWall, onOpenTasks }) {
   const productIntel = useMemo(() => getProductIntelligence(getDisplayProduct(inputs)), [inputs.product_name, inputs.custom_product_name]);
   const approvalReasons = useMemo(() => getCfoApprovalReasons(inputs, calc, risk, costRows, productIntel), [inputs, calc, risk, costRows, productIntel]);
   const founderReviewStatus = approvalReasons.length ? 'Director Review Required' : 'CFO Review Ready';
+  const hasActiveQuoteContext = Boolean(
+    String(inputs.company_name || '').trim()
+    || String(inputs.quantity || '').trim()
+    || String(inputs.destination_country || '').trim()
+    || String(inputs.destination_port || '').trim()
+    || String(inputs.custom_product_name || '').trim()
+    || String(inputs.buyer_entered_price || '').trim()
+    || inputs.product_name !== defaultPricingInputs.product_name
+  );
 
   // Fetch live market prices from CFO Market Prices table
   useEffect(() => {
@@ -2095,7 +1995,7 @@ function PricingEnginePage({ onBack, onOpenApprovalWall, onOpenTasks }) {
       <section className="cfo-pricing-toolbar">
         {cfoWorkspaceTabs.map((tab) => <button key={tab} className={activeTab === tab ? 'active' : ''} onClick={() => handleCfoTabChange(tab)}>{tab}</button>)}
       </section>
-      {activeTab !== 'Quotations' && (
+      {activeTab !== 'Quotations' && hasActiveQuoteContext && (
         <section className="cfo-pricing-controlbar">
           <div><span>Buyer</span><strong>{inputs.company_name || 'Draft buyer'}</strong></div>
           <div><span>Product</span><strong>{getDisplayProduct(inputs) || 'Select product'}</strong></div>
@@ -2147,6 +2047,7 @@ function PricingEnginePage({ onBack, onOpenApprovalWall, onOpenTasks }) {
               tab={activeTab}
               data={cfoData}
               reportOutput={cfoOutput}
+              onOpenTab={handleCfoTabChange}
               onOpenPricing={handleOpenPricingTab}
               onOpenPaymentVault={handleOpenPaymentVaultTab}
               onGenerateReport={handleGenerateCfoReport}
@@ -2234,7 +2135,7 @@ function QuotationSopPricingPage({ inputs, errors, costRows, calc, rates, risk, 
     ['Freight estimate', getFreightProfile(inputs.destination_country).complexity > 1.3 ? 'Moderate to high lane sensitivity' : 'Moderate and manageable'],
     ['Insurance', includedKeys.has('insurance_cost') ? 'Included for this Incoterm' : 'Not included unless buyer requests CIF/DAP/DDP'],
     ['Margin safety', moneyNumber(inputs.target_margin_percent) < 20 ? 'Below safe threshold' : 'Within CFO guardrail'],
-    ['Buyer risk', `${inputs.destination_country || 'Destination pending'} / ${inputs.buyer_risk_tier}`],
+    ['Buyer risk', `${inputs.destination_country || 'UAE'} / ${inputs.buyer_risk_tier}`],
     ['Shipment timeline', getFreightProfile(inputs.destination_country).lead]
   ];
 
@@ -2242,7 +2143,7 @@ function QuotationSopPricingPage({ inputs, errors, costRows, calc, rates, risk, 
     <main className="quotation-sop-page">
       <section className="quotation-sop-section">
         <div className="quotation-section-title">
-          <h2>Section 1 -- Inquiry Basics</h2>
+          <h2>Section 1 - Inquiry Basics</h2>
           <p>Core inquiry details. Pricing result does not create or send a quotation.</p>
         </div>
         <div className="quotation-basics-grid">
@@ -2283,7 +2184,7 @@ function QuotationSopPricingPage({ inputs, errors, costRows, calc, rates, risk, 
 
       <section className="quotation-sop-section">
         <div className="quotation-section-title">
-          <h2>Section 2 -- Cost Inputs</h2>
+          <h2>Section 2 - Cost Inputs</h2>
           <p>Each row shows its basis and calculated line total. Incoterm excluded rows are disabled by default.</p>
         </div>
         <div className="quote-cost-table">
@@ -2322,7 +2223,7 @@ function QuotationSopPricingPage({ inputs, errors, costRows, calc, rates, risk, 
 
       <section className="quotation-sop-section">
         <div className="quotation-section-title">
-          <h2>Section 3 -- Margin + Currency</h2>
+          <h2>Section 3 - Margin + Currency</h2>
           <p>Currency and margin assumptions used for the result.</p>
         </div>
         <div className="quotation-margin-grid">
@@ -2341,7 +2242,7 @@ function QuotationSopPricingPage({ inputs, errors, costRows, calc, rates, risk, 
 
       <section className="quotation-sop-section">
         <div className="quotation-section-title">
-          <h2>Section 4 -- Result</h2>
+          <h2>Section 4 - Result</h2>
           <p>Live pricing preview. Results update from product, quantity, destination, Incoterm, freight, FX, and margin inputs.</p>
         </div>
         <div className="quotation-result-grid">
@@ -2418,7 +2319,7 @@ function QuotationSopPricingPage({ inputs, errors, costRows, calc, rates, risk, 
             <textarea
               value={channelMessage}
               onChange={(event) => setChannelMessage(event.target.value)}
-              placeholder={`Example: Buyer: Gulf Foods LLC, ${productName || 'Cumin Seeds'} ${inputs.quantity || '20'} ${inputs.unit_of_measure || 'Ton'}, ${inputs.destination_country || 'Country pending'}, ${inputs.incoterm || 'FOB'}, ${inputs.payment_terms || 'Advance'}, price INR ${inputs.market_reference_price || '230'}/kg`}
+              placeholder={`Example: Buyer: Gulf Foods LLC, ${productName || 'Cumin Seeds'} ${inputs.quantity || '20'} ${inputs.unit_of_measure || 'Ton'}, ${inputs.destination_country || 'UAE'}, ${inputs.incoterm || 'FOB'}, ${inputs.payment_terms || 'Advance'}, price INR ${inputs.market_reference_price || '230'}/kg`}
             />
             <div className="quote-intake-actions">
               <button type="button" onClick={analyzeChannelIntake}>Check message</button>
@@ -2696,7 +2597,7 @@ function currencySymbol(currency) {
 }
 
 function buildMarketCheckNote(inputs) {
-  const product = getDisplayProduct(inputs) || 'Product pending';
+  const product = getDisplayProduct(inputs) || 'Black pepper';
   const sourcePrice = getAutoMarketSourcePrice(inputs);
   const enteredPrice = Number(inputs.market_reference_price || 0);
   const referencePrice = sourcePrice || enteredPrice;
@@ -2773,7 +2674,7 @@ function SmartQuoteSetup({ inputs, errors, updateInput, productIntel, approvalRe
   const freightProfile = getFreightProfile(inputs.destination_country);
   return (
     <section className="pricing-panel cfo-smart-setup">
-      <div className="approval-section-header"><div><span>Section A -- Product Inputs</span><h2>Live commercial pricing inputs</h2></div><SlidersHorizontal size={18} /></div>
+      <div className="approval-section-header"><div><span>Section A - Product Inputs</span><h2>Live commercial pricing inputs</h2></div><SlidersHorizontal size={18} /></div>
       <div className="cfo-section-a-grid">
         <PricingSelect label="Product" value={inputs.product_name} options={[...pricingProducts, otherPricingOption]} error={errors.product_name} onChange={(value) => updateInput('product_name', value)} />
         <SecureInput label="Quantity" value={inputs.quantity} error={errors.quantity} onChange={(value) => updateInput('quantity', value.replace(/[^\d.]/g, ''))} />
@@ -2809,7 +2710,7 @@ function ProductIntelligenceSuggestions({ productIntel, approvalReasons }) {
     <div className="product-intelligence-box">
       <div>
         <span>Product Intelligence Suggestions</span>
-        <strong>AI suggestion -- founder/CA/export consultant review required.</strong>
+        <strong>AI suggestion - founder/CA/export consultant review required.</strong>
       </div>
       <div className="product-intelligence-grid">
         <div><span>Probable HSN</span><strong>{productIntel.hsn}</strong></div>
@@ -3139,24 +3040,13 @@ function normalizeCfoTableRows(rows, columns = []) {
   return safeCfoArray(rows).map((row) => normalizeCfoTableRow(row, columns));
 }
 
-const MARKET_PRICE_PRODUCTS = [
-  { key: 'chilli',    label: 'Red Chilli',      unit: 'kg', hs: '09042110', reference: 120,  mandi: 'Guntur Mandi' },
-  { key: 'turmeric',  label: 'Turmeric',         unit: 'kg', hs: '09103010', reference: 148,  mandi: 'Nizamabad Mandi' },
-  { key: 'pepper',    label: 'Black Pepper',     unit: 'kg', hs: '09041100', reference: 680,  mandi: 'NCDEX / Kochi' },
-  { key: 'cumin',     label: 'Cumin (Jeera)',    unit: 'kg', hs: '09093100', reference: 250,  mandi: 'Unjha Mandi' },
-  { key: 'coriander', label: 'Coriander Seed',  unit: 'kg', hs: '09092100', reference: 90,   mandi: 'Rajkot Mandi' },
-  { key: 'cardamom',  label: 'Cardamom',         unit: 'kg', hs: '09083110', reference: 2200, mandi: 'ICEX / Spice Board' },
-  { key: 'fenugreek', label: 'Fenugreek (Methi)',unit: 'kg', hs: '12129200', reference: 75,   mandi: 'Rajkot Mandi' },
-  { key: 'cinnamon',  label: 'Cinnamon',         unit: 'kg', hs: '09061000', reference: 320,  mandi: 'Kochi Market' },
-  { key: 'clove',     label: 'Clove',            unit: 'kg', hs: '09072000', reference: 820,  mandi: 'Kochi Market' },
-  { key: 'mustard',   label: 'Mustard Seed',     unit: 'kg', hs: '12074000', reference: 65,   mandi: 'Jaipur Mandi' },
-  { key: 'rice',      label: 'Rice',             unit: 'kg', hs: '10063000', reference: 68,   mandi: 'APEDA rate' },
-  { key: 'onion',     label: 'Onion',            unit: 'kg', hs: '07031000', reference: 20,   mandi: 'Lasalgaon Mandi' },
-  { key: 'garlic',    label: 'Garlic',           unit: 'kg', hs: '07032000', reference: 32,   mandi: 'MP Mandi' },
-];
+const MARKET_PRICE_PRODUCTS = marketPriceProducts;
 
 function CfoMarketPricesWorkspace() {
   const [prices, setPrices] = React.useState({});
+  const [catalog, setCatalog] = React.useState(null);
+  const [search, setSearch] = React.useState('');
+  const [group, setGroup] = React.useState('All');
   const [editing, setEditing] = React.useState(null);
   const [editVal, setEditVal] = React.useState({ price: '', source: '', note: '' });
   const [saving, setSaving] = React.useState(false);
@@ -3164,12 +3054,33 @@ function CfoMarketPricesWorkspace() {
   const [loading, setLoading] = React.useState(true);
 
   React.useEffect(() => {
-    fetch('/api/prices/market')
-      .then(r => r.json())
-      .then(d => { if (d.ok) setPrices(d.prices || {}); })
+    Promise.all([
+      fetch('/api/prices/market').then(r => r.json()),
+      fetch('/api/cfo/product-catalog').then(r => r.json()).catch(() => null)
+    ])
+      .then(([priceData, catalogData]) => {
+        if (priceData.ok) setPrices(priceData.prices || {});
+        if (catalogData?.ok) setCatalog(catalogData);
+      })
       .catch(() => {})
       .finally(() => setLoading(false));
   }, []);
+
+  const catalogCounts = catalog?.counts || {
+    totalDropdownProducts: pricingProducts.length,
+    cfoMarketRows: MARKET_PRICE_PRODUCTS.length,
+    spiceBoardScheduledSpices: MARKET_PRICE_PRODUCTS.filter((product) => String(product.source_group || '').includes('Spice')).length,
+    apedaScheduledCategories: MARKET_PRICE_PRODUCTS.filter((product) => String(product.source_group || '').includes('APEDA')).length,
+    liveAgmarknetMapped: MARKET_PRICE_PRODUCTS.filter((product) => product.agmarknet).length,
+    referenceOrManualRequired: MARKET_PRICE_PRODUCTS.filter((product) => !product.agmarknet).length
+  };
+  const groups = ['All', ...Array.from(new Set(MARKET_PRICE_PRODUCTS.map((product) => product.source_group))).sort()];
+  const visibleProducts = MARKET_PRICE_PRODUCTS.filter((product) => {
+    const text = `${product.label} ${product.key} ${product.hs} ${product.source_group}`.toLowerCase();
+    const searchOk = !search.trim() || text.includes(search.trim().toLowerCase());
+    const groupOk = group === 'All' || product.source_group === group;
+    return searchOk && groupOk;
+  });
 
   function startEdit(product) {
     const current = prices[product.key];
@@ -3233,6 +3144,37 @@ function CfoMarketPricesWorkspace() {
         </p>
       </div>
       {msg && <div style={{ marginBottom: 16, padding: '10px 14px', borderRadius: 8, background: msg.startsWith('✅') ? '#14532d' : '#7f1d1d', color: '#f1f5f9', fontSize: 13 }}>{msg}</div>}
+      <div className="cfo-market-catalog-summary">
+        {[
+          ['Dropdown products', catalogCounts.totalDropdownProducts],
+          ['CFO rate rows', catalogCounts.cfoMarketRows],
+          ['Spice Board spices', catalogCounts.spiceBoardScheduledSpices],
+          ['APEDA categories', catalogCounts.apedaScheduledCategories],
+          ['Live mapped', catalogCounts.liveAgmarknetMapped],
+          ['Manual required', catalogCounts.referenceOrManualRequired]
+        ].map(([label, value]) => (
+          <article key={label}>
+            <span>{label}</span>
+            <strong>{value}</strong>
+          </article>
+        ))}
+      </div>
+      <div className="cfo-market-filterbar">
+        <label>
+          <span>Search product</span>
+          <input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Turmeric, chilli, rice, HS code..." />
+        </label>
+        <label>
+          <span>Source group</span>
+          <select value={group} onChange={(event) => setGroup(event.target.value)}>
+            {groups.map((item) => <option key={item} value={item}>{item}</option>)}
+          </select>
+        </label>
+        <div>
+          <span>Showing</span>
+          <strong>{visibleProducts.length} products</strong>
+        </div>
+      </div>
       {loading ? (
         <div style={{ color: '#64748b', fontSize: 14 }}>Loading prices…</div>
       ) : (
@@ -3249,7 +3191,7 @@ function CfoMarketPricesWorkspace() {
             </tr>
           </thead>
           <tbody>
-            {MARKET_PRICE_PRODUCTS.map(product => {
+            {visibleProducts.map(product => {
               const p = prices[product.key] || {};
               const isStale = p.stale !== false;
               const isFallback = p.is_fallback !== false;
@@ -3331,11 +3273,11 @@ function CfoMarketPricesWorkspace() {
   );
 }
 
-function CfoTabWorkspace({ tab, data, reportOutput, onOpenPricing, onOpenPaymentVault, onGenerateReport, onGenerateFounderSummary, onInitiatePayment, onSendReportSlack }) {
+function CfoTabWorkspace({ tab, data, reportOutput, onOpenTab, onOpenPricing, onOpenPaymentVault, onGenerateReport, onGenerateFounderSummary, onInitiatePayment, onSendReportSlack }) {
   if (data.loading) {
     return <section className="pricing-panel cfo-loading-panel"><MetricSkeletonGrid /></section>;
   }
-  if (tab === 'Overview') return <CfoOverviewWorkspace data={data} onOpenPricing={onOpenPricing} onOpenPaymentVault={onOpenPaymentVault} onGenerateFounderSummary={onGenerateFounderSummary} />;
+  if (tab === 'Overview') return <CfoOverviewWorkspace data={data} onOpenTab={onOpenTab} onOpenPricing={onOpenPricing} onOpenPaymentVault={onOpenPaymentVault} onGenerateFounderSummary={onGenerateFounderSummary} />;
   if (tab === 'Market Prices') return <CfoMarketPricesWorkspace />;
   if (tab === 'Cash') return <CfoCashWorkspace data={data} />;
   if (tab === 'Receivables') return <CfoReceivablesWorkspace data={data} />;
@@ -3439,7 +3381,181 @@ function CfoEmptyState({ message }) {
   return <EmptyState icon={CircleDollarSign} title={message} />;
 }
 
-function CfoOverviewWorkspace({ data, onOpenPricing, onOpenPaymentVault, onGenerateFounderSummary }) {
+function CfoRecurringPaymentsList({ rows }) {
+  const normalizedRows = safeCfoArray(rows);
+  if (!normalizedRows.length) {
+    return <CfoEmptyState message="No recurring infrastructure payments configured yet." />;
+  }
+  return (
+    <CfoFinanceTable
+      title="Recurring Infrastructure Payments"
+      subtitle="Renewal and platform spend tracked by CFO"
+      columns={['Vendor', 'Category', 'Amount', 'Frequency', 'Last status', 'Last paid']}
+      rows={normalizedRows.map((row) => [
+        row.vendor || 'Vendor pending',
+        row.category || 'Category pending',
+        formatCfoInr(row.amount),
+        row.frequency || 'Not set',
+        row.last_status || (row.auto_pay ? 'Auto-pay eligible' : 'Founder approval required'),
+        row.last_paid ? formatDisplayDate(row.last_paid) : 'Not paid yet',
+      ])}
+    />
+  );
+}
+
+function CfoFeatureTracker({ onOpenTab, onOpenPricing, onOpenPaymentVault, onGenerateFounderSummary }) {
+  const features = [
+    {
+      title: 'Quotation Pricing Engine',
+      owner: 'CFO Quote Control',
+      status: 'Integrated',
+      action: 'Open Quotations',
+      onOpen: onOpenPricing,
+      tracks: ['Buyer product, quantity, destination, incoterm, payment term', 'Raw material, packaging, processing, clearance, CHA, port and margin cost lines'],
+      output: 'Recommended quote price, profit, margin, buyer-price comparison and Director review trigger.'
+    },
+    {
+      title: 'APEDA + Spices Market Rates',
+      owner: 'Daily Market Price Control',
+      status: '117 products',
+      action: 'Open Market Prices',
+      onOpen: () => onOpenTab('Market Prices'),
+      tracks: ['APEDA and Spices Board CFO dropdown products', '8:00 AM IST Agmarknet refresh where live market mapping exists'],
+      output: 'Live or reference INR/kg rate used by the pricing engine, with manual CFO override.'
+    },
+    {
+      title: 'Shipment Cost Controls',
+      owner: 'Freight and Incoterm Costing',
+      status: 'Inside Quotations',
+      action: 'Open Quotations',
+      onOpen: onOpenPricing,
+      tracks: ['FOB, CFR, CIF, DAP and DDP cost inclusion rules', 'Inland logistics, freight, port, insurance and shipment mode assumptions'],
+      output: 'Shipment cost impact and missing freight or insurance blocks before quote release.'
+    },
+    {
+      title: 'Payment Terms and Buyer Risk',
+      owner: 'Buyer Payment Review',
+      status: 'Inside Quotations',
+      action: 'Open Quotations',
+      onOpen: onOpenPricing,
+      tracks: ['Advance, TT, LC, DP, DA, open account and mixed payment terms', 'Buyer type and payment-risk classification'],
+      output: 'Low, medium or high payment risk guidance before sending a buyer-facing price.'
+    },
+    {
+      title: 'Director Approval Gates',
+      owner: 'Founder/Director Control',
+      status: 'Guardrail',
+      action: 'Review Risks',
+      onOpen: () => onOpenTab('Risks'),
+      tracks: ['Low margin, high quote value, unknown buyer, missing cost inputs and manual FX overrides', 'Quote states that must not be sent without Director review'],
+      output: 'Approval task and Director review route when CFO rules are breached.'
+    },
+    {
+      title: 'Receivables',
+      owner: 'Buyer Payment Follow-up',
+      status: 'Connected view',
+      action: 'Open Receivables',
+      onOpen: () => onOpenTab('Receivables'),
+      tracks: ['Open buyer amounts, status and invoice/payment follow-up state', 'Receivables created from active, negotiation, won or invoiced lead statuses'],
+      output: 'Buyer money pending list for CFO follow-up.'
+    },
+    {
+      title: 'Payables',
+      owner: 'Vendor and Supplier Payment Control',
+      status: 'Controlled',
+      action: 'Open Payables',
+      onOpen: () => onOpenTab('Payables'),
+      tracks: ['Supplier, freight, platform renewal and vendor payment obligations', 'Approval state before CFO payment action'],
+      output: 'Pending vendor payment queue with approval-safe action buttons.'
+    },
+    {
+      title: 'Payment Vault',
+      owner: 'Payment Evidence and Renewals',
+      status: 'Integrated',
+      action: 'Open Payment Vault',
+      onOpen: onOpenPaymentVault,
+      tracks: ['Recent payment records, OTP-required workflow, receipts and renewal payment method', 'Infrastructure spend evidence and audit trail'],
+      output: 'Payment status, receipt status and controlled renewal/payment execution.'
+    },
+    {
+      title: 'Margin Intelligence',
+      owner: 'Profit Guardrail',
+      status: 'Integrated',
+      action: 'Open Margins',
+      onOpen: () => onOpenTab('Margins'),
+      tracks: ['Product margin analytics and quotes below target margin', 'Freight and raw material impact on quote profitability'],
+      output: 'Low-margin warning and route back to Quotations for correction.'
+    },
+    {
+      title: 'Finance Risk Watch',
+      owner: 'CFO Risk Register',
+      status: 'Integrated',
+      action: 'Open Risks',
+      onOpen: () => onOpenTab('Risks'),
+      tracks: ['Payment-term risk, FX exposure, LC discrepancy risk and freight volatility', 'Renewal and vendor risks'],
+      output: 'Risk register with next action before buyer or payment release.'
+    },
+    {
+      title: 'Cash and P&L',
+      owner: 'Financial Snapshot',
+      status: 'Connected view',
+      action: 'Open Cash',
+      onOpen: () => onOpenTab('Cash'),
+      tracks: ['Weekly and monthly revenue, COGS, infrastructure cost, gross profit and net profit', 'Recorded payments and invoice data when available'],
+      output: 'Current CFO financial snapshot for Director review.'
+    },
+    {
+      title: 'Reports and Founder Summary',
+      owner: 'CFO Reporting',
+      status: 'Integrated',
+      action: 'Generate Summary',
+      onOpen: onGenerateFounderSummary,
+      secondaryAction: 'Open Reports',
+      onSecondaryOpen: () => onOpenTab('Reports'),
+      tracks: ['CFO report, founder financial summary and Slack report handoff', 'Finance state across quotes, cash, payables, receivables and risks'],
+      output: 'Founder-ready CFO summary and report text.'
+    }
+  ];
+
+  return (
+    <section className="pricing-panel cfo-feature-tracker">
+      <div className="approval-section-header">
+        <div>
+          <span>CFO Feature Tracker</span>
+          <h2>All finance controls in one view</h2>
+        </div>
+        <LayoutDashboard size={18} />
+      </div>
+      <div className="cfo-feature-grid">
+        {features.map((feature) => (
+          <article className="cfo-feature-card" key={feature.title}>
+            <div className="cfo-feature-card-head">
+              <div>
+                <span>{feature.owner}</span>
+                <h3>{feature.title}</h3>
+              </div>
+              <strong>{feature.status}</strong>
+            </div>
+            <div className="cfo-feature-block">
+              <span>Tracks</span>
+              {feature.tracks.map((item) => <p key={item}>{item}</p>)}
+            </div>
+            <div className="cfo-feature-output">
+              <span>Output</span>
+              <p>{feature.output}</p>
+            </div>
+            <div className="cfo-feature-actions">
+              <button className="tactical-button" type="button" onClick={feature.onOpen}>{feature.action}</button>
+              {feature.secondaryAction ? <button className="ghost-button" type="button" onClick={feature.onSecondaryOpen}>{feature.secondaryAction}</button> : null}
+            </div>
+          </article>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+function CfoOverviewWorkspace({ data, onOpenTab, onOpenPricing, onOpenPaymentVault, onGenerateFounderSummary }) {
   const dashboard = data.dashboard || {};
   const monthly = dashboard.monthly_pnl || data.monthlyPnl || {};
   const weekly = dashboard.weekly_pnl || data.weeklyPnl || {};
@@ -3458,6 +3574,12 @@ function CfoOverviewWorkspace({ data, onOpenPricing, onOpenPaymentVault, onGener
         {metrics.map(([label, value]) => <article key={label}><span>{label}</span><strong>{value}</strong></article>)}
       </div>
       {!hasLiveData ? <CfoEmptyState message="Connect Supabase payments table to see live data" /> : null}
+      <CfoFeatureTracker
+        onOpenTab={onOpenTab}
+        onOpenPricing={onOpenPricing}
+        onOpenPaymentVault={onOpenPaymentVault}
+        onGenerateFounderSummary={onGenerateFounderSummary}
+      />
       <CfoRecurringPaymentsList rows={recurring} />
       <div className="cfo-report-actions">
         <button className="tactical-button" onClick={onOpenPricing}>Open Quotations Pricing Engine</button>
@@ -3564,11 +3686,11 @@ function CfoMarginsWorkspace({ data, onOpenPricing }) {
       {productRows.length || riskyQuotes.length ? null : <CfoEmptyState message="Margin data appears when quotes are generated through the Pricing Engine." />}
       {productRows.length ? <CfoFinanceTable title="By Product" subtitle="Product margin analytics" columns={['Product', 'Margin %']} rows={productRows.map((row) => {
         const item = row || {};
-        return [item.product || item[0] || 'Product pending', item.margin_percent || item.margin || item[1] || '0%'];
+        return [item.product || item[0] || 'Black pepper', item.margin_percent || item.margin || item[1] || '0%'];
       })} /> : null}
       {riskyQuotes.length ? <CfoFinanceTable title="Risky Quotes" subtitle="Quotes below target margin" columns={['Quote', 'Product', 'Margin', 'Target']} rows={riskyQuotes.map((row) => {
         const item = row || {};
-        return [item.quote_id || item.id || 'Quote pending', item.product || 'Product pending', item.margin_percent || item.margin || '0%', item.target_margin || 'Target pending'];
+        return [item.quote_id || item.id || 'Quote pending', item.product || 'Black pepper', item.margin_percent || item.margin || '0%', item.target_margin || 'Target pending'];
       })} /> : null}
       <button className="tactical-button" onClick={onOpenPricing}>Open Quotations</button>
     </section>
@@ -3931,7 +4053,7 @@ function PricingEngineHeader({ onBack, rates, onOpenTasks }) {
         <div className="coo-status"><StatusPulse /><strong>Pricing Engine Status: Monitoring</strong></div>
         <div className="coo-status"><FileCheck2 size={15} /><strong>Pending Quote Approvals: 4</strong></div>
         <div className="coo-status"><CircleDollarSign size={15} /><strong>USD/INR {usd}</strong></div>
-        <div className="coo-time"><CalendarClock size={16} /><span>{now.toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' })}</span></div>
+        <div className="coo-time"><CalendarClock size={16} /><span>{displayDateTime(now)}</span></div>
         <button className="ghost-button deck-logout" onClick={onOpenTasks}><Workflow size={15} />Task Engine</button>
         <button className="ghost-button deck-logout" onClick={onBack}><ArrowLeft size={15} /> Command Deck</button>
       </div>
@@ -4555,4 +4677,3 @@ function buildInvoiceValidation(invoice) {
 
 export { QuotationSopPricingPage };
 export default PricingEnginePage;
-

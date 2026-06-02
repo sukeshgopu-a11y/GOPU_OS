@@ -25,29 +25,25 @@ function LearningCentrePage({ navigate, onBack, reportMode = false }) {
   useEffect(() => {
     let disposed = false;
     async function refresh() {
-      const [setupResult, statusResult, findingsResult] = await Promise.all([
-        getLearningCentreSetup(),
+      const setupResult = await getLearningCentreSetup();
+      if (disposed) return;
+      const setup = setupResult.ok
+        ? (setupResult.data.migration_applied ? null : normalizeLearningCentreSetupError(setupResult))
+        : normalizeLearningCentreSetupError(setupResult);
+      setSetupRequired(setup || null);
+      if (setup) {
+        setStatus({ run: null, cards: null, debug: null });
+        setFindings([]);
+        return;
+      }
+
+      const [statusResult, findingsResult] = await Promise.all([
         getLearningCentreStatus(),
         getLearningCentreFindings({ limit: 25 })
       ]);
       if (disposed) return;
-      if (setupResult.ok) {
-        setSetupRequired(setupResult.data.migration_applied ? null : normalizeLearningCentreSetupError(setupResult));
-      }
-      if (!setupResult.ok) {
-        const setup = normalizeLearningCentreSetupError(setupResult);
-        if (setup) setSetupRequired(setup);
-      }
       if (statusResult.ok) setStatus({ run: statusResult.data.run, cards: statusResult.data.cards, debug: statusResult.data.debug || null });
-      if (!statusResult.ok) {
-        const setup = normalizeLearningCentreSetupError(statusResult);
-        if (setup) setSetupRequired(setup);
-      }
       if (findingsResult.ok) setFindings(findingsResult.data.findings || []);
-      if (!findingsResult.ok) {
-        const setup = normalizeLearningCentreSetupError(findingsResult);
-        if (setup) setSetupRequired(setup);
-      }
     }
     refresh();
     const timer = setInterval(refresh, 30000);
@@ -103,6 +99,7 @@ function LearningCentrePage({ navigate, onBack, reportMode = false }) {
   const debug = status.debug || {};
   const latestErrors = debug.ingestion_errors || [];
   const health = cards.system_health || 'green';
+  const setupBlockingActions = Boolean(setupRequired);
   const learningCentreBackendReady = backendStatus.mode === 'Connected' && !setupRequired;
   const learningCentreStatusMessage = setupRequired
     ? setupRequired.message
@@ -152,9 +149,9 @@ function LearningCentrePage({ navigate, onBack, reportMode = false }) {
           <BrainCircuit size={18} />
         </div>
         <div className="cmo-action-row">
-          <button className="tactical-button" onClick={startRun} disabled={run.status === 'running'}>{run.status === 'running' ? '12-hour run active' : 'Start 12-hour run'}</button>
-          <button className="ghost-button" onClick={runSafeTest} disabled={run.status === 'running'}>Run Safe Research Test</button>
-          <button className="ghost-button" onClick={stopRun} disabled={run.status !== 'running'} title="Emergency stop only. Normal runs continue for 12 hours.">Emergency stop</button>
+          <button className="tactical-button" onClick={startRun} disabled={setupBlockingActions || run.status === 'running'}>{run.status === 'running' ? '12-hour run active' : 'Start 12-hour run'}</button>
+          <button className="ghost-button" onClick={runSafeTest} disabled={setupBlockingActions || run.status === 'running'}>Run Safe Research Test</button>
+          <button className="ghost-button" onClick={stopRun} disabled={setupBlockingActions || run.status !== 'running'} title="Emergency stop only. Normal runs continue for 12 hours.">Emergency stop</button>
           <span>Current phase: {run.current_phase || 'idle'}</span>
         </div>
         <div className="learning-run-window">
@@ -347,4 +344,3 @@ function normalizeLearningCentreSetupError(response) {
 
 
 export default LearningCentrePage;
-

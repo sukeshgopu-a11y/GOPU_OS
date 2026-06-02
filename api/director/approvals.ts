@@ -19,6 +19,31 @@ function getSupabase() {
   });
 }
 
+function missingColumnName(error: any) {
+  const message = String(error?.message || "");
+  return (
+    message.match(/'([^']+)'\s+column/i)?.[1] ||
+    message.match(/Could not find the '([^']+)' column/i)?.[1] ||
+    message.match(/column "([^"]+)"/i)?.[1] ||
+    ""
+  );
+}
+
+async function tolerantInsertApproval(supabase: any, payload: Record<string, any>, select = "*") {
+  const { data, error } = await supabase
+    .from("founder_approvals")
+    .insert(payload)
+    .select(select)
+    .single();
+  const missing = missingColumnName(error);
+  if (error && missing && Object.prototype.hasOwnProperty.call(payload, missing)) {
+    const fallback = { ...payload };
+    delete fallback[missing];
+    return tolerantInsertApproval(supabase, fallback, select);
+  }
+  return { data, error };
+}
+
 export const config = { api: { bodyParser: true } };
 
 export default async function handler(req: any, res: any) {
@@ -33,7 +58,7 @@ export default async function handler(req: any, res: any) {
 
     let query = supabase
       .from("founder_approvals")
-      .select("id, tenant_id, lead_id, approval_type, request_type, title, summary, quotation_amount, buyer_name, buyer_email, product, quantity, amount, status, approval_status, risk_level, priority, source_module, metadata, created_at, updated_at")
+      .select("*")
       .eq("tenant_id", TENANT_ID)
       .order("created_at", { ascending: false })
       .limit(250);
@@ -90,23 +115,29 @@ export default async function handler(req: any, res: any) {
     let approval: any = null;
     let insertError: any = null;
     try {
-      const result = await supabase
-        .from("founder_approvals")
-        .insert({
-          tenant_id: TENANT_ID,
-          lead_id: lead_id ?? null,
-          approval_type,
-          summary: summary ?? null,
-          quotation_amount: quotation_amount ?? null,
-          buyer_name: buyer_name ?? null,
+      const result = await tolerantInsertApproval(supabase, {
+        tenant_id: TENANT_ID,
+        lead_id: lead_id ?? null,
+        approval_type,
+        request_type: approval_type,
+        title: approval_type,
+        summary: summary ?? null,
+        quotation_amount: quotation_amount ?? null,
+        buyer_name: buyer_name ?? null,
+        buyer_email: buyer_email ?? null,
+        product: product ?? null,
+        quantity: quantity ?? null,
+        amount: quotation_amount ?? null,
+        status: "Pending",
+        approval_status: "Pending",
+        metadata: {
           buyer_email: buyer_email ?? null,
           product: product ?? null,
           quantity: quantity ?? null,
-          status: "Pending",
-          created_at: new Date().toISOString(),
-        })
-        .select("id, approval_type, request_type, buyer_name, status, approval_status, created_at")
-        .single();
+          final_quote_amount: quotation_amount ?? null,
+        },
+        created_at: new Date().toISOString(),
+      }, "*");
       approval = result.data;
       insertError = result.error;
     } catch (_) {

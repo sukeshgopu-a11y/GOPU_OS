@@ -1,5 +1,7 @@
 import { createClient } from "@supabase/supabase-js";
 import { getCmoContentSystemPrompt } from "../../../lib/contentQualityEngine.mjs";
+import { ensureLinkedInPostRules, isLinkedInPlatform } from "../../../lib/cmoLinkedInRules.mjs";
+import { ensureCmoCanvaApprovalRow, ensureCmoCanvaDesignForApproval } from "../../../lib/cmoCanvaWorkflow.mjs";
 
 const DEMO_TENANT_ID = "11111111-1111-1111-1111-111111111111";
 
@@ -40,6 +42,7 @@ function safeJson(text = "") {
 
 function normalizePlatform(value = "") {
   const platform = String(value || "LinkedIn").trim().toLowerCase();
+  if (platform === "linkedin personal" || platform === "linkedin_personal" || platform === "linkedin-personal") return "LinkedIn Personal";
   if (platform === "instagram") return "Instagram";
   if (platform === "facebook") return "Facebook";
   return "LinkedIn";
@@ -73,11 +76,13 @@ async function generateWithOpenAI(payload: any) {
             company_context: companyContext,
             style,
             output_schema: {
+              headline: "string",
+              slides: [{ heading: "string", body: "string" }],
               caption: "string",
               generated_text: "string",
               final_text: "string",
-              image_prompt: "string",
-              hashtags: ["string"]
+              hashtags: ["string"],
+              canva_template_type: "knowledge_carousel | shipment_announcement | market_update | product_spotlight | buyer_education"
             }
           })
         }
@@ -93,6 +98,21 @@ async function generateWithOpenAI(payload: any) {
 
   const parsed = safeJson(extractText(body));
   if (!parsed) return { ok: false, status: "invalid_ai_json", message: "OpenAI response could not be parsed." };
+  if (isLinkedInPlatform(platform)) {
+    const baseText = parsed.final_text || parsed.generated_text || parsed.caption || "";
+    const enforced = ensureLinkedInPostRules(baseText, {
+      platform,
+      topic,
+      hashtags: Array.isArray(parsed.hashtags) ? parsed.hashtags : [],
+      companyPageAvailable: platform === "LinkedIn" && Boolean(env("LINKEDIN_ORGANIZATION_ID"))
+    });
+    parsed.caption = enforced.text;
+    parsed.generated_text = enforced.text;
+    parsed.final_text = enforced.text;
+    parsed.hashtags = enforced.hashtags;
+  }
+  parsed.image_prompt = "";
+  parsed.slides = Array.isArray(parsed.slides) ? parsed.slides.slice(0, 10) : [];
   return { ok: true, platform, topic, content: parsed };
 }
 
@@ -123,7 +143,8 @@ export default async function handler(req: any, res: any) {
       caption,
       generated_text: generatedText,
       final_text: finalText,
-      image_prompt: ai.content.image_prompt || "",
+      image_prompt: "",
+      hashtags: Array.isArray(ai.content.hashtags) ? ai.content.hashtags : [],
       approval_status: "pending_approval",
       publish_status: "not_published",
       metadata: {
@@ -131,13 +152,37 @@ export default async function handler(req: any, res: any) {
         company_context: payload.company_context || "",
         style: payload.style || "",
         hashtags: Array.isArray(ai.content.hashtags) ? ai.content.hashtags : [],
+        canva_required: true,
+        no_ai_image_text: true,
+        director_approval_required: true,
+        canva_content: {
+          headline: ai.content.headline || ai.topic,
+          slides: Array.isArray(ai.content.slides) ? ai.content.slides : [],
+          caption: finalText,
+          hashtags: Array.isArray(ai.content.hashtags) ? ai.content.hashtags : [],
+          template_type: ai.content.canva_template_type || ""
+        },
+        linkedin_knowledge_hub_template: isLinkedInPlatform(ai.platform) ? "linkedin_default_knowledge_post_template_v1" : null,
+        linkedin_style_scope: isLinkedInPlatform(ai.platform) ? "linkedin_only" : null,
         founder_approval_required: true,
         source: "api/cmo/content/generate"
       }
     }).select("*").maybeSingle();
 
     if (error) return res.status(200).json({ ok: false, status: "db_insert_failed", message: error.message, generated_content: ai.content });
-    return res.status(200).json({ ok: true, status: "generated", content_history: data });
+    await ensureCmoCanvaApprovalRow(client, data);
+    const canva = await ensureCmoCanvaDesignForApproval(data, { client });
+    return res.status(200).json({
+      ok: true,
+      status: canva.ok ? "generated_with_canva" : "generated_canva_pending",
+      content_history: canva.content_history || data,
+      canva: {
+        ok: canva.ok,
+        status: canva.status,
+        message: canva.message || "",
+        missing: canva.missing || []
+      }
+    });
   } catch (error: any) {
     return res.status(200).json({ ok: false, status: "failed_safely", message: error?.message || "CMO content generation failed safely." });
   }

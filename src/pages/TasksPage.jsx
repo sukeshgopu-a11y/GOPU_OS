@@ -15,6 +15,7 @@ import {
 } from 'lucide-react';
 import { ExportOSShell } from '../shared/routeShell.jsx';
 import { EmptyState, PriorityBadge, StatusBadge } from '../shared/uiPrimitives.jsx';
+import { displayDateTime } from '../utils/dateTime.js';
 import { demoTenantId } from '../services/companyService.js';
 import { createApprovalRequest } from '../services/approvalService.js';
 import { generateCOODailyPlan } from '../services/cooService.js';
@@ -32,11 +33,11 @@ const taskEngineModels = ['tasks', 'task_comments', 'task_status_history', 'task
 const initialTaskItems = [
   {
     id: 'task-uae-buyer',
-    title: 'Verify buyer details for Country pending enquiry',
+    title: 'Verify buyer details for UAE enquiry',
     description: 'Confirm buyer company, country, email, delivery address, and intended product before pricing moves forward.',
     workflow_source: 'Lead Intake',
-    linked_record_id: 'LEAD-Country pending-024',
-    linked_label: 'Country pending spice enquiry',
+    linked_record_id: 'LEAD-UAE-024',
+    linked_label: 'UAE spice enquiry',
     department: 'Operations',
     owner_command: 'COO Command',
     assigned_to: 'Operations desk',
@@ -46,7 +47,7 @@ const initialTaskItems = [
     escalation_level: 'COO if buyer data remains incomplete by evening',
     blocking_reason: '',
     next_action: 'Validate buyer identity and complete intake fields.',
-    buyer: 'Country pending enquiry',
+    buyer: 'UAE enquiry',
     product: 'Spice mix',
     created_at: 'Today 08:40',
     updated_at: 'Today 09:20'
@@ -67,7 +68,7 @@ const initialTaskItems = [
     escalation_level: 'Founder if margin remains below threshold',
     blocking_reason: '',
     next_action: 'Confirm margin threshold and freight assumption.',
-    buyer: 'Buyer pending',
+    buyer: 'Gulf Foods LLC',
     product: 'Black pepper',
     created_at: 'Today 09:10',
     updated_at: 'Today 09:45'
@@ -574,7 +575,7 @@ function TaskEngineHeader({ onBack, onNewTask }) {
       <div className="deck-header-controls">
         <div className="coo-verified"><ShieldCheck size={16} /><span>Founder session verified</span></div>
         <div className="coo-status"><Workflow size={15} /><strong>Task Engine: Monitoring</strong></div>
-        <div className="coo-time"><CalendarClock size={16} /><span>{now.toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' })}</span></div>
+        <div className="coo-time"><CalendarClock size={16} /><span>{displayDateTime(now)}</span></div>
         <button className="tactical-button" onClick={onNewTask}>New Task</button>
         <button className="ghost-button deck-logout" onClick={onBack}><ArrowLeft size={15} /> Command Deck</button>
       </div>
@@ -669,4 +670,3 @@ function COOControlSummary({ tasks, output, onPrepare }) {
   const bottleneck = tasks.filter((task) => task.status === 'Blocked').length ? 'Finance / invoice release' : 'None detected';
   return <section className="task-panel"><div className="approval-section-header"><div><span>COO Execution Control</span><h2>Founder-ready summary</h2></div><ClipboardCheck size={18} /></div><div className="task-detail-grid">{[['Total Open Tasks', tasks.filter((task) => task.status !== 'Done').length], ['Blocked Operations', tasks.filter((task) => task.status === 'Blocked').length], ['Overdue Follow-ups', tasks.filter((task) => task.due_date === 'Overdue').length], ['Founder Review', tasks.filter((task) => task.escalation_level.includes('Founder') || task.status === 'Waiting Founder Approval').length], ['Supplier Follow-ups', tasks.filter((task) => `${task.title} ${task.workflow_source}`.toLowerCase().includes('supplier')).length], ['Invoice/Document Blockers', tasks.filter((task) => ['Invoice System', 'Document Factory', 'Documents'].includes(task.workflow_source) && ['Blocked', 'Escalated', 'Waiting Review'].includes(task.status)).length], ['Department Bottleneck', bottleneck], ['Recommended COO Action', 'Clear blocked invoice/LUT work first']].map(([label, value]) => <div key={label}><span>{label}</span><strong>{value}</strong></div>)}</div><button className="tactical-button" onClick={onPrepare}>Prepare Founder Task Summary</button>{output && <pre className="task-local-output">{output}</pre>}</section>;
 }
-

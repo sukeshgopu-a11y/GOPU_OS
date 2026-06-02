@@ -95,3 +95,4 @@ build/Release
 # OS files
 .DS_Store
 .claude/
+.env*

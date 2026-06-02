@@ -1,4 +1,4 @@
-import { requireSupabase, backendStatus } from '../lib/supabaseClient.js';
+import { requireSupabaseSession, backendStatus } from '../lib/supabaseClient.js';
 import { demoTenantId } from './demoData.js';
 
 const EXECUTIVE_ROLES = ['COO', 'CFO', 'CTO', 'CMO', 'CIO'];
@@ -35,7 +35,7 @@ function vectorLiteral(embedding) {
 
 // Write a decision or insight from an agent into shared memory (executive_knowledge)
 export async function writeAgentMemory(role, topicCluster, content, options = {}) {
-  const { client, error } = requireSupabase();
+  const { client, error } = await requireSupabaseSession();
   const knowledgeKey = `${role}:${topicCluster}`.toLowerCase().replace(/[^a-z0-9]+/g, '-');
   const row = {
     role,
@@ -63,7 +63,7 @@ export async function writeAgentMemory(role, topicCluster, content, options = {}
 
 // Query shared memory for a specific role and optional topic
 export async function queryAgentMemory(role, topic = null) {
-  const { client, error } = requireSupabase();
+  const { client, error } = await requireSupabaseSession();
   if (error) return { ok: true, data: [], backend: backendStatus, local: true };
 
   let query = client.from('executive_knowledge').select('*');
@@ -87,7 +87,7 @@ export async function crossQueryMemory(askingRole, targetRole, topic) {
 
 // Broadcast a structured update from an agent to Director Command
 export async function broadcastToDirector(role, update, tenantId = demoTenantId) {
-  const { client, error } = requireSupabase();
+  const { client, error } = await requireSupabaseSession();
   const notification = {
     tenant_id: tenantId,
     recipient_role: 'director',
@@ -120,7 +120,7 @@ export async function broadcastToDirector(role, update, tenantId = demoTenantId)
 
 // Get the latest knowledge snapshot for all executives (Director overview)
 export async function getAllAgentMemorySummary() {
-  const { client, error } = requireSupabase();
+  const { client, error } = await requireSupabaseSession();
   if (error) return { ok: true, data: {}, backend: backendStatus, local: true };
 
   const { data, error: queryError } = await client

@@ -46,7 +46,7 @@ function ConnectionBanner() {
   return (
     <div className="connection-banner" role="alert" aria-live="assertive">
       <AlertTriangle size={14} aria-hidden="true" />
-      You are offline -- changes may not save until connection is restored.
+      You are offline - changes may not save until connection is restored.
     </div>
   );
 }
@@ -602,6 +602,7 @@ function SettingToggle({ label, description, value, onChange }) {
         id={id}
         role="switch"
         aria-checked={value}
+        aria-label={label}
         className={`toggle-switch ${value ? 'on' : ''}`}
         onClick={() => onChange(!value)}
       >
@@ -1202,7 +1203,7 @@ function getGlobalBackContext(pathname) {
     ['/export-os/payments', 'Back to Payments'],
     ['/export-os/pricing-engine', 'Back to Pricing'],
     ['/export-os/director', 'Back to Director'],
-    ['/export-os/notification', 'Back to Notifications'],
+    ['/export-os/notification-center', 'Back to Notifications'],
     ['/export-os/learning-centre', 'Back to Learning Centre'],
     ['/export-os/workflow-engine', 'Back to Workflow Engine'],
     ['/export-os/workflow-dependencies', 'Back to Workflow Engine']

@@ -1,7 +1,7 @@
 import { getApprovalQueue } from './approvalService.js';
 import { getTasks } from './taskService.js';
 import { demoTenantId } from './demoData.js';
-import { isSupabaseConfigured, requireSupabase } from '../lib/supabaseClient.js';
+import { isSupabaseConfigured, requireSupabase, requireSupabaseSession } from '../lib/supabaseClient.js';
 
 const demoDelay = 0;
 const localViewed = new Set();
@@ -72,35 +72,34 @@ function taskToNotification(task) {
 export async function getNotificationCenterData(tenantId = demoTenantId) {
   await wait();
   if (isSupabaseConfigured) {
-    const { client, error } = requireSupabase();
-    if (error) return { data: { notifications: [], audit: [], counts: { critical: 0, pendingReviews: 0, escalated: 0 } }, error };
-
-    const [{ data: liveNotifications, error: notificationError }, { data: auditRows }] = await Promise.all([
-      client.from('notifications').select('*').eq('tenant_id', tenantId).order('created_at', { ascending: false }),
-      client.from('audit_logs').select('*').eq('tenant_id', tenantId).eq('module', 'notifications').order('created_at', { ascending: false }).limit(20)
-    ]);
-    if (notificationError) {
-      return { data: { notifications: [], audit: [], counts: { critical: 0, pendingReviews: 0, escalated: 0 } }, error: notificationError };
+    const { client, error } = await requireSupabaseSession();
+    if (!error) {
+      const [{ data: liveNotifications, error: notificationError }, { data: auditRows }] = await Promise.all([
+        client.from('notifications').select('*').eq('tenant_id', tenantId).order('created_at', { ascending: false }),
+        client.from('audit_logs').select('*').eq('tenant_id', tenantId).eq('module', 'notifications').order('created_at', { ascending: false }).limit(20)
+      ]);
+      if (!notificationError) {
+        const notifications = (liveNotifications || []).map((item) => ({
+          ...item,
+          notification_type: item.notification_type || item.source_module || 'Notification',
+          severity: item.severity || item.priority || 'Attention',
+          linked_route: item.linked_route || item.metadata?.linked_route || '/export-os/notifications',
+          viewed_by_founder: item.status === 'Viewed' || Boolean(item.read_at)
+        }));
+        return {
+          data: {
+            notifications,
+            audit: auditRows || [],
+            counts: {
+              critical: notifications.filter((item) => item.severity === 'Critical').length,
+              pendingReviews: notifications.filter((item) => ['Approval Needed', 'Review Required', 'Verification Required', 'Attention Required'].includes(item.status)).length,
+              escalated: notifications.filter((item) => item.status === 'Escalated').length
+            }
+          },
+          error: null
+        };
+      }
     }
-    const notifications = (liveNotifications || []).map((item) => ({
-      ...item,
-      notification_type: item.notification_type || item.source_module || 'Notification',
-      severity: item.severity || item.priority || 'Attention',
-      linked_route: item.linked_route || item.metadata?.linked_route || '/export-os/notifications',
-      viewed_by_founder: item.status === 'Viewed' || Boolean(item.read_at)
-    }));
-    return {
-      data: {
-        notifications,
-        audit: auditRows || [],
-        counts: {
-          critical: notifications.filter((item) => item.severity === 'Critical').length,
-          pendingReviews: notifications.filter((item) => ['Approval Needed', 'Review Required', 'Verification Required', 'Attention Required'].includes(item.status)).length,
-          escalated: notifications.filter((item) => item.status === 'Escalated').length
-        }
-      },
-      error: null
-    };
   }
 
   const [approvalResponse, taskResponse] = await Promise.all([

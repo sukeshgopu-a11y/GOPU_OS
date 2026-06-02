@@ -12,7 +12,7 @@
  * Gracefully degrades to in-memory when Supabase is unavailable.
  */
 
-import { requireSupabase, backendStatus } from '../lib/supabaseClient.js';
+import { requireSupabase, requireSupabaseSession, backendStatus } from '../lib/supabaseClient.js';
 import { demoTenantId } from './demoData.js';
 import { writeAgentMemory, broadcastToDirector, crossQueryMemory } from './agentMemoryService.js';
 import { createTaskFromWorkflow } from './taskService.js';
@@ -78,7 +78,7 @@ export async function resolveAgentMessage(messageId, reply, tenantId = demoTenan
 }
 
 export async function getAgentMessages(role, status = null, tenantId = demoTenantId) {
-  const { client, error } = requireSupabase();
+  const { client, error } = await requireSupabaseSession();
   if (!error) {
     let query = client
       .from('agent_messages')

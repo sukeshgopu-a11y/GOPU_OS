@@ -8,6 +8,7 @@
  */
 
 import { createClient } from "@supabase/supabase-js";
+import { cleanSlackText } from "../../../lib/slackTextClean.js";
 
 const TENANT_ID = "11111111-1111-1111-1111-111111111111";
 
@@ -188,6 +189,21 @@ export default async function handler(req: any, res: any) {
   const slackToken = env("SLACK_BOT_TOKEN");
   const slackChannel = env("SLACK_CHANNEL_ID");
   if (sent > 0 && slackToken && slackChannel) {
+    const text = cleanSlackText([
+      "*GOPU OS - CMO follow-up emails sent*",
+      `${sent} follow-up email${sent > 1 ? "s" : ""} sent to buyers today`,
+      markedCold > 0 ? `${markedCold} buyer${markedCold > 1 ? "s" : ""} moved to Cold (no response after 14 days)` : "",
+      "",
+      "*Action needed*",
+      "Review buyer replies and next follow-up tasks in CMO."
+    ].filter(Boolean).join("\n"));
+    await fetch("https://slack.com/api/chat.postMessage", {
+      method: "POST",
+      headers: { Authorization: `Bearer ${slackToken}`, "Content-Type": "application/json" },
+      body: JSON.stringify({ channel: slackChannel, text }),
+    }).catch(() => null);
+  }
+  if (false && sent > 0 && slackToken && slackChannel) {
     await fetch("https://slack.com/api/chat.postMessage", {
       method: "POST",
       headers: { Authorization: `Bearer ${slackToken}`, "Content-Type": "application/json" },

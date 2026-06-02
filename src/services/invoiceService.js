@@ -1,5 +1,5 @@
 import { createTableService } from './serviceHelpers.js';
-import { backendStatus, requireSupabase } from '../lib/supabaseClient.js';
+import { backendStatus, requireSupabaseSession } from '../lib/supabaseClient.js';
 import {
   demoTenantId,
   getCompanyProfile,
@@ -176,7 +176,7 @@ export async function createInvoiceCompanySnapshot(tenantId = demoTenantId, invo
     lut_valid_to: snapshot.lut_valid_to || null,
     lut_status: snapshot.lut_status
   };
-  const { client, error } = requireSupabase();
+  const { client, error } = await requireSupabaseSession();
   if (error) {
     await writeInvoiceAuditLog(tenantId, invoiceId, {
       action: 'Company data snapshot injected',
@@ -212,7 +212,7 @@ export async function createInvoiceDraftFromVault(tenantId = demoTenantId, paylo
     grand_total: 0,
     amount_in_words: 'Draft amount pending'
   };
-  const { client, error } = requireSupabase();
+  const { client, error } = await requireSupabaseSession();
   if (error) {
     await writeInvoiceAuditLog(tenantId, invoiceNumber, {
       action: 'Company data snapshot injected',

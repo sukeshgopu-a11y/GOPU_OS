@@ -76,13 +76,14 @@ export default async function handler(req: any, res: any) {
     const targetName = findExistingEnvName(parseEnvLines(existing), config.aliases) || config.primary;
     const nextContent = updateEnvContent(existing, targetName, value);
     await fs.writeFile(envPath, nextContent.endsWith("\n") ? nextContent : `${nextContent}\n`, "utf8");
+    process.env[targetName] = value;
 
     console.log("[cto-provider-env]", JSON.stringify({ provider: serviceId, event: "saved", envName: targetName }));
     return res.status(200).json({
       ok: true,
       status: "saved",
       env_name: targetName,
-      message: `${targetName} saved to .env.local. Restart the dev server to load it.`
+      message: `${targetName} saved to .env.local and loaded into the current backend process. Restart dev server if another process needs it.`
     });
   } catch (error) {
     console.error("[cto-provider-env]", {

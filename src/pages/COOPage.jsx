@@ -33,6 +33,7 @@ import {
   StatusPulse,
   TrendIndicator
 } from '../shared/uiPrimitives.jsx';
+import { displayDateTime } from '../utils/dateTime.js';
 import { ProgressBar } from '../shared/dashboardPrimitives.jsx';
 import { backendStatus } from '../lib/supabaseClient.js';
 import { demoTenantId } from '../services/companyService.js';
@@ -57,6 +58,7 @@ import {
   getSlackNotificationActivity,
   sendSlackNotification
 } from '../services/slackNotificationService.js';
+import { getDemoLeadProfile } from '../config/demoLeadProfile.js';
 
 const executiveCommands = [
   {
@@ -269,7 +271,7 @@ function routeForOperationalItem(item = {}) {
   if (text.includes('pricing') || text.includes('margin')) return '/export-os/pricing-engine';
   if (text.includes('invoice') || text.includes('lut')) return item.id?.includes?.('readiness') ? '/export-os/invoices/new' : `/export-os/invoices/${item.linked_record_id || item.id || 'draft'}`;
   if (text.includes('approval') || text.includes('founder')) return '/export-os/director';
-  if (text.includes('shipment') || text.includes('dispatch') || text.includes('freight') || text.includes('cha')) return `/export-os/shipments/${item.id || 'SHP-Country pending-001'}`;
+  if (text.includes('shipment') || text.includes('dispatch') || text.includes('freight') || text.includes('cha')) return `/export-os/shipments/${item.id || 'SHP-UAE-001'}`;
   if (text.includes('supplier')) return '/export-os/suppliers/supplier-malabar-spice';
   if (text.includes('warehouse') || text.includes('stock') || text.includes('allocation')) return '/export-os/warehouse';
   if (text.includes('document') || text.includes('packing list') || text.includes('hsn') || text.includes('origin')) return '/export-os/document-factory';
@@ -294,7 +296,7 @@ function normalizeOperationalItem(item = {}, type = 'Workflow') {
   };
 }
 
-function COORecentLeads({ leads, onNewLead, onOpenDirector }) {
+function COORecentLeadsLegacy({ leads, onNewLead, onOpenDirector, onOpenLead }) {
   if (!leads || leads.length === 0) return null;
   return (
     <section className="coo-panel coo-recent-leads-panel">
@@ -304,7 +306,7 @@ function COORecentLeads({ leads, onNewLead, onOpenDirector }) {
       </div>
       <div className="coo-leads-table">
         <div className="coo-leads-thead">
-          <span>Buyer</span><span>Product</span><span>Qty</span><span>Country</span><span>Status</span>
+          <span>Lead</span><span>Buyer</span><span>Product</span><span>Load</span><span>Quote</span><span>Payment</span><span>Docs</span><span>Status</span>
         </div>
         {leads.map((lead, i) => (
           <div key={lead.id || i} className="coo-leads-row">
@@ -315,6 +317,46 @@ function COORecentLeads({ leads, onNewLead, onOpenDirector }) {
             <span className={`coo-lead-status coo-lead-status--${String(lead.status || '').toLowerCase().replace(/\s+/g, '-')}`}>{lead.status || 'Pending'}</span>
           </div>
         ))}
+      </div>
+      <div className="coo-leads-footer">
+        <button className="ghost-button" onClick={onNewLead}>+ New Lead</button>
+        <button className="tactical-button" onClick={onOpenDirector}>View Director Queue <ChevronRight size={14} /></button>
+      </div>
+    </section>
+  );
+}
+
+function COORecentLeads({ leads, onNewLead, onOpenDirector, onOpenLead }) {
+  if (!leads || leads.length === 0) return null;
+  return (
+    <section className="coo-panel coo-recent-leads-panel">
+      <div className="coo-section-header">
+        <div><span>Slack Lead Pipeline</span><h2>Recent leads from Slack and web - {leads.length} ready</h2></div>
+        <Activity size={18} />
+      </div>
+      <div className="coo-leads-table">
+        <div className="coo-leads-thead">
+          <span>Lead</span><span>Buyer</span><span>Product</span><span>Load</span><span>Quote</span><span>Payment</span><span>Docs</span><span>Status</span>
+        </div>
+        {leads.map((lead, i) => {
+          const leadRef = lead.lead_number || lead.lead_no || lead.id || `Lead ${i + 1}`;
+          const qty = lead.container_load || (lead.quantity ? `${lead.quantity} ${lead.unit || lead.unit_of_measure || ''}`.trim() : '-');
+          const quote = lead.final_quote || lead.quote_amount || lead.quotation_amount || lead.quote || 'Pending';
+          const payment = lead.payment_terms || lead.payment_type || 'To confirm';
+          const docs = lead.document_status || lead.documents_status || lead.required_documents || 'Docs pending';
+          return (
+            <button key={lead.id || lead.lead_number || i} type="button" className="coo-leads-row" onClick={() => onOpenLead?.(lead)}>
+              <span className="coo-lead-ref">{leadRef}</span>
+              <span className="coo-lead-buyer">{lead.buyer_name || lead.company_name || '-'}</span>
+              <span>{lead.product || '-'}</span>
+              <span>{qty}</span>
+              <span>{quote}</span>
+              <span>{payment}</span>
+              <span>{docs}</span>
+              <span className={`coo-lead-status coo-lead-status--${String(lead.status || '').toLowerCase().replace(/\s+/g, '-')}`}>{lead.status || 'Pending'}</span>
+            </button>
+          );
+        })}
       </div>
       <div className="coo-leads-footer">
         <button className="ghost-button" onClick={onNewLead}>+ New Lead</button>
@@ -391,6 +433,21 @@ function COOCommandPage({ navigate, onBack, onOpenApprovalWall, onOpenTasks }) {
   });
   const sopWatch = getSOPImprovementWatch(priorities);
   const priorityQueue = buildCOOPriorityQueue(priorities, blockers, approvals, followups);
+  const visibleRecentLeads = useMemo(() => {
+    const demoLead = {
+      ...getDemoLeadProfile(),
+      final_quote: 'CFO quote ready',
+      document_status: '12 docs + certificates',
+      status: 'Demo Ready'
+    };
+    const seen = new Set();
+    return [demoLead, ...(recentLeads || [])].filter((lead) => {
+      const key = lead.id || lead.lead_number || `${lead.buyer_name}-${lead.product}`;
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
+  }, [recentLeads]);
 
   async function generateDailyPlan() {
     const result = await generateCOODailyPlan(demoTenantId);
@@ -407,7 +464,7 @@ function COOCommandPage({ navigate, onBack, onOpenApprovalWall, onOpenTasks }) {
     setLastCOOSlackNotification(result.data || null);
     const notConfigured = result.data?.status === 'Provider Not Connected';
     const message = notConfigured
-      ? 'Slack not configured -- add SLACK_BOT_TOKEN to env'
+      ? 'Slack not configured - add SLACK_BOT_TOKEN to env'
       : result.ok
         ? successMessage
         : 'Slack notification failed safely.';
@@ -547,7 +604,12 @@ function COOCommandPage({ navigate, onBack, onOpenApprovalWall, onOpenTasks }) {
       <COOSlackAlertsPanel lastNotification={lastCOOSlackNotification} notice={cooSlackNotice} onSendStatus={sendCOOStatusToSlack} />
       <COOTabBar activeTab={activeCOOTab} onSelect={setActiveCOOTab} />
       <COOOperationalSummary summary={summary} inspect={inspectOperationalItem} />
-      <COORecentLeads leads={recentLeads} onNewLead={() => navigate('/export-os/leads/new')} onOpenDirector={() => navigate('/export-os/director')} />
+      <COORecentLeads
+        leads={visibleRecentLeads}
+        onNewLead={() => navigate('/export-os/leads/new')}
+        onOpenDirector={() => navigate('/export-os/director')}
+        onOpenLead={(lead) => navigate(`/export-os/coo/leads/${encodeURIComponent(lead.id || lead.lead_number)}`)}
+      />
       {activeCOOTab === 'Overview' && (
         <>
           <section className="coo-executive-layout">
@@ -684,9 +746,9 @@ function ExportOrderCard({ order, onAdvanceStage }) {
     >
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '8px' }}>
         <div>
-          <strong style={{ fontSize: '15px' }}>{order.buyer_name || order.buyer || 'Buyer pending'}</strong>
+          <strong style={{ fontSize: '15px' }}>{order.buyer_name || order.buyer || 'Gulf Foods LLC'}</strong>
           <p style={{ margin: '2px 0 0', fontSize: '13px', color: 'var(--muted, #6b7280)' }}>
-            {order.product || 'Product pending'} &middot; Qty: {order.quantity || '--'}
+            {order.product || 'Black pepper'} &middot; Qty: {order.quantity || '--'}
           </p>
         </div>
         <div style={{ textAlign: 'right' }}>
@@ -893,7 +955,7 @@ function COOOperationsHeader({ onBack, summary, onNewLead, onSendDailyBriefing }
         <div className="coo-verified"><ShieldCheck size={16} /><span>Founder session verified</span></div>
         <div className="coo-status"><Workflow size={15} /><strong>{summary?.activeWorkflows ?? '--'} active</strong></div>
         <div className="coo-status"><TriangleAlert size={15} /><strong>{summary?.blockedWorkflows ?? '--'} blocked</strong></div>
-        <div className="coo-time"><CalendarClock size={16} /><span>{now.toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' })}</span></div>
+        <div className="coo-time"><CalendarClock size={16} /><span>{displayDateTime(now)}</span></div>
         <button className="tactical-button" onClick={onNewLead}>New Lead</button>
         <button className="ghost-button" onClick={onSendDailyBriefing}>Send Daily Briefing</button>
         <button className="ghost-button coo-back" onClick={onBack}><ArrowLeft size={15} />Command Deck</button>
@@ -912,7 +974,7 @@ function COOSlackAlertsPanel({ lastNotification, notice, onSendStatus }) {
       </div>
       <div className="coo-slack-alerts-body">
         <div>
-          <strong>{providerNotConnected ? 'Slack not configured -- add SLACK_BOT_TOKEN to env' : 'Send current COO status to Slack'}</strong>
+          <strong>{providerNotConnected ? 'Slack not configured - add SLACK_BOT_TOKEN to env' : 'Send current COO status to Slack'}</strong>
           <span>
             {lastNotification
               ? `Last notification: ${new Date(lastNotification.timestamp).toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' })} / ${lastNotification.status}`
@@ -1162,7 +1224,26 @@ function COOActivityTimeline({ entries, onInspect }) {
 }
 
 function SOPImprovementWatch({ issues, onDraft, onInspect }) {
-  return <details className="coo-panel coo-compact-section coo-sop-panel"><summary><span>SOP Improvement Watch</span><strong>Secondary intelligence</strong><Settings size={17} /></summary><div className="coo-sop-list">{issues.map((issue) => <button onClick={() => onInspect(issue, 'SOP Improvement Watch')} key={issue.id}><strong>{issue.issue}</strong><span>{issue.count} signals</span><p>{issue.recommendation}</p><StatusBadge label={issue.status} state={issue.status === 'Review Required' ? 'attention' : 'progress'} /></button>)}</div><button className="coo-inline-action" onClick={onDraft}>Draft SOP Improvement</button></details>;
+  return (
+    <details className="coo-panel coo-compact-section coo-sop-panel">
+      <summary><span>SOP Improvement Watch</span><strong>Secondary intelligence</strong><Settings size={17} /></summary>
+      <div className="coo-sop-list">
+        {issues.map((issue) => (
+          <button
+            aria-label={`Inspect SOP issue: ${issue.issue}`}
+            onClick={() => onInspect(issue, 'SOP Improvement Watch')}
+            key={issue.id}
+          >
+            <strong>{issue.issue}</strong>
+            <span>{issue.count} signals</span>
+            <p>{issue.recommendation}</p>
+            <StatusBadge label={issue.status} state={issue.status === 'Review Required' ? 'attention' : 'progress'} />
+          </button>
+        ))}
+      </div>
+      <button className="coo-inline-action" aria-label="Draft SOP improvement" onClick={onDraft}>Draft SOP Improvement</button>
+    </details>
+  );
 }
 
 function CriticalOperationsPanel({ blockers, approvals, followups, onInspect, onOpenApprovalWall }) {
@@ -1219,7 +1300,7 @@ function OperationalDetailDrawer({ item, note, setNote, onClose, onOpenWorkflow,
   const linkedSystems = [
     ['Open Full Workflow', item.route, ArrowUpRight],
     ['Open Director Queue', '/export-os/director', ShieldCheck],
-    ['Open Shipment', '/export-os/shipments/SHP-Country pending-001', Route],
+    ['Open Shipment', '/export-os/shipments/SHP-UAE-001', Route],
     ['Open Invoice', '/export-os/invoices/new', FileText],
     ['Open Pricing', '/export-os/pricing-engine', Calculator],
     ['Open Task', '/export-os/tasks', ClipboardList]
@@ -1256,7 +1337,7 @@ function OperationalDetailDrawer({ item, note, setNote, onClose, onOpenWorkflow,
           <div className="drawer-timeline"><p>Intake checked.</p><p>{item.status} with owner: {item.owner}.</p><p>Next action: {item.nextAction}</p></div>
         </section>
         <section className="drawer-section director-ai-recommendation">
-          <span>AI Recommendation -- Human Review Advised</span>
+          <span>AI Recommendation - Human Review Advised</span>
           <p>{aiRecommendation.summary}</p>
           <div className="director-ai-grid">
             <div><strong>Risk</strong><small>{aiRecommendation.risk}</small></div>
@@ -1340,7 +1421,7 @@ function COOHeader({ onBack, onOpenTasks }) {
         </div>
         <div className="coo-time">
           <CalendarClock size={16} />
-          <span>{now.toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' })}</span>
+          <span>{displayDateTime(now)}</span>
         </div>
         <button className="icon-button" aria-label="Notifications">
           <Bell size={18} />
@@ -1603,7 +1684,7 @@ function Stepper({ steps, current, onChange }) {
                 className="stepper-node"
                 onClick={() => done && onChange && onChange(i)}
                 disabled={!done}
-                aria-label={`${step.label}${done ? ' -- completed' : active ? ' -- current' : ' -- upcoming'}`}
+                aria-label={`${step.label}${done ? ' - completed' : active ? ' - current' : ' - upcoming'}`}
               >
                 {done
                   ? <CheckCircle2 size={16} aria-hidden="true" />
@@ -1775,17 +1856,17 @@ function ShipmentWizard({ onComplete, onCancel, buyers = [] }) {
             <h3 id="wizard-s3">Review & Confirm</h3>
             <div className="wizard-review-grid">
               {[
-                ['Buyer',        buyers.find((b) => b.id === form.buyer_id)?.company_name || '--'],
+                ['Buyer',        buyers.find((b) => b.id === form.buyer_id)?.company_name || '-'],
                 ['Product',      form.product_name],
                 ['Quantity',     `${form.quantity} ${form.unit}`],
                 ['Origin',       form.origin],
                 ['Destination',  form.destination],
                 ['Incoterm',     form.incoterm],
                 ['ETD',          form.etd],
-                ['ETA',          form.eta || '--'],
-                ['Vessel',       form.vessel || '--'],
-                ['B/L Number',   form.bl_number || '--'],
-                ['Packing',      form.packing_type || '--'],
+                ['ETA',          form.eta || '-'],
+                ['Vessel',       form.vessel || '-'],
+                ['B/L Number',   form.bl_number || '-'],
+                ['Packing',      form.packing_type || '-'],
               ].map(([label, value]) => (
                 <div key={label} className="wizard-review-row">
                   <span className="wizard-review-label">{label}</span>
@@ -1818,10 +1899,10 @@ const SHIPMENT_STAGE_LIST = [
   'Order Confirmed',
   'Production Ready',
   'Pre-Shipment Inspection',
-  'Customs Clearance -- Export',
+  'Customs Clearance - Export',
   'Port Loading',
   'In Transit',
-  'Customs Clearance -- Import',
+  'Customs Clearance - Import',
   'Port Discharge',
   'Delivered',
 ];
@@ -1864,7 +1945,7 @@ const ShipmentProgressTracker = React.memo(function ShipmentProgressTracker({ cu
         <div className="tracker-meta">
           <span>ETD <time dateTime={shipment.etd}>{new Date(shipment.etd).toLocaleDateString([], { day: 'numeric', month: 'short', year: 'numeric' })}</time></span>
           {shipment.eta && <span>ETA <time dateTime={shipment.eta}>{new Date(shipment.eta).toLocaleDateString([], { day: 'numeric', month: 'short', year: 'numeric' })}</time></span>}
-          {shipment.vessel && <span>Vessel -- {shipment.vessel}</span>}
+          {shipment.vessel && <span>Vessel - {shipment.vessel}</span>}
         </div>
       )}
     </div>
@@ -1957,4 +2038,3 @@ function GeneratedPanel({ output }) {
 
 
 export default COOCommandPage;
-

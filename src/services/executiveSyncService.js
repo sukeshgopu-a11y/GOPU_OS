@@ -31,7 +31,7 @@ function executiveForRisk(riskType) {
 
 function buildCrossExecutiveAlerts(journeys, dependencyEngine) {
   const firstJourney = journeys[0];
-  const blockers = dependencyEngine.blockers.slice(0, 8);
+  const blockers = Array.isArray(dependencyEngine?.blockers) ? dependencyEngine.blockers.slice(0, 8) : [];
   return [
     {
       id: 'sync-alert-low-margin',
@@ -39,7 +39,7 @@ function buildCrossExecutiveAlerts(journeys, dependencyEngine) {
       severity: 'High',
       source_executives: ['CFO', 'COO', 'CIO'],
       impacted_departments: ['Pricing', 'Shipment', 'Strategic Opportunity'],
-      workflow_id: firstJourney.id,
+      workflow_id: firstJourney?.id || null,
       message: 'CFO margin review blocks buyer quote release; COO must confirm operational feasibility; CIO should weigh UAE opportunity value.',
       linked_route: '/export-os/pricing-engine',
       next_action: 'CFO updates freight/margin, COO confirms feasibility, then Founder receives combined recommendation.'
@@ -50,7 +50,7 @@ function buildCrossExecutiveAlerts(journeys, dependencyEngine) {
       severity: 'Critical',
       source_executives: ['COO', 'CFO', 'CMO'],
       impacted_departments: ['Supplier', 'Invoice', 'Buyer Communication'],
-      workflow_id: firstJourney.id,
+      workflow_id: firstJourney?.id || null,
       message: 'Supplier confirmation and quality review are unresolved; invoice and shipment communication should remain controlled.',
       linked_route: '/export-os/suppliers/supplier-malabar-spice',
       next_action: 'COO creates supplier follow-up, CFO keeps invoice release blocked, CMO prepares buyer update draft only.'
@@ -61,7 +61,7 @@ function buildCrossExecutiveAlerts(journeys, dependencyEngine) {
       severity: 'Medium',
       source_executives: ['CTO', 'COO', 'Founder'],
       impacted_departments: ['Automation', 'Director Queue', 'Task Engine'],
-      workflow_id: firstJourney.id,
+      workflow_id: firstJourney?.id || null,
       message: 'Workflow automation is locally connected; CTO should monitor queue readiness before any external execution claim.',
       linked_route: '/export-os/executives/cto',
       next_action: 'CTO confirms integration readiness and COO keeps manual fallback visible.'
@@ -251,7 +251,8 @@ function buildMemory() {
 }
 
 function buildWarRoomSummary(journeys, alerts, risks, escalations) {
-  const readiness = Math.round(journeys.reduce((sum, workflow) => sum + workflow.scores.workflowCompletion + workflow.scores.dependencyCompletion + workflow.scores.approvalCompletion + workflow.scores.shipmentReadiness + workflow.scores.documentationReadiness, 0) / (journeys.length * 5));
+  const scoreTotal = journeys.reduce((sum, workflow) => sum + workflow.scores.workflowCompletion + workflow.scores.dependencyCompletion + workflow.scores.approvalCompletion + workflow.scores.shipmentReadiness + workflow.scores.documentationReadiness, 0);
+  const readiness = journeys.length ? Math.round(scoreTotal / (journeys.length * 5)) : 0;
   return {
     activeWorkflows: journeys.length,
     criticalAlerts: alerts.filter((alert) => alert.severity === 'Critical').length,

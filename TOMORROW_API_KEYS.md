@@ -22,12 +22,26 @@
 - Run all blocks from PENDING_SQL.md (Steps 0 through 6)
 - Tables: export_orders, leads, tasks, founder_approvals, agent_decisions,
   integration_services, agent_briefings, cold_email_sequences,
-  cio_buyer_intelligence, cto_credit_alerts, cfo_wallet, cfo_wallet_transactions
+  cio_buyer_intelligence, cto_credit_alerts, cfo_wallet, cfo_wallet_transactions,
+  invoices, invoice_company_snapshot, invoice_buyer_snapshot, invoice_line_items,
+  invoice_export_details, invoice_validation_logs, invoice_approval_events,
+  invoice_audit_log
+- 2026-06-01 check: production `public.invoices` is missing; Supabase connector did not have permission to apply the migration directly.
 
 ## 4. Fix Vercel Auto-Deploy
 - Vercel → gopu-os-cmo → Settings → Git
 - Disconnect and reconnect sukeshgopu-a11y/GOPU_OS
 - So future git pushes auto-deploy without manual vercel --prod
+
+## 4A. Domain + Canva Reminders - 2026-06-02
+- Fix or verify `os.gopuexports.com` DNS so Safari opens the custom domain reliably.
+  - Checked 2026-06-01 after Vercel deployment: Vercel alias exists, but DNS still does not resolve from this machine.
+- Confirm CMO Canva production template IDs:
+  - Knowledge Carousel
+  - Shipment Announcement
+  - Market Update
+  - Product Spotlight
+  - Buyer Education
 
 ## 5. Already Have (No Action Needed)
 - SLACK_BOT_TOKEN ✅

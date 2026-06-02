@@ -1,4 +1,4 @@
-import { backendStatus, requireSupabase } from '../lib/supabaseClient.js';
+import { backendStatus, requireSupabase, requireSupabaseSession } from '../lib/supabaseClient.js';
 import { demoTenantId } from './demoData.js';
 import { createTableService } from './serviceHelpers.js';
 
@@ -84,7 +84,7 @@ export async function createAuditLog(payload = {}) {
 }
 
 export async function listAuditLogs(limit = 50) {
-  const { client, error } = requireSupabase();
+  const { client, error } = await requireSupabaseSession();
   if (error) return { ok: true, data: fallbackAuditLogs, error: null, backend: backendStatus };
 
   try {

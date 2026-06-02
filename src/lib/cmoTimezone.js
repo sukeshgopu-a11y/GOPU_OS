@@ -61,9 +61,9 @@ export const CMO_TIMEZONE_OPTIONS = [
 });
 
 export const CMO_PLATFORM_DEFAULT_SLOTS = {
-  LinkedIn: '11:00',
-  Facebook: '12:30',
-  Instagram: '18:00',
+  LinkedIn: '09:00',
+  Facebook: '09:00',
+  Instagram: '09:00',
   YouTube: '20:00',
   X: '09:30',
   Blog: '10:00',

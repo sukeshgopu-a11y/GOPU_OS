@@ -1,4 +1,4 @@
-import { backendStatus, requireSupabase } from '../lib/supabaseClient.js';
+import { backendStatus, requireSupabaseSession } from '../lib/supabaseClient.js';
 import { demoTenantId } from './demoData.js';
 import { createAuditLog } from './auditService.js';
 
@@ -132,7 +132,7 @@ function normalizeShipment(row, buyers = fallbackBuyers) {
 }
 
 async function getBuyers(tenantId) {
-  const { client, error } = requireSupabase();
+  const { client, error } = await requireSupabaseSession();
   if (error) return response(fallbackBuyers);
 
   const { data, error: queryError } = await client
@@ -147,7 +147,7 @@ async function getBuyers(tenantId) {
 }
 
 async function getShipments(tenantId, buyers) {
-  const { client, error } = requireSupabase();
+  const { client, error } = await requireSupabaseSession();
   if (error) return response(fallbackShipments.map((shipment) => normalizeShipment(shipment, buyers)));
 
   const { data, error: queryError } = await client
@@ -211,7 +211,7 @@ export async function createShipment(tenantId = demoTenantId, payload, existingS
     }
   };
 
-  const { client, error } = requireSupabase();
+  const { client, error } = await requireSupabaseSession();
   if (error || !isUuid(buyer.id)) {
     const localShipment = normalizeShipment({ ...base, id: `shipment-local-${Date.now()}`, buyer }, verifiedBuyers);
     await createAuditLog({
@@ -264,7 +264,7 @@ export async function updateShipment(tenantId = demoTenantId, shipmentId, change
     if (updatePayload[key] === undefined) delete updatePayload[key];
   });
 
-  const { client, error } = requireSupabase();
+  const { client, error } = await requireSupabaseSession();
   if (error || !isUuid(shipmentId)) {
     return response(normalizeShipment({ id: shipmentId, tenant_id: tenantId, ...updatePayload }, buyers));
   }
@@ -285,7 +285,7 @@ export async function verifyShipmentCompany(tenantId = demoTenantId, buyerId, bu
   const cached = buyers.find((buyer) => buyer.id === buyerId);
   if (cached?.company_name) return response(cached);
 
-  const { client, error } = requireSupabase();
+  const { client, error } = await requireSupabaseSession();
   if (error) return response(null, new Error('Company not verified. Add buyer first.'));
 
   const { data, error: queryError } = await client

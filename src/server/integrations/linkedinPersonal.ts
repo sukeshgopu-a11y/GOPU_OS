@@ -1,3 +1,5 @@
+import { ensureLinkedInPostRules, validateLinkedInPublishText } from "../../../lib/cmoLinkedInRules.mjs";
+
 const LINKEDIN_API_VERSION = "202605";
 
 function env(name: string): string {
@@ -6,12 +8,6 @@ function env(name: string): string {
 
 function safeError(error: unknown): string {
   return error instanceof Error ? error.message : "Unknown LinkedIn personal publishing error";
-}
-
-function withGopuHashtag(text: string): string {
-  const clean = String(text || "").trim();
-  if (!clean) return "#GopuExports";
-  return /(^|\s)#GopuExports\b/i.test(clean) ? clean : `${clean}\n\n#GopuExports`;
 }
 
 async function readLinkedInJson(url: string, token: string) {
@@ -79,7 +75,11 @@ export async function publishLinkedInPersonalPost({ text, mediaUrl }: { text: st
     return { ok: false, status: "missing_author", error: author.error || "LinkedIn personal author is missing." };
   }
 
-  const postText = withGopuHashtag(text);
+  const postText = ensureLinkedInPostRules(text, { platform: "LinkedIn Personal" }).text;
+  const validation = validateLinkedInPublishText(postText);
+  if (!validation.ok) {
+    return { ok: false, status: validation.status, error: validation.error };
+  }
   const response = await fetch("https://api.linkedin.com/rest/posts", {
     method: "POST",
     headers: {

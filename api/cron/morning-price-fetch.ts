@@ -1,17 +1,21 @@
 // @ts-nocheck
 /**
- * Morning Price Fetch — runs daily at 9:00 AM IST (3:30 AM UTC)
+ * Morning Price Fetch - runs daily at 8:00 AM IST (2:30 AM UTC)
  *
  * Flow:
- * 1. Fetch live commodity prices from data.gov.in Agmarknet API + MCX
- * 2. Update commodity_prices table in Supabase
- * 3. Send formatted price report to Slack
- * 4. Morning briefing then uses these fresh prices for all quotes
+ * 1. Fetch Agmarknet live rates for CFO catalog products where a live market mapping exists.
+ * 2. Refresh every APEDA/Spice Board product row in commodity_prices.
+ * 3. Send the CFO market-rate report to Slack.
+ * 4. Morning briefing and pricing engine use these fresh CFO rates for quotes.
  */
 
 import { createClient } from "@supabase/supabase-js";
+import { cleanSlackText } from "../../lib/slackTextClean.js";
+import { marketPriceProducts } from "../../lib/exportProductCatalog.mjs";
+import { PRICE_SOURCE_TYPES } from "../../lib/pricingSourceUtils.mjs";
 
 const TENANT_ID = "11111111-1111-1111-1111-111111111111";
+const AGMARKNET_RESOURCE_ID = "9ef84268-d588-465a-a308-a864a43d0070";
 
 function env(k: string) { return process.env[k]?.trim() || ""; }
 
@@ -22,135 +26,187 @@ function getSupabase() {
   return createClient(url, key, { auth: { persistSession: false, autoRefreshToken: false } });
 }
 
-// Commodity config — maps our product keys to data source identifiers
-const COMMODITY_CONFIG = [
-  { key: "chilli",    label: "Red Chilli",       agmarknet: "Chilli",     unit: "Quintal", mandi: "Guntur",       divisor: 100 },
-  { key: "turmeric",  label: "Turmeric",          agmarknet: "Turmeric",   unit: "Quintal", mandi: "Nizamabad",    divisor: 100 },
-  { key: "pepper",    label: "Black Pepper",      agmarknet: "Pepper",     unit: "Quintal", mandi: "Kochi",        divisor: 100 },
-  { key: "cumin",     label: "Cumin Seeds",       agmarknet: "Cumin",      unit: "Quintal", mandi: "Unjha",        divisor: 100 },
-  { key: "coriander", label: "Coriander",         agmarknet: "Coriander",  unit: "Quintal", mandi: "Kota",         divisor: 100 },
-  { key: "cardamom",  label: "Cardamom",          agmarknet: "Cardamom",   unit: "Kg",      mandi: "Kumily",       divisor: 1   },
-  { key: "fenugreek", label: "Fenugreek",         agmarknet: "Fenugreek",  unit: "Quintal", mandi: "Rajkot",       divisor: 100 },
-  { key: "mustard",   label: "Mustard",           agmarknet: "Mustard",    unit: "Quintal", mandi: "Alwar",        divisor: 100 },
-  { key: "cinnamon",  label: "Cinnamon",          agmarknet: null,         unit: "Kg",      mandi: "Kochi",        divisor: 1   },
-  { key: "clove",     label: "Clove",             agmarknet: null,         unit: "Kg",      mandi: "Kochi",        divisor: 1   },
-  { key: "rice",      label: "Rice",              agmarknet: "Rice",       unit: "Quintal", mandi: "Nizamabad",    divisor: 100 },
-  { key: "onion",     label: "Onion",             agmarknet: "Onion",      unit: "Quintal", mandi: "Lasalgaon",    divisor: 100 },
-  { key: "garlic",    label: "Garlic",            agmarknet: "Garlic",     unit: "Quintal", mandi: "Indore",       divisor: 100 },
-];
+function todayIstParts() {
+  const parts = new Intl.DateTimeFormat("en-GB", {
+    timeZone: "Asia/Kolkata",
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+  }).formatToParts(new Date());
+  const byType = Object.fromEntries(parts.map((part) => [part.type, part.value]));
+  return { dd: byType.day, mm: byType.month, yyyy: byType.year };
+}
 
-// Reference prices (INR/kg) — used when live fetch fails
-const REFERENCE_PRICES: Record<string, number> = {
-  chilli: 120, turmeric: 148, pepper: 680, cumin: 250, coriander: 90,
-  cardamom: 2200, fenugreek: 75, mustard: 65, cinnamon: 320, clove: 820,
-  rice: 68, onion: 20, garlic: 32,
-};
+function parsePriceRecord(record: any, divisor: number) {
+  const modalPrice = parseFloat(record?.modal_price || record?.modal || "0");
+  const minPrice = parseFloat(record?.min_price || record?.min || "0");
+  const maxPrice = parseFloat(record?.max_price || record?.max || "0");
+  const rawPrice = modalPrice || (minPrice && maxPrice ? (minPrice + maxPrice) / 2 : 0);
+  if (!rawPrice || rawPrice <= 0) return null;
+  return Math.round((rawPrice / (divisor || 100)) * 100) / 100;
+}
 
-async function fetchAgmarknetPrice(commodity: any): Promise<{ price: number; source: string } | null> {
+async function queryAgmarknet({ apiKey, commodity, market, dateStr, limit = 10 }: any) {
+  const params = new URLSearchParams({
+    "api-key": apiKey,
+    format: "json",
+    limit: String(limit),
+  });
+  params.set("filters[commodity]", commodity);
+  if (market) params.set("filters[market]", market);
+  if (dateStr) params.set("filters[arrival_date]", dateStr);
+
+  const url = `https://api.data.gov.in/resource/${AGMARKNET_RESOURCE_ID}?${params.toString()}`;
+  const res = await fetch(url, { signal: AbortSignal.timeout(9000) });
+  if (!res.ok) return [];
+  const data = await res.json().catch(() => ({}));
+  return Array.isArray(data?.records) ? data.records : [];
+}
+
+async function fetchAgmarknetPrice(product: any): Promise<{ price: number; source: string; reference: string; market: string; fetchedAt: string } | null> {
   const apiKey = env("DATA_GOV_API_KEY");
-  if (!apiKey || !commodity.agmarknet) return null;
+  if (!apiKey || !product.agmarknet) return null;
 
   try {
-    const today = new Date();
-    const dd = String(today.getDate()).padStart(2, "0");
-    const mm = String(today.getMonth() + 1).padStart(2, "0");
-    const yyyy = today.getFullYear();
+    const { dd, mm, yyyy } = todayIstParts();
     const dateStr = `${dd}/${mm}/${yyyy}`;
+    const exactRecords = await queryAgmarknet({ apiKey, commodity: product.agmarknet, market: product.mandi, dateStr, limit: 5 });
+    const fallbackRecords = exactRecords.length
+      ? exactRecords
+      : await queryAgmarknet({ apiKey, commodity: product.agmarknet, dateStr, limit: 10 });
+    const record = fallbackRecords.find((item: any) => parsePriceRecord(item, product.divisor));
+    if (!record) return null;
 
-    const url = `https://api.data.gov.in/resource/9ef84268-d588-465a-a308-a864a43d0070?api-key=${apiKey}&format=json&filters[commodity]=${encodeURIComponent(commodity.agmarknet)}&filters[market]=${encodeURIComponent(commodity.mandi)}&filters[arrival_date]=${encodeURIComponent(dateStr)}&limit=5`;
+    const price = parsePriceRecord(record, product.divisor);
+    if (!price) return null;
 
-    const res = await fetch(url, { signal: AbortSignal.timeout(8000) });
-    if (!res.ok) return null;
-
-    const data = await res.json();
-    const records = data?.records || [];
-    if (!records.length) return null;
-
-    // Use modal price if available, else average of min/max
-    const r = records[0];
-    const modalPrice = parseFloat(r.modal_price || r.modal || "0");
-    const minPrice = parseFloat(r.min_price || r.min || "0");
-    const maxPrice = parseFloat(r.max_price || r.max || "0");
-    const rawPrice = modalPrice || ((minPrice + maxPrice) / 2);
-    if (!rawPrice || rawPrice <= 0) return null;
-
-    const pricePerKg = rawPrice / commodity.divisor;
+    const market = record.market || product.mandi || "Agmarknet";
+    const arrivalDate = record.arrival_date || dateStr;
     return {
-      price: Math.round(pricePerKg * 100) / 100,
-      source: `Agmarknet — ${commodity.mandi} Mandi (${dd}/${mm}/${yyyy})`,
+      price,
+      source: `Agmarknet - ${market} (${arrivalDate})`,
+      reference: `data.gov.in Agmarknet ${product.agmarknet}/${market}`,
+      market,
+      fetchedAt: new Date().toISOString(),
     };
   } catch {
     return null;
   }
 }
 
-async function fetchAllPrices(): Promise<Array<{ key: string; label: string; price: number; source: string; live: boolean }>> {
-  const results = await Promise.allSettled(
-    COMMODITY_CONFIG.map(async (commodity) => {
-      const live = await fetchAgmarknetPrice(commodity);
-      if (live) {
-        return { key: commodity.key, label: commodity.label, price: live.price, source: live.source, live: true };
-      }
-      // Fall back to reference price
-      const ref = REFERENCE_PRICES[commodity.key] || 100;
-      return { key: commodity.key, label: commodity.label, price: ref, source: `Reference — update manually in CFO → Market Prices`, live: false };
-    })
-  );
+function fallbackPrice(product: any) {
+  return {
+    key: product.key,
+    label: product.label,
+    price: product.reference || 115,
+    source: product.source || `${product.source_group || "Catalog"} reference`,
+    reference: product.source_reference || "GOPU CFO product catalog",
+    note: `${product.note || "Reference price only."} CFO must verify before final quote.`,
+    live: false,
+    product,
+  };
+}
 
-  return results
-    .filter((r): r is PromiseFulfilledResult<any> => r.status === "fulfilled")
-    .map(r => r.value);
+async function fetchProductPrice(product: any) {
+  const live = await fetchAgmarknetPrice(product);
+  if (live) {
+    return {
+      key: product.key,
+      label: product.label,
+      price: live.price,
+      source: live.source,
+      reference: live.reference,
+      note: `Auto-updated at 8 AM IST from Agmarknet for ${product.label}.`,
+      live: true,
+      fetchedAt: live.fetchedAt,
+      market: live.market,
+      product,
+    };
+  }
+  return fallbackPrice(product);
+}
+
+async function fetchAllPrices() {
+  const results: any[] = [];
+  const chunkSize = 8;
+  for (let i = 0; i < marketPriceProducts.length; i += chunkSize) {
+    const chunk = marketPriceProducts.slice(i, i + chunkSize);
+    const settled = await Promise.allSettled(chunk.map(fetchProductPrice));
+    for (const item of settled) {
+      if (item.status === "fulfilled") results.push(item.value);
+    }
+  }
+  return results;
 }
 
 async function updateSupabasePrices(client: any, prices: any[]) {
-  const livePrices = prices.filter(p => p.live);
-  if (!livePrices.length) return { updated: 0 };
+  if (!prices.length) return { updated: 0, liveUpdated: 0, referenceUpdated: 0 };
 
-  const upserts = livePrices.map(p => ({
+  const now = new Date().toISOString();
+  const upserts = prices.map((p) => ({
     tenant_id: TENANT_ID,
     product_key: p.key,
     product_label: p.label,
     price_inr_per_kg: p.price,
     source: p.source,
-    note: "Auto-updated by morning price fetch cron",
-    updated_at: new Date().toISOString(),
+    price_source_type: p.live ? PRICE_SOURCE_TYPES.LIVE : PRICE_SOURCE_TYPES.FALLBACK,
+    price_source_name: p.live ? "data.gov.in Agmarknet" : p.source,
+    price_source_reference: p.reference,
+    product_grade: p.product?.product_grade || "Commercial export grade",
+    market_location: p.market || p.product?.market_location || p.source,
+    unit: p.product?.unit || "kg",
+    currency: "INR",
+    note: p.note,
+    fetched_at: p.fetchedAt || now,
+    updated_at: now,
   }));
 
   const { error } = await client
     .from("commodity_prices")
     .upsert(upserts, { onConflict: "tenant_id,product_key" });
 
-  return { updated: error ? 0 : livePrices.length, error: error?.message };
+  return {
+    updated: error ? 0 : upserts.length,
+    liveUpdated: error ? 0 : prices.filter((p) => p.live).length,
+    referenceUpdated: error ? 0 : prices.filter((p) => !p.live).length,
+    error: error?.message,
+  };
 }
 
-function buildSlackPriceReport(prices: any[], updatedCount: number): string {
+function buildSlackPriceReport(prices: any[], dbResult: any): string {
   const today = new Date().toLocaleDateString("en-IN", {
-    weekday: "long", day: "numeric", month: "long", year: "numeric",
+    weekday: "long",
+    day: "numeric",
+    month: "long",
+    year: "numeric",
     timeZone: "Asia/Kolkata",
   });
+  const liveCount = prices.filter((p) => p.live).length;
+  const referenceCount = prices.length - liveCount;
 
   const lines = [
-    `🌅 *Good Morning — GOPU OS Daily Price Report*`,
-    `📅 ${today} | 9:00 AM IST`,
-    ``,
-    `📊 *Commodity Prices (₹/kg) — ${updatedCount > 0 ? `${updatedCount} live from Agmarknet` : "Reference prices — set DATA_GOV_API_KEY for live fetch"}*`,
-    ``,
+    "*Good Morning - GOPU OS Daily CFO Price Update*",
+    `${today} | 8:00 AM IST`,
+    "",
+    `Catalog refreshed: ${prices.length} APEDA/Spice Board products`,
+    `Live Agmarknet: ${liveCount} | Reference/manual-required: ${referenceCount} | DB rows updated: ${dbResult.updated || 0}`,
+    "",
+    "*Rates (INR/kg)*",
   ];
 
   for (const p of prices) {
-    const icon = p.live ? "🟢" : "🟡";
-    const sourceShort = p.live
-      ? p.source.replace("Agmarknet — ", "").split("(")[0].trim()
-      : "Reference";
-    lines.push(`${icon} *${p.label}*: ₹${p.price}/kg  _${sourceShort}_`);
+    const status = p.live ? "LIVE" : "REF";
+    const sourceShort = p.live ? p.source.replace("Agmarknet - ", "") : "reference";
+    lines.push(`${status} - ${p.label}: INR ${p.price}/kg (${sourceShort})`);
   }
 
-  lines.push(``);
-  lines.push(updatedCount > 0
-    ? `✅ Pricing engine updated with today's live prices. All quotes for today use these rates.`
-    : `⚠️ Live prices unavailable today. Set *DATA_GOV_API_KEY* in Vercel env vars to enable Agmarknet live fetch. Reference prices used for quotes.`
-  );
-  lines.push(`💡 To override any price: *CFO → Market Prices tab → Update Price*`);
+  lines.push("");
+  if (liveCount > 0) {
+    lines.push("CFO pricing engine now has today's refreshed market table. Reference rows still need CFO verification before final quotes.");
+  } else {
+    lines.push("No live Agmarknet rows were fetched today. Check DATA_GOV_API_KEY and market availability; reference rows were still refreshed for CFO review.");
+  }
+  lines.push("To override: CFO -> Market Prices tab -> Update Price.");
 
   return lines.join("\n");
 }
@@ -163,21 +219,19 @@ async function sendSlack(text: string) {
   const res = await fetch("https://slack.com/api/chat.postMessage", {
     method: "POST",
     headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
-    body: JSON.stringify({ channel, text }),
+    body: JSON.stringify({ channel, text: cleanSlackText(text) }),
   });
   const body = await res.json().catch(() => ({}));
-  return { ok: body.ok === true, ts: body.ts };
+  return { ok: body.ok === true, ts: body.ts, error: body.error };
 }
 
 export const config = { api: { bodyParser: false } };
 
 export default async function handler(req: any, res: any) {
-  // Allow GET for manual trigger from browser/test
   if (req.method !== "GET" && req.method !== "POST") {
     return res.status(405).json({ ok: false, message: "GET or POST only" });
   }
 
-  // Security: verify cron secret on POST (Vercel cron sends no auth by default in free tier)
   if (req.method === "POST") {
     const secret = env("CRON_SECRET");
     const authHeader = String(req.headers.authorization || "");
@@ -188,22 +242,17 @@ export default async function handler(req: any, res: any) {
 
   const client = getSupabase();
   const startAt = Date.now();
-
-  // 1. Fetch prices (live from Agmarknet if API key set, else reference)
   const prices = await fetchAllPrices();
-  const liveCount = prices.filter(p => p.live).length;
 
-  // 2. Update Supabase commodity_prices table
-  let dbResult = { updated: 0 };
+  let dbResult = { updated: 0, liveUpdated: 0, referenceUpdated: 0 };
   if (client) {
     dbResult = await updateSupabasePrices(client, prices);
   }
 
-  // 3. Build and send Slack message
-  const slackText = buildSlackPriceReport(prices, liveCount);
+  const slackText = buildSlackPriceReport(prices, dbResult);
   const slackResult = await sendSlack(slackText);
+  const liveCount = prices.filter((p) => p.live).length;
 
-  // 4. Log to audit
   if (client) {
     try {
       await client.from("audit_logs").insert({
@@ -211,24 +260,25 @@ export default async function handler(req: any, res: any) {
         action_type: "morning_price_fetch",
         module: "CFO Pricing Engine",
         actor: "System Cron",
-        description: `Morning price fetch: ${liveCount} live prices, ${dbResult.updated} updated in DB, Slack ${slackResult.ok ? "sent" : "failed"}`,
-        metadata: { prices, liveCount, dbResult, slackResult, duration_ms: Date.now() - startAt },
+        description: `8 AM CFO price fetch: ${liveCount} live prices, ${dbResult.updated} rows refreshed, Slack ${slackResult.ok ? "sent" : "failed"}`,
+        metadata: { catalog_count: prices.length, liveCount, dbResult, slackResult, duration_ms: Date.now() - startAt },
         created_at: new Date().toISOString(),
       });
     } catch {
-      // Price fetch should still return if audit persistence is unavailable.
+      // Audit logging must not block the price update response.
     }
   }
 
   return res.status(200).json({
     ok: true,
-    prices,
+    catalog_count: prices.length,
     live_prices_fetched: liveCount,
+    reference_prices_refreshed: prices.length - liveCount,
     db_updated: dbResult.updated,
     slack_sent: slackResult.ok,
     duration_ms: Date.now() - startAt,
     note: liveCount === 0
-      ? "No live prices fetched. Add DATA_GOV_API_KEY to Vercel env vars to enable Agmarknet live fetch."
-      : `${liveCount} live prices fetched and updated.`,
+      ? "No live prices fetched. Add/check DATA_GOV_API_KEY and Agmarknet availability. CFO reference rows were refreshed."
+      : `${liveCount} live prices fetched and ${dbResult.updated} CFO market rows refreshed.`,
   });
 }

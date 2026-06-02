@@ -1,4 +1,4 @@
-import { backendStatus, requireSupabase } from '../lib/supabaseClient.js';
+import { backendStatus, requireSupabase, requireSupabaseSession } from '../lib/supabaseClient.js';
 import { demoData, demoTenantId } from './demoData.js';
 import { createTableService } from './serviceHelpers.js';
 
@@ -53,7 +53,7 @@ function localUpsert(tableName, tenantId, payload, matchKey = 'id') {
 }
 
 async function selectRows(tableName, tenantId, fallback = []) {
-  const { client, error } = requireSupabase();
+  const { client, error } = await requireSupabaseSession();
   if (error) return response(fallback.length ? fallback : localList(tableName, tenantId));
 
   const { data, error: queryError } = await client.from(tableName).select('*').eq('tenant_id', tenantId);
@@ -192,7 +192,7 @@ export async function saveCompanyDocument(tenantId = demoTenantId, payload) {
 }
 
 export async function getCompanyAuditLog(tenantId = demoTenantId) {
-  const { client, error } = requireSupabase();
+  const { client, error } = await requireSupabaseSession();
   if (error) return response(localList('system_audit_log', tenantId));
 
   const { data, error: queryError } = await client

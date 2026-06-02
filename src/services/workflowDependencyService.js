@@ -171,7 +171,7 @@ function routeForDependency(workflow, dependencyName = '') {
 
 function buildWorkflowHealth(workflow) {
   const total = workflow.dependencyChain.length;
-  const completion = Math.round((workflow.dependencyChain.reduce((sum, [, , status]) => sum + statusWeight(status), 0) / total) * 100);
+  const completion = total ? Math.round((workflow.dependencyChain.reduce((sum, [, , status]) => sum + statusWeight(status), 0) / total) * 100) : 0;
   const failed = workflow.dependencyChain.filter(([, , status]) => status === 'Failed').length;
   const riskLevel = riskFromScore(completion, failed);
   return {
@@ -272,7 +272,7 @@ export async function getWorkflowDependencyEngineData() {
         workflowCount: workflows.length,
         blockerCount: blockers.length,
         criticalCount: blockers.filter((item) => item.severity === 'Critical').length,
-        averageHealth: Math.round(health.reduce((sum, item) => sum + item.healthScore, 0) / health.length),
+        averageHealth: health.length ? Math.round(health.reduce((sum, item) => sum + item.healthScore, 0) / health.length) : 0,
         nextAction: 'Resolve invoice and shipment blockers first, then rerun dependency validation before buyer-facing release.'
       }
     },

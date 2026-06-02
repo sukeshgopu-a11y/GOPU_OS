@@ -1,6 +1,10 @@
-import { isSupabaseConfigured, requireSupabase } from '../lib/supabaseClient.js';
+import { isSupabaseConfigured, requireSupabaseSession } from '../lib/supabaseClient.js';
 import importerSeedData from '../data/importerSeedData.js';
 import { demoTenantId } from './demoData.js';
+import {
+  apedaScheduledProductCategories,
+  spiceBoardProducts,
+} from '../../lib/exportProductCatalog.mjs';
 
 const serviceDelay = 0;
 
@@ -43,41 +47,8 @@ export const importerCountries = [
   'Vanuatu', 'Venezuela', 'Vietnam', 'Yemen', 'Zambia', 'Zimbabwe'
 ];
 
-export const apedaProductCategories = [
-  'Fruits, Vegetables and their Products',
-  'Meat and Meat Products',
-  'Poultry and Poultry Products',
-  'Dairy Products',
-  'Confectionery, Biscuits and Bakery Products',
-  'Honey, Jaggery and Sugar Products',
-  'Cocoa and its products, chocolates of all kinds',
-  'Alcoholic and Non-Alcoholic Beverages',
-  'Cereal and Cereal Products',
-  'Basmati Rice',
-  'Groundnuts, Peanuts and Walnuts',
-  'Pickles, Papads and Chutneys',
-  'Guar Gum',
-  'Floriculture and Floriculture Products',
-  'Herbal and Medicinal Plants',
-  'De-oiled Rice Bran',
-  'Green Pepper in Brine',
-  'Cashew Nuts and Its Products',
-  'Cashew Kernels',
-  'Cashewnut Shell Liquid',
-  'Cardanol',
-  'Organic Products'
-];
-
-export const spiceBoardProducts = [
-  'Cardamom', 'Pepper', 'Chilli', 'Ginger', 'Turmeric', 'Coriander', 'Cumin',
-  'Fennel', 'Fenugreek', 'Celery', 'Aniseed', 'Ajwain', 'Caraway', 'Dill',
-  'Cinnamon', 'Cassia', 'Garlic', 'Curry Leaf', 'Kokam', 'Mint', 'Mustard',
-  'Parsley', 'Pomegranate Seed', 'Saffron', 'Vanilla', 'Tejpat', 'Long Pepper',
-  'Star Anise', 'Sweet Flag', 'Greater Galanga', 'Horseradish', 'Caper',
-  'Clove', 'Asafoetida', 'Cambodge', 'Hyssop', 'Juniper Berry', 'Bay Leaf',
-  'Lovage', 'Marjoram', 'Nutmeg', 'Mace', 'Basil', 'Poppy Seed', 'Allspice',
-  'Rosemary', 'Sage', 'Savory', 'Thyme', 'Oregano', 'Tarragon', 'Tamarind'
-];
+export const apedaProductCategories = apedaScheduledProductCategories;
+export { spiceBoardProducts };
 
 export const exportProductOptions = [
   ...['Onion', 'Garlic', 'Rice', 'Pepper', 'Cardamom', 'Turmeric', 'Chilli', 'Spices'].map((product) => ({ label: product, group: 'Sample Products' })),
@@ -369,7 +340,7 @@ export async function getImporterById(importerId) {
 
 async function loadImporterRecords() {
   if (!isSupabaseConfigured) return buildGlobalImporterIndex();
-  const { client, error } = requireSupabase();
+  const { client, error } = await requireSupabaseSession();
   if (error) return buildGlobalImporterIndex();
   const { data, error: queryError } = await client
     .from('importer_records')
@@ -396,8 +367,8 @@ async function loadImporterRecords() {
 
 async function loadMarketSignals() {
   if (!isSupabaseConfigured) return marketSignalRecords;
-  const { client, error } = requireSupabase();
-  if (error) return [];
+  const { client, error } = await requireSupabaseSession();
+  if (error) return marketSignalRecords;
   const { data, error: queryError } = await client
     .from('market_signals')
     .select('*')

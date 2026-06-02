@@ -1,4 +1,4 @@
-import { backendStatus, isSupabaseConfigured, requireSupabase } from '../lib/supabaseClient.js';
+import { backendStatus, isSupabaseConfigured, requireSupabase, requireSupabaseSession } from '../lib/supabaseClient.js';
 
 function cleanError(error, tableName) {
   return {
@@ -15,8 +15,8 @@ function cleanError(error, tableName) {
 export function createTableService(tableName, fallback = []) {
   return {
     async list(filters = {}) {
-      const { client, error } = requireSupabase();
-      if (error) return { ok: true, data: [], error: null, backend: backendStatus };
+      const { client, error } = await requireSupabaseSession();
+      if (error) return { ok: true, data: fallback, error: null, backend: backendStatus };
 
       let query = client.from(tableName).select('*');
       Object.entries(filters).forEach(([key, value]) => {
@@ -29,8 +29,8 @@ export function createTableService(tableName, fallback = []) {
     },
 
     async getById(id) {
-      const { client, error } = requireSupabase();
-      if (error) return { ok: true, data: null, error: null, backend: backendStatus };
+      const { client, error } = await requireSupabaseSession();
+      if (error) return { ok: true, data: Array.isArray(fallback) ? fallback.find((item) => item?.id === id) || null : null, error: null, backend: backendStatus };
 
       const { data, error: queryError } = await client.from(tableName).select('*').eq('id', id).maybeSingle();
       if (queryError) return cleanError(queryError, tableName);
@@ -38,8 +38,16 @@ export function createTableService(tableName, fallback = []) {
     },
 
     async create(payload) {
-      const { client, error } = requireSupabase();
-      if (error) return { ok: false, data: null, error, backend: backendStatus };
+      const { client, error } = await requireSupabaseSession();
+      if (error) {
+        return {
+          ok: true,
+          data: { id: payload?.id || `${tableName}-local-${Date.now()}`, ...payload },
+          error: null,
+          backend: backendStatus,
+          local: true
+        };
+      }
 
       const { data, error: queryError } = await client.from(tableName).insert(payload).select('*').single();
       if (queryError) return cleanError(queryError, tableName);
@@ -47,8 +55,16 @@ export function createTableService(tableName, fallback = []) {
     },
 
     async update(id, payload) {
-      const { client, error } = requireSupabase();
-      if (error) return { ok: false, data: null, error, backend: backendStatus };
+      const { client, error } = await requireSupabaseSession();
+      if (error) {
+        return {
+          ok: true,
+          data: { id, ...payload },
+          error: null,
+          backend: backendStatus,
+          local: true
+        };
+      }
 
       const { data, error: queryError } = await client.from(tableName).update(payload).eq('id', id).select('*').single();
       if (queryError) return cleanError(queryError, tableName);

@@ -4,6 +4,7 @@ import { createClient } from "@supabase/supabase-js";
 import { runPricingEngine } from "../../src/services/pricingEngineService.js";
 import { createExportOrder } from "../export/stages.js";
 import { buildPricingSourceSummary } from "../../lib/pricingSourceUtils.mjs";
+import { cleanSlackText } from "../../lib/slackTextClean.js";
 
 const demoTenantId = "11111111-1111-1111-1111-111111111111";
 
@@ -856,6 +857,48 @@ export async function processLead(event: Record<string, any>, text: string, opti
 }
 
 export function buildReply(result: any) {
+  const { lead, pricing, amount, issues, cooTask, cfoTask, approval, exportOrderId } = result;
+  const sourceSummary = result.priceSourceSummary || buildPricingSourceSummary(pricing);
+  const pricePerUnit = formatMoney(pricing.recommendedPricePerUnit, pricing.currency);
+  const cooStatus = cooTask.data?.id ? "Created" : "Queued";
+  const cfoStatus = cfoTask.data?.id ? "Created" : "Queued";
+  const dirStatus = approval.data?.id ? `Pending approval (${approval.data.id})` : "Queued";
+  const rows = [
+    ":white_check_mark: *New lead captured in GOPU OS*",
+    "",
+    "*Lead summary*",
+    `*Buyer:* ${lead.company_name}`,
+    `*Product:* ${lead.quantity} ${lead.unit.toUpperCase()} ${lead.product}`,
+    `*Destination:* ${lead.destination_country}`,
+    `*Incoterm:* ${pricing.incoterm || lead.incoterm}`,
+    "",
+    "*Pricing estimate*",
+    `- Total: *${amount}*`,
+    `- Per ${lead.unit.toUpperCase()}: *${pricePerUnit}*`,
+    `- Margin: ${pricing.achievedMarginPercent}%`,
+    `- Delivery: ${pricing.seaLeadTime}`,
+    `- Source: *${sourceSummary.price_source_type}* (${sourceSummary.source_confidence})`,
+    `- Raw material: Rs.${pricing.rawMaterialPriceInr}/kg (${sourceSummary.price_source_name || pricing.priceSource?.source || "source not recorded"})`,
+    `- Basis: ${sourceSummary.estimate_vs_verified}`,
+    "",
+    "*Routing now*",
+    `- COO verification task: ${cooStatus}`,
+    `- CFO pricing review task: ${cfoStatus}`,
+    `- Director approval: ${dirStatus}`,
+    exportOrderId ? `- Order ref: ${exportOrderId.slice(0, 8).toUpperCase()}` : "",
+    lead.lead_number ? `- Lead no: ${lead.lead_number}` : "",
+    "",
+    "*Action needed*",
+    approval.data?.id ? `Open GOPU OS Director approvals and approve, reject, or request changes for approval ${approval.data.id}.` : "Check GOPU OS Director approvals. Approval record was not created.",
+    "",
+    "*Safety*",
+    "No quote, invoice, or buyer reply has been sent. Buyer-facing release stays blocked until Director approval is recorded."
+  ].filter(Boolean);
+  if (issues.length) rows.push("", `:warning: *Items to review:* ${issues.slice(0, 2).map((item: string) => cleanSlackText(item)).join(" | ")}`);
+  return cleanSlackText(rows.join("\n"));
+}
+
+function buildReplyLegacy(result: any) {
   const { lead, pricing, amount, issues, cooTask, cfoTask, approval, exportOrderId } = result;
   const sourceSummary = result.priceSourceSummary || buildPricingSourceSummary(pricing);
   const pricePerUnit = formatMoney(pricing.recommendedPricePerUnit, pricing.currency);

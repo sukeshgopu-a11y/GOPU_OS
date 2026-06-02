@@ -80,7 +80,7 @@ function Stepper({ steps, current, onChange }) {
                 className="stepper-node"
                 onClick={() => done && onChange && onChange(i)}
                 disabled={!done}
-                aria-label={`${step.label}${done ? ' -- completed' : active ? ' -- current' : ' -- upcoming'}`}
+                aria-label={`${step.label}${done ? ' - completed' : active ? ' - current' : ' - upcoming'}`}
               >
                 {done
                   ? <CheckCircle2 size={16} aria-hidden="true" />
@@ -252,17 +252,17 @@ function ShipmentWizard({ onComplete, onCancel, buyers = [] }) {
             <h3 id="wizard-s3">Review & Confirm</h3>
             <div className="wizard-review-grid">
               {[
-                ['Buyer',        buyers.find((b) => b.id === form.buyer_id)?.company_name || '--'],
+                ['Buyer',        buyers.find((b) => b.id === form.buyer_id)?.company_name || '-'],
                 ['Product',      form.product_name],
                 ['Quantity',     `${form.quantity} ${form.unit}`],
                 ['Origin',       form.origin],
                 ['Destination',  form.destination],
                 ['Incoterm',     form.incoterm],
                 ['ETD',          form.etd],
-                ['ETA',          form.eta || '--'],
-                ['Vessel',       form.vessel || '--'],
-                ['B/L Number',   form.bl_number || '--'],
-                ['Packing',      form.packing_type || '--'],
+                ['ETA',          form.eta || '-'],
+                ['Vessel',       form.vessel || '-'],
+                ['B/L Number',   form.bl_number || '-'],
+                ['Packing',      form.packing_type || '-'],
               ].map(([label, value]) => (
                 <div key={label} className="wizard-review-row">
                   <span className="wizard-review-label">{label}</span>
@@ -295,10 +295,10 @@ const SHIPMENT_STAGE_LIST = [
   'Order Confirmed',
   'Production Ready',
   'Pre-Shipment Inspection',
-  'Customs Clearance -- Export',
+  'Customs Clearance - Export',
   'Port Loading',
   'In Transit',
-  'Customs Clearance -- Import',
+  'Customs Clearance - Import',
   'Port Discharge',
   'Delivered',
 ];
@@ -341,7 +341,7 @@ const ShipmentProgressTracker = React.memo(function ShipmentProgressTracker({ cu
         <div className="tracker-meta">
           <span>ETD <time dateTime={shipment.etd}>{new Date(shipment.etd).toLocaleDateString([], { day: 'numeric', month: 'short', year: 'numeric' })}</time></span>
           {shipment.eta && <span>ETA <time dateTime={shipment.eta}>{new Date(shipment.eta).toLocaleDateString([], { day: 'numeric', month: 'short', year: 'numeric' })}</time></span>}
-          {shipment.vessel && <span>Vessel -- {shipment.vessel}</span>}
+          {shipment.vessel && <span>Vessel - {shipment.vessel}</span>}
         </div>
       )}
     </div>

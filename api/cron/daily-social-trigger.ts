@@ -2,6 +2,7 @@
 import { createClient } from "@supabase/supabase-js";
 import { DateTime } from "luxon";
 import { runCmoPublishingEngine } from "../../lib/cmoPublishingEngine.mjs";
+import { cleanSlackText } from "../../lib/slackTextClean.js";
 
 type PostingSetting = {
   id: string;
@@ -27,7 +28,7 @@ type DueSchedule = {
 };
 
 const DEFAULT_WINDOW_MINUTES = 10;
-const VERCEL_CRON_SCHEDULE = "0 0 * * *";
+const VERCEL_CRON_SCHEDULE = "*/10 * * * *";
 const SCHEDULER_RUNTIME = "vercel_cron";
 
 function env(name: string) {
@@ -58,8 +59,18 @@ function normalizeDay(value = "") {
 }
 
 function nextVercelCronWake(nowUtc: DateTime) {
-  const nextMidnight = nowUtc.plus({ days: 1 }).set({ hour: 0, minute: 0, second: 0, millisecond: 0 });
-  return nextMidnight.toISO();
+  const minute = Math.ceil((nowUtc.minute + 1) / 10) * 10;
+  const nextWake = minute >= 60
+    ? nowUtc.plus({ hours: 1 }).set({ minute: 0, second: 0, millisecond: 0 })
+    : nowUtc.set({ minute, second: 0, millisecond: 0 });
+  return nextWake.toISO();
+}
+
+function appBaseUrl() {
+  const configured = env("NEXT_PUBLIC_APP_URL") || env("APP_BASE_URL") || env("GOPU_OS_BASE_URL");
+  if (configured) return configured.startsWith("http") ? configured.replace(/\/$/, "") : `https://${configured.replace(/\/$/, "")}`;
+  const vercelUrl = env("VERCEL_URL");
+  return vercelUrl ? `https://${vercelUrl.replace(/\/$/, "")}` : "http://127.0.0.1:3000";
 }
 
 function getNextSchedule(setting: PostingSetting, nowUtc: DateTime) {
@@ -378,8 +389,9 @@ export default async function handler(req: any, res: any) {
         const topicLine = DAILY_TOPICS[todayName] || DAILY_TOPICS["Monday"];
         const dailyContent = `${topicLine}\n\nGOPU Exports delivers premium quality Indian spices to global buyers. Contact us for competitive export pricing, APEDA-certified shipments, and consistent supply chain reliability.\n\n${HASHTAGS}`;
 
-        const baseUrl = env("NEXT_PUBLIC_APP_URL") || env("VERCEL_URL") ? `https://${env("VERCEL_URL")}` : "http://localhost:3000";
+        const baseUrl = appBaseUrl();
         const socialPlatforms = ["facebook", "instagram", "linkedin"];
+        const dailyImagePrompt = "Professional square social media image for an Indian spice export company: premium black pepper, turmeric, cumin, chilli and cardamom beside export cartons on a clean packing table, realistic lighting, no text overlay.";
         const spicePostResults: Array<{ platform: string; ok: boolean; post_id?: string; url?: string; error?: string }> = [];
 
         for (const platform of socialPlatforms) {
@@ -387,7 +399,7 @@ export default async function handler(req: any, res: any) {
             const publishRes = await fetch(`${baseUrl}/api/cmo/social/publish`, {
               method: "POST",
               headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ platform, content: dailyContent }),
+              body: JSON.stringify({ platform, content: dailyContent, image_prompt: dailyImagePrompt }),
               signal: AbortSignal.timeout(10000)
             });
             const publishData = await publishRes.json().catch(() => ({ ok: false, error: "Invalid JSON response" }));
@@ -467,7 +479,7 @@ export default async function handler(req: any, res: any) {
         fetch(webhookUrl, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ text: lines })
+          body: JSON.stringify({ text: cleanSlackText(lines) })
         }).catch(() => null);
       }
     } else {

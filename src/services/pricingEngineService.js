@@ -5,6 +5,7 @@
  */
 
 import { aiPriceSource, buildPricingSourceSummary, fallbackPriceSource, normalizePriceSource } from "../../lib/pricingSourceUtils.mjs";
+import { marketPriceFallbacks, resolvePricingProductKey, resolvePricingProductKeys } from "../../lib/exportProductCatalog.mjs";
 
 export const EXCHANGE_RATE_DEFAULT = 95.88;
 export const TARGET_MARGIN_DEFAULT = 20;
@@ -29,22 +30,12 @@ const COST_SEED = [
 
 // Reference prices (INR/kg) — FALLBACK ONLY
 // CFO must update actual purchase prices via CFO dashboard → Market Prices
-const PRICE_REFERENCE = {
-  pepper:    { price: 680,  source: 'NCDEX reference',           stale: true },
-  cardamom:  { price: 2200, source: 'ICEX reference',            stale: true },
-  cinnamon:  { price: 320,  source: 'Kochi market reference',    stale: true },
-  clove:     { price: 820,  source: 'Kochi market reference',    stale: true },
-  coriander: { price: 90,   source: 'Rajkot Mandi reference',    stale: true },
-  cumin:     { price: 250,  source: 'Unjha Mandi reference',     stale: true },
-  turmeric:  { price: 148,  source: 'Nizamabad Mandi reference', stale: true },
-  chilli:    { price: 120,  source: 'Guntur Mandi reference',    stale: true },
-  rice:      { price: 68,   source: 'APEDA reference',           stale: true },
-  onion:     { price: 20,   source: 'Lasalgaon Mandi reference', stale: true },
-  garlic:    { price: 32,   source: 'MP Mandi reference',        stale: true },
-  fenugreek: { price: 75,   source: 'Rajkot Mandi reference',    stale: true },
-  mustard:   { price: 65,   source: 'Jaipur Mandi reference',    stale: true },
-  default:   { price: 115,  source: 'Generic estimate',          stale: true },
-};
+const PRICE_REFERENCE = Object.fromEntries(
+  Object.entries(marketPriceFallbacks).map(([key, value]) => [
+    key,
+    { price: value.price, source: value.source || 'GOPU reference fallback', stale: true },
+  ])
+);
 
 const COMMERCIAL_PRESETS = {
   pepper:    { packagingInrPerKg: 10.5, processingInrPerKg: 15,   laborInrPerKg: 4.8, overheadInrPerKg: 6.5,  packing: '25 KG moisture-protected bags',           category: 'Spice Board product' },
@@ -98,21 +89,7 @@ export function convertCurrency(amount, from, to, usdToInrRate = EXCHANGE_RATE_D
 }
 
 function productKey(name) {
-  const n = String(name || '').toLowerCase();
-  if (n.includes('pepper') || n.includes('black pepper')) return 'pepper';
-  if (n.includes('cardamom')) return 'cardamom';
-  if (n.includes('cinnamon')) return 'cinnamon';
-  if (n.includes('clove')) return 'clove';
-  if (n.includes('coriander')) return 'coriander';
-  if (n.includes('cumin') || n.includes('jeera')) return 'cumin';
-  if (n.includes('turmeric') || n.includes('haldi')) return 'turmeric';
-  if (n.includes('chilli') || n.includes('chili') || n.includes('red chilli')) return 'chilli';
-  if (n.includes('fenugreek') || n.includes('methi')) return 'fenugreek';
-  if (n.includes('mustard')) return 'mustard';
-  if (n.includes('rice') || n.includes('basmati')) return 'rice';
-  if (n.includes('onion')) return 'onion';
-  if (n.includes('garlic')) return 'garlic';
-  return 'default';
+  return resolvePricingProductKey(name) || 'default';
 }
 
 function getFreightProfile(country) {
@@ -165,6 +142,7 @@ export function runPricingEngine(lead, liveMarketPrices = null) {
   const qty = parsedQuantity(lead.quantity, lead.unit_of_measure || lead.unit || 'mt');
   const kg = Math.max(qty.kg, 1);
   const pKey = productKey(product);
+  const pKeys = resolvePricingProductKeys(product);
   const preset = getPreset(product);
   const freight = getFreightProfile(country);
   const included = incotermKeys(incoterm);
@@ -173,8 +151,10 @@ export function runPricingEngine(lead, liveMarketPrices = null) {
   const toQuote = (inr) => roundMoney(convertCurrency(inr, 'INR', quoteCurrency, exRate));
 
   // Raw material price resolution. Verified live labels require complete source metadata.
-  const livePrice = liveMarketPrices?.[pKey] || liveMarketPrices?.['default'];
-  const fallbackRef = PRICE_REFERENCE[pKey] || PRICE_REFERENCE.default;
+  const livePriceKey = pKeys.find((key) => liveMarketPrices?.[key]);
+  const livePrice = livePriceKey ? liveMarketPrices[livePriceKey] : null;
+  const fallbackKey = pKeys.find((key) => PRICE_REFERENCE[key]) || 'default';
+  const fallbackRef = PRICE_REFERENCE[fallbackKey] || PRICE_REFERENCE.default;
   const rawMaterialInrPerKg = livePrice?.price_inr_per_kg || fallbackRef.price;
   const priceSource = livePrice
     ? normalizePriceSource({
@@ -183,9 +163,9 @@ export function runPricingEngine(lead, liveMarketPrices = null) {
         updated_at: livePrice.updated_at,
         fetched_at: livePrice.fetched_at || livePrice.updated_at,
         product,
-        product_key: pKey,
+        product_key: livePriceKey || pKey,
         product_grade: livePrice.product_grade || lead.product_grade || lead.grade || 'Commercial export grade',
-        market_location: livePrice.market_location || country || 'Destination pending',
+        market_location: livePrice.market_location || country || 'UAE',
         unit: livePrice.unit || 'kg',
         currency: livePrice.currency || 'INR',
         stale: livePrice.stale || false,
@@ -193,9 +173,9 @@ export function runPricingEngine(lead, liveMarketPrices = null) {
     : fallbackPriceSource({
         source: fallbackRef.source,
         product,
-        product_key: pKey,
+        product_key: fallbackKey || pKey,
         product_grade: lead.product_grade || lead.grade || 'Commercial export grade',
-        market_location: country || 'Destination pending',
+        market_location: country || 'UAE',
         unit: 'kg',
         currency: 'INR',
         price_basis: fallbackRef.source,
@@ -204,7 +184,7 @@ export function runPricingEngine(lead, liveMarketPrices = null) {
   const pricingSource = aiPriceSource({
     product,
     product_grade: priceSource.product_grade || lead.product_grade || lead.grade || 'Commercial export grade',
-    market_location: priceSource.market_location || country || 'Destination pending',
+    market_location: priceSource.market_location || country || 'UAE',
     unit: quoteCurrency,
     currency: quoteCurrency,
     price_basis: 'CFO AI calculation using recorded raw material source, logistics estimates, packaging estimates, and margin guardrails.',
@@ -237,8 +217,8 @@ export function runPricingEngine(lead, liveMarketPrices = null) {
     const lineSource = key === 'raw_material_cost'
       ? priceSource
       : key === 'packaging_cost'
-        ? fallbackPriceSource({ product, product_grade: priceSource.product_grade, market_location: country || 'Destination pending', unit: est.basis, currency: quoteCurrency, price_basis: 'Packaging fallback estimate' })
-        : aiPriceSource({ product, product_grade: priceSource.product_grade, market_location: country || 'Destination pending', unit: est.basis, currency: quoteCurrency, price_basis: `${label} calculated from AI/internal estimate; external verified source not attached` });
+        ? fallbackPriceSource({ product, product_grade: priceSource.product_grade, market_location: country || 'UAE', unit: est.basis, currency: quoteCurrency, price_basis: 'Packaging fallback estimate' })
+        : aiPriceSource({ product, product_grade: priceSource.product_grade, market_location: country || 'UAE', unit: est.basis, currency: quoteCurrency, price_basis: `${label} calculated from AI/internal estimate; external verified source not attached` });
     return { key, label, amount: est.amount, basis: est.basis, included: isIncluded, lineTotal, price_source: lineSource };
   });
 

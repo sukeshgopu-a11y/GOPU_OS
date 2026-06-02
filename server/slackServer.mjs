@@ -9,6 +9,7 @@ import handleSchedulerHealth from '../api/cmo/scheduler-health.js';
 import handleCtoIntegrationsApiStatus from '../api/cto/integrations/status.ts';
 import handleCtoProviderEnvApiSave from '../api/cto/provider-env/save.ts';
 import handleCtoProviderEnvApiStatus from '../api/cto/provider-env/status.ts';
+import handleForexRates from '../api/forex/rates.ts';
 import { getCreativeEngineStatus } from '../lib/creativeStatus.mjs';
 import {
   handleLearningCentreFindings,
@@ -22,6 +23,7 @@ import {
 import { getOpenAIStatus } from '../lib/openaiStatus.mjs';
 import { getSupabaseStorageStatus } from '../lib/supabaseStorageStatus.mjs';
 import { getVercelStatus } from '../lib/vercelStatus.mjs';
+import { cleanSlackText, compactSlackValue } from '../lib/slackTextClean.js';
 import { runPricingEngine } from '../src/services/pricingEngineService.js';
 
 const port = Number(process.env.SLACK_NOTIFICATION_PORT || 8787);
@@ -246,21 +248,24 @@ async function sendResendEmail(apiKey, message) {
 }
 
 function formatSlackText(alert) {
+  const priority = compactSlackValue(alert.priority, 'INFO').toUpperCase();
+  const title = alert.type === 'Founder Approval Required' ? 'GOPU OS - Approval needed' : `GOPU OS - ${compactSlackValue(alert.type, 'Operational Alert')}`;
   return [
-    '--------------',
-    'GOPU OS ALERT',
+    `*${title}*`,
     '',
-    `Priority: ${alert.priority}`,
-    `Type: ${alert.type}`,
-    `Reference: ${alert.reference}`,
-    `Buyer: ${alert.buyer}`,
-    `Status: ${alert.status}`,
-    `ETA: ${alert.eta}`,
+    `*Priority:* ${priority}`,
+    `*Status:* ${compactSlackValue(alert.status, 'Monitoring')}`,
+    `*Reference:* ${compactSlackValue(alert.reference, 'GOPU-OS')}`,
+    alert.buyer ? `*Buyer / Vendor:* ${cleanSlackText(alert.buyer)}` : '',
+    alert.eta ? `*Due / ETA:* ${cleanSlackText(alert.eta)}` : '',
+    alert.source ? `*Source:* ${cleanSlackText(alert.source)}` : '',
     '',
-    'Action Required:',
-    alert.actionRequired,
-    '--------------'
-  ].join('\n');
+    '*Action needed*',
+    cleanSlackText(alert.actionRequired || 'Review in GOPU OS.'),
+    '',
+    '*Safety*',
+    'GOPU OS will not release buyer-facing messages, payments, invoices, or public posts unless the required approval is recorded.'
+  ].filter(Boolean).join('\n');
 }
 
 async function readRawBody(request) {
@@ -276,11 +281,13 @@ async function readBody(request) {
 }
 
 async function handleApiRoute(handler, request, response) {
+  const url = new URL(request.url || '/', 'http://127.0.0.1');
   const body = request.method === 'POST' ? await readBody(request) : undefined;
   await handler(
     {
       method: request.method,
       headers: request.headers,
+      query: Object.fromEntries(url.searchParams.entries()),
       body
     },
     vercelStyleResponse(response, request.headers.origin || '')
@@ -499,6 +506,15 @@ async function processSlackLead(event, rawText) {
     metadata: {
       lead,
       pricing,
+      lead_id: leadResult.ok ? lead.id : null,
+      buyer_email: lead.email || '',
+      email: lead.email || '',
+      product: lead.product,
+      quantity: lead.quantity,
+      unit: lead.unit,
+      destination: lead.destination_country,
+      incoterm: lead.incoterm,
+      final_quote_amount: amount,
       coo_task_id: cooTaskResult.data?.id || null,
       cfo_task_id: cfoTaskResult.data?.id || null,
       approval_gating_required: true,
@@ -1426,6 +1442,10 @@ const server = http.createServer((request, response) => {
   }
   if (request.method === 'GET' && routePath === '/api/integrations/slack/status') {
     handleSlackStatus(request, response);
+    return;
+  }
+  if (request.method === 'GET' && routePath === '/api/forex/rates') {
+    handleApiRoute(handleForexRates, request, response);
     return;
   }
   if (request.method === 'GET' && routePath === '/api/cto/integrations/status') {

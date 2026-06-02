@@ -1,4 +1,4 @@
-import { backendStatus, requireSupabase } from '../lib/supabaseClient.js';
+import { backendStatus, requireSupabaseSession } from '../lib/supabaseClient.js';
 import { demoTenantId } from './demoData.js';
 
 function response(data, error = null) {
@@ -57,7 +57,7 @@ function normalizePaymentVaultRow(row = {}) {
 }
 
 export async function getPaymentVaultRenewals(tenantId = demoTenantId) {
-  const { client, error } = requireSupabase();
+  const { client, error } = await requireSupabaseSession();
   if (error) return response({ payments: [], forecasts: [] }, null);
 
   const { data, error: queryError } = await client

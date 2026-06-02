@@ -10,6 +10,7 @@
  */
 
 import { createClient } from "@supabase/supabase-js";
+import { cleanSlackText } from "../../lib/slackTextClean.js";
 
 const TENANT_ID = "11111111-1111-1111-1111-111111111111";
 
@@ -133,7 +134,7 @@ async function sendSlack(text: string) {
   const res = await fetch("https://slack.com/api/chat.postMessage", {
     method: "POST",
     headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
-    body: JSON.stringify({ channel, text }),
+    body: JSON.stringify({ channel, text: cleanSlackText(text) }),
   });
   const body = await res.json().catch(() => ({}));
   return { ok: body.ok, ts: body.ts };

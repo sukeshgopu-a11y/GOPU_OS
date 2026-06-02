@@ -1,4 +1,5 @@
 import { getCtoProviderSecret } from "../../../lib/ctoProviderVault.mjs";
+import { getCanvaConnectionStatus } from "../../../lib/cmoCanvaWorkflow.mjs";
 
 function hasEnv(...names: string[]) {
   return names.every((name) => Boolean(process.env[name]));
@@ -43,6 +44,7 @@ export default async function handler(req: any, res: any) {
   const twilioReady = areResolved(...twilioProviders);
   const twilioPartial = arePartiallyResolved(...twilioProviders);
   const vercelReady = isResolved("vercel") || hasEnv("VERCEL_URL") || hasEnv("VERCEL");
+  const canvaStatus = await getCanvaConnectionStatus();
 
   const rows = [
     statusRow(
@@ -76,6 +78,11 @@ export default async function handler(req: any, res: any) {
       "Vercel",
       vercelReady ? "live" : "unconfigured",
       vercelReady ? "Vercel runtime detected" : "Local development runtime"
+    ),
+    statusRow(
+      "Canva",
+      ["live", "configured"].includes(canvaStatus.status) ? "live" : canvaStatus.status === "partial" ? "partial" : "unconfigured",
+      canvaStatus.error_message || "Canva Connect API configured for CMO template rendering"
     )
   ];
 
