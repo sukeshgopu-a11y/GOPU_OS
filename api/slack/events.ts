@@ -5,6 +5,7 @@ import { runPricingEngine } from "../../src/services/pricingEngineService.js";
 import { createExportOrder } from "../export/stages.js";
 import { buildPricingSourceSummary } from "../../lib/pricingSourceUtils.mjs";
 import { cleanSlackText } from "../../lib/slackTextClean.js";
+import { getCtoProviderSecret } from "../../lib/ctoProviderVault.mjs";
 
 const demoTenantId = "11111111-1111-1111-1111-111111111111";
 
@@ -15,6 +16,19 @@ function leadReference(id = "") {
 
 function env(name: string) {
   return process.env[name]?.trim() || "";
+}
+
+function providerSecret(key: string) {
+  try {
+    const result = getCtoProviderSecret(key);
+    return result.ok ? result.secret : "";
+  } catch {
+    return "";
+  }
+}
+
+function slackSigningSecret() {
+  return env("SLACK_SIGNING_SECRET") || providerSecret("slack_signing_secret");
 }
 
 function getSupabaseUrl() {
@@ -56,7 +70,7 @@ function safeEqual(left: string, right: string) {
 }
 
 function verifySlackSignature(req: any, rawBody: string) {
-  const signingSecret = env("SLACK_SIGNING_SECRET");
+  const signingSecret = slackSigningSecret();
   if (!signingSecret) return { ok: false, status: "missing_signing_secret", message: "SLACK_SIGNING_SECRET is missing." };
   const signature = String(req.headers["x-slack-signature"] || "");
   const timestamp = String(req.headers["x-slack-request-timestamp"] || "");
@@ -66,6 +80,24 @@ function verifySlackSignature(req: any, rawBody: string) {
   const expected = `v0=${crypto.createHmac("sha256", signingSecret).update(`v0:${timestamp}:${rawBody}`).digest("hex")}`;
   if (!safeEqual(expected, signature)) return { ok: false, status: "invalid_signature", message: "Invalid Slack signature." };
   return { ok: true, status: "verified" };
+}
+
+function parseEventPayload(rawBody: string, contentType = "") {
+  if (contentType.includes("application/x-www-form-urlencoded")) {
+    const params = new URLSearchParams(rawBody);
+    const payload = params.get("payload");
+    return payload ? JSON.parse(payload) : Object.fromEntries(params.entries());
+  }
+  return rawBody ? JSON.parse(rawBody) : {};
+}
+
+function slackFailureAck(verification: Record<string, any>) {
+  return {
+    ok: false,
+    status: `acknowledged_${verification.status || "signature_failed"}`,
+    processed: false,
+    message: "Slack event acknowledged but not processed because signature verification failed. Update the Slack signing secret in GOPU OS/Vercel before enabling lead intake events.",
+  };
 }
 
 export function normalizeText(value: unknown, fallback = "") {
@@ -948,15 +980,17 @@ export default async function handler(req: any, res: any) {
     const botToken = Boolean(env("SLACK_BOT_TOKEN"));
     const channelId = Boolean(env("SLACK_CHANNEL_ID"));
     const signingSecret = Boolean(env("SLACK_SIGNING_SECRET"));
+    const signingSecretResolved = Boolean(slackSigningSecret());
     const supabase = Boolean(getSupabaseUrl() && env("SUPABASE_SERVICE_ROLE_KEY"));
     return res.status(200).json({
       ok: true,
       endpoint: "/api/slack/events",
-      status: botToken && signingSecret ? "ready" : "missing_config",
+      status: botToken && signingSecretResolved ? "ready" : "missing_config",
       config: {
         bot_token: botToken,
         channel_id: channelId,
         signing_secret: signingSecret,
+        signing_secret_resolved: signingSecretResolved,
         supabase: supabase,
       },
       instructions: "POST Slack events here. Message must contain: lead, buyer, product, quote, enquiry, or pricing.",
@@ -982,19 +1016,24 @@ export default async function handler(req: any, res: any) {
       return res.status(400).json({ ok: false, status: "invalid_payload", message: "Invalid Slack event payload." });
     }
     try {
-      payload = rawBody ? JSON.parse(rawBody) : {};
+      payload = parseEventPayload(rawBody, String(req.headers["content-type"] || ""));
     } catch {
       return res.status(400).json({ ok: false, status: "invalid_payload", message: "Invalid Slack event JSON." });
     }
   }
 
   // Handle URL verification BEFORE signature check — Slack sends this without a valid signature
+  if (payload.ssl_check === "1") return res.status(200).send("");
   if (payload.type === "url_verification") return res.status(200).json({ challenge: payload.challenge });
 
   const verification = verifySlackSignature(req, rawBody);
   if (!verification.ok) {
     console.error("[slack/events] signature verification failed", verification);
-    return res.status(401).json(verification);
+    await upsertSlackStatus("error", {
+      event: "signature_verification",
+      error_message: verification.message || verification.status || "Slack signature verification failed",
+    }).catch(() => null);
+    return res.status(200).json(slackFailureAck(verification));
   }
 
   // Deduplicate by Slack event_id to prevent double-processing on retries
