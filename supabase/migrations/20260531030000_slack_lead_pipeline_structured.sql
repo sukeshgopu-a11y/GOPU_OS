@@ -54,6 +54,20 @@ create table if not exists public.commodity_prices (
   unique (tenant_id, product_key)
 );
 
+alter table public.commodity_prices
+  add column if not exists product_label text,
+  add column if not exists source text,
+  add column if not exists price_source_type text,
+  add column if not exists price_source_name text,
+  add column if not exists price_source_reference text,
+  add column if not exists product_grade text,
+  add column if not exists market_location text,
+  add column if not exists unit text default 'kg',
+  add column if not exists currency text default 'INR',
+  add column if not exists note text,
+  add column if not exists fetched_at timestamptz,
+  add column if not exists updated_at timestamptz not null default now();
+
 create table if not exists public.export_orders (
   id uuid primary key default gen_random_uuid(),
   tenant_id uuid not null references public.tenants(id) on delete cascade,

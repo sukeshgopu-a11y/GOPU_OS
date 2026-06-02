@@ -2,6 +2,7 @@
 import { createClient } from "@supabase/supabase-js";
 import { PRICE_SOURCE_TYPES, normalizePriceSource } from "../../lib/pricingSourceUtils.mjs";
 import { apedaScheduledProductCategories, marketPriceFallbacks, marketPriceProducts, productSlug, spiceBoardProducts } from "../../lib/exportProductCatalog.mjs";
+import { upsertCommodityPriceRows } from "../../lib/supabaseCommodityPrices.mjs";
 
 function env(k: string) { return process.env[k]?.trim() || ""; }
 
@@ -103,7 +104,7 @@ export default async function handler(req: any, res: any) {
     }
 
     const normalizedProductKey = productSlug(product_key);
-    const { data, error } = await client.from("commodity_prices").upsert({
+    const row = {
       tenant_id: "11111111-1111-1111-1111-111111111111",
       product_key: normalizedProductKey,
       product_label: product_label || product_key,
@@ -118,10 +119,16 @@ export default async function handler(req: any, res: any) {
       currency: currency || "INR",
       note: note || "",
       updated_at: new Date().toISOString(),
-    }, { onConflict: "tenant_id,product_key" }).select("*").maybeSingle();
+    };
+    const { data, error, removedColumns } = await upsertCommodityPriceRows(client, row, { select: true });
 
     if (error) return res.status(500).json({ ok: false, message: error.message });
-    return res.status(200).json({ ok: true, data, message: `Price updated: ${normalizedProductKey} = INR ${price_inr_per_kg}/kg` });
+    return res.status(200).json({
+      ok: true,
+      data: Array.isArray(data) ? data[0] : data,
+      schema_fallback_columns: removedColumns || [],
+      message: `Price updated: ${normalizedProductKey} = INR ${price_inr_per_kg}/kg`
+    });
   }
 
   res.setHeader("Allow", "GET, POST");

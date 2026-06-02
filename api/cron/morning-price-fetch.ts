@@ -13,6 +13,7 @@ import { createClient } from "@supabase/supabase-js";
 import { cleanSlackText } from "../../lib/slackTextClean.js";
 import { marketPriceProducts } from "../../lib/exportProductCatalog.mjs";
 import { PRICE_SOURCE_TYPES } from "../../lib/pricingSourceUtils.mjs";
+import { upsertCommodityPriceRows } from "../../lib/supabaseCommodityPrices.mjs";
 
 const TENANT_ID = "11111111-1111-1111-1111-111111111111";
 const AGMARKNET_RESOURCE_ID = "9ef84268-d588-465a-a308-a864a43d0070";
@@ -161,14 +162,13 @@ async function updateSupabasePrices(client: any, prices: any[]) {
     updated_at: now,
   }));
 
-  const { error } = await client
-    .from("commodity_prices")
-    .upsert(upserts, { onConflict: "tenant_id,product_key" });
+  const { error, removedColumns } = await upsertCommodityPriceRows(client, upserts);
 
   return {
     updated: error ? 0 : upserts.length,
     liveUpdated: error ? 0 : prices.filter((p) => p.live).length,
     referenceUpdated: error ? 0 : prices.filter((p) => !p.live).length,
+    schemaFallbackColumns: removedColumns || [],
     error: error?.message,
   };
 }
@@ -276,6 +276,8 @@ export default async function handler(req: any, res: any) {
     reference_prices_refreshed: prices.length - liveCount,
     db_updated: dbResult.updated,
     slack_sent: slackResult.ok,
+    db_schema_fallback_columns: dbResult.schemaFallbackColumns || [],
+    db_error: dbResult.error || null,
     duration_ms: Date.now() - startAt,
     note: liveCount === 0
       ? "No live prices fetched. Add/check DATA_GOV_API_KEY and Agmarknet availability. CFO reference rows were refreshed."
