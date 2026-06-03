@@ -1,9 +1,6 @@
 name: Sync Claude branches to main
 
 on:
-  push:
-    branches:
-      - 'claude/**'
   workflow_dispatch:
 
 permissions:
