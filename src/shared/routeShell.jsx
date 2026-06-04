@@ -5,8 +5,11 @@ import {
   AlertTriangle,
   ArrowLeft,
   Bell,
+  Boxes,
   BrainCircuit,
+  Building2,
   CheckCircle2,
+  ChevronLeft,
   CircleDollarSign,
   ClipboardList,
   Database,
@@ -14,7 +17,9 @@ import {
   FileText,
   Fingerprint,
   Gauge,
+  LayoutDashboard,
   LockKeyhole,
+  Menu,
   PackageCheck,
   Route,
   Search,
@@ -28,6 +33,7 @@ import {
   Workflow,
   Zap
 } from 'lucide-react';
+import { GopuLogoMark } from '../components/brand/BrandIcons.jsx';
 import { backendStatus } from '../lib/supabaseClient.js';
 import { demoTenantId } from '../services/companyService.js';
 import { getNotificationCenterData } from '../services/notificationService.js';
@@ -971,12 +977,180 @@ const InvoiceDocument = React.memo(function InvoiceDocument({ invoice }) {
   );
 });
 
+const NAV_GROUPS = [
+  {
+    items: [
+      { label: 'Dashboard', icon: LayoutDashboard, route: '/export-os', exact: true },
+      { label: 'Director', icon: Target, route: '/export-os/director' },
+    ],
+  },
+  {
+    label: 'Operations',
+    items: [
+      { label: 'Leads', icon: UsersRound, route: '/export-os/leads' },
+      { label: 'Pricing Engine', icon: CircleDollarSign, route: '/export-os/pricing-engine' },
+      { label: 'Invoices', icon: FileText, route: '/export-os/invoices' },
+      { label: 'Shipments', icon: Route, route: '/export-os/shipments' },
+      { label: 'Tasks', icon: ClipboardList, route: '/export-os/tasks' },
+    ],
+  },
+  {
+    label: 'Executives',
+    items: [
+      { label: 'COO', icon: Workflow, route: '/export-os/executives/coo' },
+      { label: 'CFO', icon: CircleDollarSign, route: '/export-os/executives/cfo' },
+      { label: 'CMO', icon: TrendingUp, route: '/export-os/executives/cmo' },
+      { label: 'CTO', icon: Database, route: '/export-os/executives/cto' },
+      { label: 'CIO', icon: BrainCircuit, route: '/export-os/executives/cio' },
+    ],
+  },
+  {
+    label: 'Business',
+    items: [
+      { label: 'Buyers', icon: UsersRound, route: '/export-os/buyers' },
+      { label: 'Suppliers', icon: PackageCheck, route: '/export-os/suppliers' },
+      { label: 'Warehouse', icon: Boxes, route: '/export-os/warehouse' },
+      { label: 'Payments', icon: LockKeyhole, route: '/export-os/payment-vault' },
+      { label: 'Documents', icon: FileBarChart, route: '/export-os/document-factory' },
+    ],
+  },
+  {
+    label: 'System',
+    items: [
+      { label: 'Automation', icon: Zap, route: '/export-os/automation-center' },
+      { label: 'Learning', icon: BrainCircuit, route: '/export-os/learning-centre' },
+      { label: 'Security', icon: ShieldCheck, route: '/export-os/security' },
+      { label: 'Company', icon: Building2, route: '/export-os/company-master-data' },
+    ],
+  },
+];
+
+export function AppSidebar({ collapsed, onToggle, pathname, liveDataConnected, notificationCount, onOpenNotifications, onOpenSettings, onOpenCommandPalette }) {
+  function navigate(route) {
+    window.history.pushState({}, '', route);
+    window.dispatchEvent(new PopStateEvent('popstate'));
+  }
+
+  function isActive(route, exact) {
+    if (exact) return pathname === route;
+    if (route === '/export-os') return pathname === '/export-os';
+    return pathname.startsWith(route);
+  }
+
+  return (
+    <aside className={`app-sidebar ${collapsed ? 'collapsed' : ''}`} aria-label="Main navigation">
+      <div className="sidebar-brand" role="banner">
+        <GopuLogoMark size={26} />
+        {!collapsed && (
+          <div className="sidebar-brand-copy">
+            <span className="sidebar-brand-name">GOPU OS</span>
+            <span className="sidebar-brand-sub">Export Command</span>
+          </div>
+        )}
+      </div>
+
+      <button
+        className="sidebar-search-btn"
+        onClick={onOpenCommandPalette}
+        title="Command palette (Ctrl+K)"
+        aria-label="Open command palette"
+      >
+        <Search size={14} aria-hidden="true" />
+        {!collapsed && <span>Quick search…</span>}
+        {!collapsed && <kbd className="sidebar-kbd">⌘K</kbd>}
+      </button>
+
+      <nav className="sidebar-nav" aria-label="Module navigation">
+        {NAV_GROUPS.map((group, gi) => (
+          <div key={gi} className="sidebar-group">
+            {group.label && !collapsed && (
+              <span className="sidebar-group-label" aria-hidden="true">{group.label}</span>
+            )}
+            {group.items.map((item) => {
+              const active = isActive(item.route, item.exact);
+              const Icon = item.icon;
+              return (
+                <button
+                  key={item.route}
+                  className={`sidebar-nav-item ${active ? 'active' : ''}`}
+                  onClick={() => navigate(item.route)}
+                  title={collapsed ? item.label : undefined}
+                  aria-current={active ? 'page' : undefined}
+                  aria-label={item.label}
+                >
+                  <Icon size={15} aria-hidden="true" />
+                  {!collapsed && <span>{item.label}</span>}
+                </button>
+              );
+            })}
+          </div>
+        ))}
+      </nav>
+
+      <div className="sidebar-footer">
+        <div className={`sidebar-status-dot ${liveDataConnected ? 'online' : 'offline'}`} title={liveDataConnected ? 'Live data connected' : 'Offline'} />
+        {!collapsed && (
+          <span className="sidebar-status-label">{liveDataConnected ? 'Live' : 'Offline'}</span>
+        )}
+        <div className="sidebar-footer-actions">
+          <button
+            className="sidebar-icon-btn"
+            onClick={onOpenNotifications}
+            aria-label={`Notifications${notificationCount > 0 ? ` (${notificationCount} unread)` : ''}`}
+            title="Notifications"
+          >
+            <Bell size={15} aria-hidden="true" />
+            {notificationCount > 0 && (
+              <span className="sidebar-badge" aria-hidden="true">{notificationCount > 9 ? '9+' : notificationCount}</span>
+            )}
+          </button>
+          <button className="sidebar-icon-btn" onClick={onOpenSettings} aria-label="Settings" title="Settings">
+            <Settings size={15} aria-hidden="true" />
+          </button>
+          <button
+            className="sidebar-icon-btn sidebar-collapse-btn"
+            onClick={onToggle}
+            aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+            title={collapsed ? 'Expand' : 'Collapse'}
+          >
+            <ChevronLeft size={15} className={`sidebar-chevron ${collapsed ? 'rotated' : ''}`} aria-hidden="true" />
+          </button>
+        </div>
+      </div>
+    </aside>
+  );
+}
+
 const ShellControlsContext = React.createContext(null);
 
 export function ExportOSShell({ children, className = '', liveDataConnected = backendStatus.mode === 'Connected', statusMessage, loading = false }) {
   const isCtoShell = className.includes('cto-shell');
   const backendMessage = statusMessage || (isCtoShell && liveDataConnected ? 'Supabase live connected' : isCtoShell && !liveDataConnected ? 'No live data connected' : backendStatus.message);
   const [settingsOpen, setSettingsOpen] = React.useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = React.useState(() => {
+    try { return localStorage.getItem('gopu-sidebar-collapsed') === 'true'; } catch { return false; }
+  });
+  const [shellPathname, setShellPathname] = React.useState(
+    typeof window !== 'undefined' ? window.location.pathname : '/export-os'
+  );
+
+  React.useEffect(() => {
+    function sync() { setShellPathname(window.location.pathname); }
+    window.addEventListener('popstate', sync);
+    return () => window.removeEventListener('popstate', sync);
+  }, []);
+
+  React.useEffect(() => {
+    function toggle() {
+      setSidebarCollapsed((c) => {
+        const next = !c;
+        try { localStorage.setItem('gopu-sidebar-collapsed', String(next)); } catch {}
+        return next;
+      });
+    }
+    window.addEventListener('gopu:toggle-sidebar', toggle);
+    return () => window.removeEventListener('gopu:toggle-sidebar', toggle);
+  }, []);
   const [notifOpen, setNotifOpen] = React.useState(false);
   const [notifications, setNotifications] = React.useState([]);
   const [showSearch, setShowSearch] = React.useState(false);
@@ -1094,41 +1268,31 @@ export function ExportOSShell({ children, className = '', liveDataConnected = ba
   }
 
   return (
-    <motion.div
-      className={`export-os-shell ${prefs.compact ? 'compact-mode' : ''} ${className}`}
-      id="main-content"
-      role="main"
-      aria-label="Main content"
-      initial={{ opacity: 0, y: 18 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.52, ease: [0.16, 1, 0.3, 1] }}
-    >
+    <div className={`app-root ${prefs.compact ? 'compact-mode' : ''} ${sidebarCollapsed ? 'sidebar-collapsed' : ''}`}>
       <TopLoadingBar loading={loading} />
-      <a href="#main-content" className="skip-link">Skip to main content</a>
       <ConnectionBanner />
-      <div
-        id="sr-announcer"
-        role="status"
-        aria-live="polite"
-        aria-atomic="true"
-        className="sr-only"
+      <div id="sr-announcer" role="status" aria-live="polite" aria-atomic="true" className="sr-only" />
+      <div id="sr-alert" role="alert" aria-live="assertive" aria-atomic="true" className="sr-only" />
+      <a href="#shell-content" className="skip-link">Skip to main content</a>
+      <AppSidebar
+        collapsed={sidebarCollapsed}
+        onToggle={() => setSidebarCollapsed((c) => {
+          const next = !c;
+          try { localStorage.setItem('gopu-sidebar-collapsed', String(next)); } catch {}
+          return next;
+        })}
+        pathname={shellPathname}
+        liveDataConnected={liveDataConnected}
+        notificationCount={shellControls.notificationCount}
+        onOpenNotifications={() => setNotifOpen(true)}
+        onOpenSettings={() => setSettingsOpen(true)}
+        onOpenCommandPalette={() => setShowSearch(true)}
       />
-      <div
-        id="sr-alert"
-        role="alert"
-        aria-live="assertive"
-        aria-atomic="true"
-        className="sr-only"
-      />
-      <div className="background-grid" />
-      <GlobalBackNavigation />
-      <div className={`backend-status-banner ${liveDataConnected ? 'connected' : 'pending'}`}>
-        <Database size={14} />
-        <span>{backendMessage}</span>
-      </div>
-      <ShellControlsContext.Provider value={shellControls}>
-        {children}
-      </ShellControlsContext.Provider>
+      <main id="shell-content" className={`shell-main ${className}`} aria-label="Main content">
+        <ShellControlsContext.Provider value={shellControls}>
+          {children}
+        </ShellControlsContext.Provider>
+      </main>
       <NotificationCentre
         open={notifOpen}
         onClose={() => setNotifOpen(false)}
@@ -1150,7 +1314,7 @@ export function ExportOSShell({ children, className = '', liveDataConnected = ba
         }}
       />
       <ScrollToTop />
-    </motion.div>
+    </div>
   );
 }
 

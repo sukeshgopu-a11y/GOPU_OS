@@ -75,8 +75,7 @@ import {
   ExportOSIcon,
   GopuLogoMark,
   GopuWordmark,
-  LearningIcon,
-  PlantOSIcon
+  LearningIcon
 } from './components/brand/BrandIcons.jsx';
 import {
   Breadcrumb,
@@ -353,6 +352,7 @@ import {
   sendSlackNotification
 } from './services/slackNotificationService.js';
 import { getTrustCenterData } from './services/trustCenterService.js';
+import { AppSidebar } from './shared/routeShell.jsx';
 import './styles.css';
 import './premium.css';
 
@@ -2755,7 +2755,7 @@ function App() {
     }
   });
   const current = pages[activePage];
-  const isProtectedRoute = route === '/plant-os' || route === '/export-os' || route.startsWith('/export-os/');
+  const isProtectedRoute = route === '/export-os' || route.startsWith('/export-os/');
   const handleSessionTimeout = React.useCallback(async () => {
     if (!isProtectedRoute || !authState.session) return;
     try {
@@ -2870,8 +2870,7 @@ function App() {
   }
 
   if (isProtectedRoute && !authState.session) {
-    const osId = route === '/plant-os' ? 'plant' : 'export';
-    return withSessionWarning(<SelectedOSLogin osId={osId} onBack={() => navigate('/')} onSuccess={() => completeLocalLogin(osId, route === '/plant-os' ? '/plant-os' : '/export-os')} />);
+    return withSessionWarning(<SelectedOSLogin osId="export" onBack={() => navigate('/')} onSuccess={() => completeLocalLogin('export', '/export-os')} />);
   }
 
   if (route === '/' || route === '/login/export' || route === '/login/plant') {
@@ -2880,10 +2879,6 @@ function App() {
 
   if (route === '/export-os/agents/coo') {
     return null;
-  }
-
-  if (route === '/plant-os') {
-    return withSessionWarning(<PlantDashboard onBack={() => navigate('/')} />);
   }
 
   if (route === '/export-os/company-master-data') {
@@ -3179,10 +3174,10 @@ function OSGateway({ onSelectOS }) {
               aria-labelledby="os-selection-title"
             >
               <div className="selection-copy">
-                <span>Select your workspace</span>
-                <h1 id="os-selection-title">Where would you like to work today?</h1>
+                <span>Your workspace</span>
+                <h1 id="os-selection-title">GOPU Export OS</h1>
               </div>
-            <div className="os-card-grid grid">
+              <div className="os-card-grid grid">
                 <OSSelectionCard
                   id="export"
                   title="GOPU Export OS"
@@ -3190,15 +3185,6 @@ function OSGateway({ onSelectOS }) {
                   description="Manage buyers, pricing, quotations, CO workflow, shipments, documents, and export intelligence."
                   icon={ExportOSIcon}
                   selected={selectedCard === 'export'}
-                  onSelect={selectOS}
-                />
-                <OSSelectionCard
-                  id="plant"
-                  title="Spice Plant OS"
-                  subtitle="Factory & Processing Intelligence"
-                  description="Manage raw intake, batch processing, quality checks, packing, warehouse movement, and dispatch operations."
-                  icon={PlantOSIcon}
-                  selected={selectedCard === 'plant'}
                   onSelect={selectOS}
                 />
               </div>
@@ -3217,13 +3203,6 @@ const osLoginConfig = {
     subtitle: 'Global Trade Command System',
     button: 'Enter Export OS',
     tone: 'cyan'
-  },
-  plant: {
-    badge: 'Spice Plant OS',
-    title: 'Secure Plant OS Access',
-    subtitle: 'Factory & Processing Intelligence',
-    button: 'Enter Plant OS',
-    tone: 'amber'
   }
 };
 
@@ -5199,6 +5178,28 @@ const ShellControlsContext = React.createContext(null);
 export function ExportOSShell({ children, className = '', liveDataConnected = backendStatus.mode === 'Connected', statusMessage, loading = false }) {
   const isCtoShell = className.includes('cto-shell');
   const backendMessage = statusMessage || (isCtoShell && liveDataConnected ? 'Supabase live connected' : isCtoShell && !liveDataConnected ? 'No live data connected' : backendStatus.message);
+  const [sidebarCollapsed, setSidebarCollapsed] = React.useState(() => {
+    try { return localStorage.getItem('gopu-sidebar-collapsed') === 'true'; } catch { return false; }
+  });
+  const [shellPathname, setShellPathname] = React.useState(
+    typeof window !== 'undefined' ? window.location.pathname : '/export-os'
+  );
+  React.useEffect(() => {
+    function sync() { setShellPathname(window.location.pathname); }
+    window.addEventListener('popstate', sync);
+    return () => window.removeEventListener('popstate', sync);
+  }, []);
+  React.useEffect(() => {
+    function toggle() {
+      setSidebarCollapsed((c) => {
+        const next = !c;
+        try { localStorage.setItem('gopu-sidebar-collapsed', String(next)); } catch {}
+        return next;
+      });
+    }
+    window.addEventListener('gopu:toggle-sidebar', toggle);
+    return () => window.removeEventListener('gopu:toggle-sidebar', toggle);
+  }, []);
   const [settingsOpen, setSettingsOpen] = React.useState(false);
   const [notifOpen, setNotifOpen] = React.useState(false);
   const [notifications, setNotifications] = React.useState([]);
@@ -5317,41 +5318,31 @@ export function ExportOSShell({ children, className = '', liveDataConnected = ba
   }
 
   return (
-    <motion.div
-      className={`export-os-shell ${prefs.compact ? 'compact-mode' : ''} ${className}`}
-      id="main-content"
-      role="main"
-      aria-label="Main content"
-      initial={{ opacity: 0, y: 18 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.52, ease: [0.16, 1, 0.3, 1] }}
-    >
+    <div className={`app-root ${prefs.compact ? 'compact-mode' : ''} ${sidebarCollapsed ? 'sidebar-collapsed' : ''}`}>
       <TopLoadingBar loading={loading} />
-      <a href="#main-content" className="skip-link">Skip to main content</a>
       <ConnectionBanner />
-      <div
-        id="sr-announcer"
-        role="status"
-        aria-live="polite"
-        aria-atomic="true"
-        className="sr-only"
+      <div id="sr-announcer" role="status" aria-live="polite" aria-atomic="true" className="sr-only" />
+      <div id="sr-alert" role="alert" aria-live="assertive" aria-atomic="true" className="sr-only" />
+      <a href="#shell-content" className="skip-link">Skip to main content</a>
+      <AppSidebar
+        collapsed={sidebarCollapsed}
+        onToggle={() => setSidebarCollapsed((c) => {
+          const next = !c;
+          try { localStorage.setItem('gopu-sidebar-collapsed', String(next)); } catch {}
+          return next;
+        })}
+        pathname={shellPathname}
+        liveDataConnected={liveDataConnected}
+        notificationCount={shellControls.notificationCount}
+        onOpenNotifications={() => setNotifOpen(true)}
+        onOpenSettings={() => setSettingsOpen(true)}
+        onOpenCommandPalette={() => setShowSearch(true)}
       />
-      <div
-        id="sr-alert"
-        role="alert"
-        aria-live="assertive"
-        aria-atomic="true"
-        className="sr-only"
-      />
-      <div className="background-grid" />
-      <GlobalBackNavigation />
-      <div className={`backend-status-banner ${liveDataConnected ? 'connected' : 'pending'}`}>
-        <Database size={14} />
-        <span>{backendMessage}</span>
-      </div>
-      <ShellControlsContext.Provider value={shellControls}>
-        {children}
-      </ShellControlsContext.Provider>
+      <main id="shell-content" className={`shell-main ${className}`} aria-label="Main content">
+        <ShellControlsContext.Provider value={shellControls}>
+          {children}
+        </ShellControlsContext.Provider>
+      </main>
       <NotificationCentre
         open={notifOpen}
         onClose={() => setNotifOpen(false)}
@@ -5373,7 +5364,7 @@ export function ExportOSShell({ children, className = '', liveDataConnected = ba
         }}
       />
       <ScrollToTop />
-    </motion.div>
+    </div>
   );
 }
 
@@ -12471,62 +12462,6 @@ function WhatsAppIntegrationStatus() {
         {whatsappIntegrationStatus.map(([label, value]) => <div key={label}><span>{label}</span><strong>{value}</strong></div>)}
       </div>
     </section>
-  );
-}
-
-function PlantDashboard({ onBack }) {
-  const plantMetrics = [
-    { label: 'Raw Intake', value: '18.4T', delta: '+6 batches', tone: 'cyan' },
-    { label: 'Processing Yield', value: '94.2%', delta: '+2.1%', tone: 'green' },
-    { label: 'Quality Holds', value: '03', delta: 'pending lab', tone: 'amber' },
-    { label: 'Dispatch Ready', value: '142', delta: 'cartons', tone: 'blue' }
-  ];
-
-  return (
-    <div className="app plant-app">
-      <div className="background-grid" />
-      <section className="plant-shell">
-        <header className="plant-header">
-          <div>
-            <span>SPICE PLANT OS</span>
-            <h1>Factory & Processing Intelligence</h1>
-            <p>Raw intake, batch processing, quality checks, packing, warehouse movement, and dispatch operations.</p>
-          </div>
-          <button className="ghost-button" onClick={onBack}>OS Gateway <ChevronRight size={14} /></button>
-        </header>
-        <div className="metric-grid">
-          {plantMetrics.map((metric, index) => (
-            <article className={`metric-panel tone-${metric.tone}`} key={metric.label} style={{ '--delay': `${index * 70}ms` }}>
-              <span>{metric.label}</span>
-              <strong>{metric.value}</strong>
-              <small><TrendIndicator value={metric.delta} suffix="" /></small>
-              <div className="metric-line" />
-            </article>
-          ))}
-        </div>
-        <div className="dashboard-layout">
-          <Panel className="span-2" title="Batch Processing Line" action="Live factory mesh">
-            <div className="workflow">
-              {['Raw Intake', 'Cleaning', 'Grinding', 'Quality Check', 'Packing'].map((step, index) => (
-                <div className={`workflow-step ${index < 3 ? 'done' : index === 3 ? 'active' : ''}`} key={step}>
-                  <CheckCircle2 size={18} />
-                  <span>{step}</span>
-                </div>
-              ))}
-            </div>
-          </Panel>
-          <Panel title="Quality Intelligence" action="Lab sync">
-            <SignalList items={['Aflatoxin screen clear', 'Moisture variance 0.4%', 'Metal detector pass', 'Retain samples indexed']} />
-          </Panel>
-          <Panel title="Warehouse Movement" action="Dispatch queue">
-            <SignalList items={['Zone A: 52 cartons', 'Zone B: 38 cartons', 'Export dock: 31 cartons', 'Domestic dispatch: 21 cartons']} />
-          </Panel>
-          <Panel className="span-2" title="Plant Telemetry" action="Secure stream">
-            <MiniBars values={[58, 71, 66, 83, 79, 88, 74, 92]} />
-          </Panel>
-        </div>
-      </section>
-    </div>
   );
 }
 
