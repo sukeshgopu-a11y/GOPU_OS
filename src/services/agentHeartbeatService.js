@@ -87,10 +87,10 @@ export const tomorrowReminders = Object.freeze([
     status: 'Tomorrow'
   },
   {
-    id: 'canva-template-ids',
+    id: 'chatgpt-image-generator',
     dueDate: tomorrow,
     owner: 'CMO + CTO',
-    title: 'Confirm Canva template IDs in production config',
+    title: 'Confirm OPENAI_IMAGE_MODEL is set in production config for ChatGPT image generation',
     route: '/export-os/executives/cmo',
     status: 'Tomorrow'
   }
