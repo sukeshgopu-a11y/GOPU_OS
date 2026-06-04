@@ -219,7 +219,7 @@ function CMOCommandPage({ view = 'command', navigate, onBack }) {
     navigate('/export-os/director');
   }
 
-  const tabs = ['Overview', 'Content Queue', 'Published Posts', 'Platforms', 'Reference Lab', 'LinkedIn Composer', 'Digital Marketing'];
+  const tabs = ['Overview', 'Pipeline', 'Content Queue', 'Published Posts', 'Platforms', 'Reference Lab', 'LinkedIn Composer', 'Digital Marketing'];
   const scheduledCount = data.summary?.scheduledContent ?? 'Awaiting analytics';
   const approvalCount = data.summary?.pendingApprovals ?? 'Verification pending';
   const realRunStatus = getCmoRealRunStatus(data);
@@ -675,6 +675,7 @@ function CMODigitalMarketingTab() {
 }
 
 function CMOFocusedCommandTabs({ activeTab, data, output, navigate, realRunStatus, onNewContent, onSchedulePost, onViewPublished, onSendSlack, onContentDecision, onCreateApprovalRequest }) {
+  if (activeTab === 'Pipeline') return <CMOPipelineTab />;
   if (activeTab === 'Content Queue') return <CMOContentQueueTab items={getCmoPendingContentItems(data)} onContentDecision={onContentDecision} />;
   if (activeTab === 'Published Posts') return <CMOPublishedPostsTab items={getCmoPublishedContentItems(data)} />;
   if (activeTab === 'Platforms') return <CMOPlatformsTab connectedCount={getCmoConnectedPlatformCount(data)} navigate={navigate} />;
@@ -4920,6 +4921,212 @@ function ContentIntelligenceMemory() {
         {contentMemoryCategories.map((item) => <span key={item}>{item}</span>)}
       </div>
       <small>Future mode: Connected Memory for approved claims, rejected wording, buyer objections, winning hooks, campaign outcomes, and market positioning.</small>
+    </section>
+  );
+}
+
+const CMO_PIPELINE_STEPS = [
+  {
+    step: 1,
+    icon: BrainCircuit,
+    label: 'Content Generation',
+    status: 'auto',
+    statusLabel: 'Auto · cron / manual',
+    color: '#4f8ef7',
+    details: [
+      'OpenAI generates: caption, headline, slides, hashtags, content type',
+      'Platform-specific rules enforced (LinkedIn, Instagram, Facebook)',
+      'Saved to content_history → approval_status: pending_approval',
+    ],
+    table: null,
+  },
+  {
+    step: 2,
+    icon: Sparkles,
+    label: 'Image Generation',
+    status: 'auto',
+    statusLabel: 'Auto · gpt-image-1',
+    color: '#a78bfa',
+    details: [
+      'Builds brand-aware corporate infographic prompt by content type',
+      'gpt-image-1 generates 1024×1536 portrait PNG (high quality)',
+      'Uploads to Supabase Storage → cmo-generated-assets',
+      'Saves poster_url to content_history + content_links table',
+    ],
+    table: [
+      ['knowledge_carousel', 'Trade knowledge infographic, numbered points, navy/gold'],
+      ['shipment_announcement', 'Aerial container port, global route overlay, golden hour'],
+      ['market_update', 'Commodity macro + data chart, Bloomberg-style'],
+      ['product_spotlight', 'Studio spice macro photography, lab-quality presentation'],
+      ['buyer_education', 'Trade document texture, numbered compliance checklist'],
+    ],
+  },
+  {
+    step: 3,
+    icon: Bell,
+    label: 'Slack Approval Card',
+    status: 'auto',
+    statusLabel: 'Auto · Slack Bot',
+    color: '#34d399',
+    details: [
+      'Sends interactive card to SLACK_CHANNEL_ID',
+      'Card shows: post copy, hashtags, image preview, run ID, platform',
+      'Three action buttons: Approve · Reject · Modify',
+      'Nothing publishes until founder acts',
+    ],
+    table: null,
+  },
+  {
+    step: 4,
+    icon: User,
+    label: 'Founder Decision',
+    status: 'manual',
+    statusLabel: 'Manual · Founder',
+    color: '#fbbf24',
+    details: [
+      'Approve  →  approval_status: approved · publish_status: queued',
+      'Reject   →  approval_status: rejected · returned to edit queue',
+      'Modify   →  OpenAI interprets notes → revises copy/image → resends card',
+      'Every decision logged to audit_logs with actor, timestamp, risk level',
+    ],
+    table: null,
+  },
+  {
+    step: 5,
+    icon: ShieldCheck,
+    label: 'Publishing Guards',
+    status: 'auto',
+    statusLabel: 'Auto · 9 checks',
+    color: '#f97316',
+    details: null,
+    table: [
+      ['approval_status = approved', '✓'],
+      ['Platform valid (LinkedIn / Instagram / Facebook)', '✓'],
+      ['No duplicate publish for this run_id', '✓'],
+      ['Publish attempt count < 3', '✓'],
+      ['Not test-mode content in production', '✓'],
+      ['Platform credentials present', '✓'],
+      ['Image present (chatgpt_image guard)', '✓'],
+      ['LinkedIn text includes #GOPUExports', '✓'],
+      ['No existing live_post_url', '✓'],
+    ],
+  },
+  {
+    step: 6,
+    icon: Send,
+    label: 'Publish to Platform',
+    status: 'auto',
+    statusLabel: 'Auto · Platform API',
+    color: '#10b981',
+    details: [
+      'Records live_post_url → publish_status: published',
+    ],
+    table: [
+      ['LinkedIn (company page)', 'POST /rest/posts · LinkedIn API v202605'],
+      ['LinkedIn Personal', 'OAuth token from platform_integrations'],
+      ['Instagram', 'Meta Graph API · image + caption'],
+      ['Facebook', 'Meta Pages API · message + image'],
+    ],
+  },
+  {
+    step: 7,
+    icon: Activity,
+    label: 'Audit + Slack Notify',
+    status: 'auto',
+    statusLabel: 'Auto · always',
+    color: '#60a5fa',
+    details: [
+      'Every action written to audit_logs (actor, risk_level, metadata)',
+      'Slack notified of publish success or failure',
+      'Engagement metrics tracked post-publish (likes, comments, shares)',
+    ],
+    table: null,
+  },
+];
+
+function CMOPipelineTab() {
+  const [expanded, setExpanded] = useState(null);
+  const toggle = (i) => setExpanded(prev => prev === i ? null : i);
+
+  return (
+    <section className="cmo-pipeline-tab">
+      <div className="cmo-panel">
+        <div className="approval-section-header">
+          <div><span>CMO Automation</span><h2>End-to-end publishing pipeline</h2></div>
+          <Workflow size={18} />
+        </div>
+        <p className="cmo-pipeline-subtitle">
+          From content generation to live post — every step, guard, and decision in the CMO flow.
+          Click any step to expand details.
+        </p>
+      </div>
+
+      <div className="cmo-pipeline-steps">
+        {CMO_PIPELINE_STEPS.map((s, i) => {
+          const Icon = s.icon;
+          const open = expanded === i;
+          return (
+            <React.Fragment key={s.step}>
+              <article
+                className={`cmo-pipeline-card${open ? ' cmo-pipeline-card--open' : ''}`}
+                onClick={() => toggle(i)}
+                style={{ '--step-color': s.color }}
+              >
+                <div className="cmo-pipeline-card-header">
+                  <div className="cmo-pipeline-step-badge" style={{ background: s.color }}>
+                    <Icon size={15} />
+                  </div>
+                  <div className="cmo-pipeline-card-meta">
+                    <span className="cmo-pipeline-step-num">Step {s.step}</span>
+                    <strong className="cmo-pipeline-step-label">{s.label}</strong>
+                  </div>
+                  <span className={`cmo-pipeline-mode cmo-pipeline-mode--${s.status}`}>
+                    {s.statusLabel}
+                  </span>
+                  <ChevronRight size={14} className={`cmo-pipeline-chevron${open ? ' cmo-pipeline-chevron--open' : ''}`} />
+                </div>
+
+                {open && (
+                  <div className="cmo-pipeline-card-body">
+                    {s.details && (
+                      <ul className="cmo-pipeline-detail-list">
+                        {s.details.map((d, di) => <li key={di}>{d}</li>)}
+                      </ul>
+                    )}
+                    {s.table && (
+                      <table className="cmo-pipeline-table">
+                        <tbody>
+                          {s.table.map(([col1, col2], ti) => (
+                            <tr key={ti}>
+                              <td>{col1}</td>
+                              <td>{col2}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    )}
+                  </div>
+                )}
+              </article>
+
+              {i < CMO_PIPELINE_STEPS.length - 1 && (
+                <div className="cmo-pipeline-connector">
+                  <div className="cmo-pipeline-connector-line" />
+                  <ChevronRight size={12} className="cmo-pipeline-connector-arrow" />
+                </div>
+              )}
+            </React.Fragment>
+          );
+        })}
+      </div>
+
+      <div className="cmo-panel cmo-pipeline-safety-note">
+        <ShieldCheck size={15} />
+        <span>
+          <strong>Founder control is absolute.</strong> No content reaches any platform without explicit Slack approval.
+          All actions are immutably logged to audit_logs with actor, timestamp, and risk level.
+        </span>
+      </div>
     </section>
   );
 }
