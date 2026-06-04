@@ -16,7 +16,7 @@ import { demoTenantId, buildCompanySnapshotFromVault, createInvoiceCompanySnapsh
 import { generateCFOReport, getCFODashboard, generateFounderFinancialSummary, getCFOSummary, getFinancialRisks, getMonthlyProfit, getMarginAnalytics, getPayables, getPaymentVaultSummary, getRecurringPayments, getReceivables, getRenewalForecast, getWeeklyProfit, initiatePayment } from '../services/cfoService.js';
 import { addApprovalComment, approveRequest, createApprovalRequest, getApprovalQueue, needsReviewRequest, rejectRequest } from '../services/approvalService.js';
 import { createAuditLog, listAuditLogs } from '../services/auditService.js';
-import { ExportOSShell } from '../shared/routeShell.jsx';
+import { ExportOSShell, ExecSuiteBar } from '../shared/routeShell.jsx';
 import { Breadcrumb, StatusBadge, TrendIndicator, EmptyState, SkeletonBlock, SkeletonCard, SkeletonTable, SkeletonKpiBar, MetricSkeletonGrid, HBarChart, SortableTableHeader, StatusPulse, PriorityBadge, SeverityBadge, Panel, StatusPill, StateChip, SignalList, MiniBars, BulkActionBar, FilterBar, VirtualList, useSortable } from '../shared/uiPrimitives.jsx';
 import { formatDisplayDate, formatDisplayDateTime as displayDateTime } from '../utils/dateFormat.js';
 import { cfoExportProducts as pricingProducts, marketPriceProducts } from '../../lib/exportProductCatalog.mjs';
@@ -1592,7 +1592,7 @@ function getCfoApprovalReasons(inputs, calc, risk, costRows, productIntel) {
   return [...new Set(reasons)];
 }
 
-function PricingEnginePage({ onBack, onOpenApprovalWall, onOpenTasks }) {
+function PricingEnginePage({ onBack, onOpenApprovalWall, onOpenTasks, navigate }) {
   const { rates, status: forexStatus } = useLiveForexRates();
   const [activeTab, setActiveTab] = useState('Overview');
   const [inputs, setInputs] = useState(defaultPricingInputs);
@@ -4474,6 +4474,7 @@ function CFOCommandPage({ onBack, onOpenPricing, onOpenApprovalWall, onOpenPayme
           <PricingAuditTrail audit={pricingAuditEvents} />
         </main>
       </section>
+      <ExecSuiteBar current="cfo" navigate={navigate} />
     </ExportOSShell>
   );
 }

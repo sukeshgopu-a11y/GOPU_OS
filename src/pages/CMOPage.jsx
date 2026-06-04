@@ -16,7 +16,7 @@ import { demoTenantId } from '../services/companyService.js';
 import { createApprovalRequest as createCmoApprovalRequest } from '../services/approvalService.js';
 import { DEFAULT_CMO_TIMEZONE, CMO_PLATFORM_DEFAULT_SLOTS, CMO_TIMEZONE_OPTIONS, formatInCmoTimezone, getCmoDateRangeUtc, getCmoLocalIsoDate, getCmoNowUtc, getCmoRollingRangeStartUtc, getCmoTimezoneLabel, getCmoTimezoneOption, getNextPlatformSlot, getSelectedCmoTimezone, isUtcOnOrAfter, isUtcOnOrBefore } from '../lib/cmoTimezone.js';
 import { generateDailyGrowthRunbook, generateCMOReport, generateFounderMarketingSummary, createMarketingCampaignDraft, cleanupLatestStep6TestContentPackage, createStep6TestContentPackage, generateReferenceLearningContent, getAIBudgetAnalysis, getAICampaignForecasts, getAICmoOperatingSystem, getAIGrowthInsights, getAILeadScores, getAIRecommendations, getAIScheduleOptimizations, getBrandRisks, getBuyerOutreach, getCMOSummary, getCampaigns, getContentApprovalQueue, getCompetitorReviews, getContentMemoryArchive, getCmoTimezonePreference, getCmoAutomationFlow, getCmoLearningCentreDashboard, getMarketingCampaignControlCenter, getCmoProviderConnectionStatus, saveCmoPostingSettings, saveCmoTimezonePreference, getContentCalendar, getContentPerformance, getCrossExecutiveContentIdeas, getFacebookPipeline, getGrowthOptimizationInsights, getGrowthTargets, getInstagramPipeline, getLinkedInPipeline, getContentToolchain, getDigitalMarketingOptimization, getGlobalTargetingStrategy, getOpenAIContentBrain, getOpenAIContentMemory, getTenglishVoiceRules, getThumbnailDirections, getVideoScriptStyles, getSocialGrowthAnalytics, getSocialGrowthMetrics, getYouTubePlans, updateFounderContentDecision } from '../services/cmoService.js';
-import { ExportOSShell } from '../shared/routeShell.jsx';
+import { ExportOSShell, ExecSuiteBar } from '../shared/routeShell.jsx';
 import { Breadcrumb, StatusBadge, TrendIndicator, EmptyState, SkeletonBlock, SkeletonCard, SkeletonTable, SkeletonKpiBar, MetricSkeletonGrid, HBarChart, SortableTableHeader, StatusPulse, PriorityBadge, SeverityBadge, Panel, StatusPill, StateChip, SignalList, MiniBars, BulkActionBar, FilterBar, VirtualList, useSortable } from '../shared/uiPrimitives.jsx';
 import { displayDateTime } from '../utils/dateTime.js';
 
@@ -299,6 +299,7 @@ function CMOCommandPage({ view = 'command', navigate, onBack }) {
           </main>
         </>
       )}
+      <ExecSuiteBar current="cmo" navigate={navigate} />
     </ExportOSShell>
   );
 }

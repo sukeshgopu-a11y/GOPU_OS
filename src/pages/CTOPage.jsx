@@ -16,7 +16,7 @@ import { demoTenantId } from '../services/companyService.js';
 import { ctoLabels } from '../../GOPU_OS/cto/labels.js';
 import { createPaymentRequirement, generateFounderTechnicalSummary, getCTODashboard, getIncidents, getLiveIntegrationStatus, getSubscriptionWatch, getSystemHealthSummary } from '../services/ctoService.js';
 import { getPaymentVaultRenewals } from '../services/renewalService.js';
-import { ExportOSShell } from '../shared/routeShell.jsx';
+import { ExportOSShell, ExecSuiteBar } from '../shared/routeShell.jsx';
 import { Breadcrumb, StatusBadge, TrendIndicator, EmptyState, SkeletonBlock, SkeletonCard, SkeletonTable, SkeletonKpiBar, MetricSkeletonGrid, HBarChart, SortableTableHeader, StatusPulse, PriorityBadge, SeverityBadge, Panel, StatusPill, StateChip, SignalList, MiniBars, BulkActionBar, FilterBar, VirtualList, useSortable } from '../shared/uiPrimitives.jsx';
 import { ctoDefaultLoginEmail } from '../config/defaultLogins.js';
 
@@ -1160,6 +1160,7 @@ function CTOCommandPage({ navigate, onBack }) {
           {!subscriptions.length && <button className="ghost-button" type="button" onClick={() => handleCreatePaymentRequirement()}>Create Payment Requirement</button>}
         </article>
       </section>
+      <ExecSuiteBar current="cto" navigate={navigate} />
     </ExportOSShell>
   );
 }

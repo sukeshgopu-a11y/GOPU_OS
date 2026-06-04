@@ -352,7 +352,7 @@ import {
   sendSlackNotification
 } from './services/slackNotificationService.js';
 import { getTrustCenterData } from './services/trustCenterService.js';
-import { AppSidebar } from './shared/routeShell.jsx';
+import { AppSidebar, ExecSuiteBar } from './shared/routeShell.jsx';
 import './styles.css';
 import './premium.css';
 
@@ -2843,7 +2843,7 @@ function App() {
   }
 
   if (route === '/export-os/pricing-engine') {
-    return withSessionWarning(<PricingEnginePage onBack={() => navigate('/export-os')} onOpenApprovalWall={() => navigate('/export-os/director')} onOpenTasks={() => navigate('/export-os/tasks')} />);
+    return withSessionWarning(<PricingEnginePage navigate={navigate} onBack={() => navigate('/export-os')} onOpenApprovalWall={() => navigate('/export-os/director')} onOpenTasks={() => navigate('/export-os/tasks')} />);
   }
 
   if (route === '/export-os/document-factory' || route === '/export-os/documents') {
@@ -3009,7 +3009,7 @@ function App() {
   }
 
   if (route === '/export-os/executives/cfo' || route === '/export-os/finance') {
-    return <PricingEnginePage onBack={() => navigate('/export-os')} onOpenApprovalWall={() => navigate('/export-os/director')} onOpenTasks={() => navigate('/export-os/tasks')} />;
+    return <PricingEnginePage navigate={navigate} onBack={() => navigate('/export-os')} onOpenApprovalWall={() => navigate('/export-os/director')} onOpenTasks={() => navigate('/export-os/tasks')} />;
   }
 
   if (route === '/export-os/executives/cmo' || route === '/export-os/content-engine' || route === '/export-os/content-calendar' || route === '/export-os/campaigns') {
@@ -9624,6 +9624,7 @@ function CIOCommandPage({ navigate, onBack, view = 'overview', importerId }) {
           {notice && <section className="cio-panel cio-notice"><strong>System Note</strong><p>{notice}</p></section>}
         </main>
       )}
+      <ExecSuiteBar current="cio" navigate={navigate} />
     </ExportOSShell>
   );
 }

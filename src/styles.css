@@ -37440,6 +37440,73 @@ td, th { max-width: 0; }
 .breadcrumb span:not(:last-child) { color: var(--dim); }
 .breadcrumb span:last-child { color: var(--muted); }
 
+/* ── Executive Suite Bar ── */
+.exec-suite-bar {
+  display: flex;
+  align-items: center;
+  gap: var(--space-5);
+  padding: var(--space-3) var(--space-6);
+  background: rgba(255,255,255,0.025);
+  border-top: 1px solid var(--border);
+  flex-shrink: 0;
+}
+.exec-suite-label {
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: var(--dim);
+  white-space: nowrap;
+}
+.exec-suite-links {
+  display: flex;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+}
+.exec-suite-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1px;
+  padding: 6px 12px;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  cursor: pointer;
+  color: inherit;
+  transition: background 150ms var(--ease), border-color 150ms var(--ease);
+}
+.exec-suite-btn:hover:not(:disabled) {
+  background: rgba(46,242,255,0.08);
+  border-color: rgba(46,242,255,0.3);
+}
+.exec-suite-btn.active,
+.exec-suite-btn:disabled {
+  background: rgba(46,242,255,0.1);
+  border-color: var(--cyan);
+  cursor: default;
+}
+.exec-suite-btn.exec-suite-director { border-color: rgba(255,185,66,0.25); }
+.exec-suite-btn.exec-suite-director:hover:not(:disabled) { background: rgba(255,185,66,0.08); border-color: rgba(255,185,66,0.5); }
+.exec-suite-btn.exec-suite-director.active,
+.exec-suite-btn.exec-suite-director:disabled { background: rgba(255,185,66,0.1); border-color: var(--gold); }
+.exec-suite-btn.exec-suite-director.active .exec-suite-abbr,
+.exec-suite-btn.exec-suite-director:disabled .exec-suite-abbr { color: var(--gold); }
+.exec-suite-abbr {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  color: var(--muted);
+}
+.exec-suite-btn.active .exec-suite-abbr,
+.exec-suite-btn:disabled .exec-suite-abbr { color: var(--cyan); }
+.exec-suite-btn.exec-suite-director .exec-suite-abbr { color: var(--gold); }
+.exec-suite-desc {
+  font-size: 9px;
+  color: var(--dim);
+  white-space: nowrap;
+}
+
 /* ── Mobile adjustments ── */
 @media (max-width: 860px) {
   .coo-header,
@@ -37452,4 +37519,6 @@ td, th { max-width: 0; }
   }
   .director-glow-header { margin: var(--space-4); }
   .director-command-page { padding: var(--space-4); }
+  .exec-suite-bar { padding: var(--space-3) var(--space-4); gap: var(--space-3); }
+  .exec-suite-label { display: none; }
 }
