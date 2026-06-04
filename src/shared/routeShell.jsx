@@ -1039,8 +1039,9 @@ export function AppSidebar({ collapsed, onToggle, pathname, liveDataConnected, n
 
   return (
     <aside className={`app-sidebar ${collapsed ? 'collapsed' : ''}`} aria-label="Main navigation">
+      {/* Brand */}
       <div className="sidebar-brand" role="banner">
-        <GopuLogoMark size={26} />
+        <GopuLogoMark size={28} />
         {!collapsed && (
           <div className="sidebar-brand-copy">
             <span className="sidebar-brand-name">GOPU OS</span>
@@ -1049,17 +1050,21 @@ export function AppSidebar({ collapsed, onToggle, pathname, liveDataConnected, n
         )}
       </div>
 
-      <button
-        className="sidebar-search-btn"
-        onClick={onOpenCommandPalette}
-        title="Command palette (Ctrl+K)"
-        aria-label="Open command palette"
-      >
-        <Search size={14} aria-hidden="true" />
-        {!collapsed && <span>Quick search…</span>}
-        {!collapsed && <kbd className="sidebar-kbd">⌘K</kbd>}
-      </button>
+      {/* Search */}
+      <div className="sidebar-search-wrap">
+        <button
+          className="sidebar-search-btn"
+          onClick={onOpenCommandPalette}
+          title="Command palette (Ctrl+K)"
+          aria-label="Open command palette"
+        >
+          <Search size={14} aria-hidden="true" />
+          {!collapsed && <span>Quick search…</span>}
+          {!collapsed && <kbd className="sidebar-kbd">⌘K</kbd>}
+        </button>
+      </div>
 
+      {/* Navigation */}
       <nav className="sidebar-nav" aria-label="Module navigation">
         {NAV_GROUPS.map((group, gi) => (
           <div key={gi} className="sidebar-group">
@@ -1078,8 +1083,10 @@ export function AppSidebar({ collapsed, onToggle, pathname, liveDataConnected, n
                   aria-current={active ? 'page' : undefined}
                   aria-label={item.label}
                 >
-                  <Icon size={15} aria-hidden="true" />
-                  {!collapsed && <span>{item.label}</span>}
+                  <span className="sidebar-nav-icon">
+                    <Icon size={16} aria-hidden="true" />
+                  </span>
+                  {!collapsed && <span className="sidebar-nav-label">{item.label}</span>}
                 </button>
               );
             })}
@@ -1087,11 +1094,18 @@ export function AppSidebar({ collapsed, onToggle, pathname, liveDataConnected, n
         ))}
       </nav>
 
+      {/* Footer */}
       <div className="sidebar-footer">
-        <div className={`sidebar-status-dot ${liveDataConnected ? 'online' : 'offline'}`} title={liveDataConnected ? 'Live data connected' : 'Offline'} />
-        {!collapsed && (
-          <span className="sidebar-status-label">{liveDataConnected ? 'Live' : 'Offline'}</span>
-        )}
+        <div className="sidebar-user">
+          <div className={`sidebar-status-dot ${liveDataConnected ? 'online' : 'offline'}`}
+            title={liveDataConnected ? 'Live data connected' : 'Offline'} />
+          {!collapsed && (
+            <div className="sidebar-user-info">
+              <span className="sidebar-user-name">Sukesh Reddy</span>
+              <span className="sidebar-user-role">Founder</span>
+            </div>
+          )}
+        </div>
         <div className="sidebar-footer-actions">
           <button
             className="sidebar-icon-btn"
@@ -1099,21 +1113,21 @@ export function AppSidebar({ collapsed, onToggle, pathname, liveDataConnected, n
             aria-label={`Notifications${notificationCount > 0 ? ` (${notificationCount} unread)` : ''}`}
             title="Notifications"
           >
-            <Bell size={15} aria-hidden="true" />
+            <Bell size={14} aria-hidden="true" />
             {notificationCount > 0 && (
               <span className="sidebar-badge" aria-hidden="true">{notificationCount > 9 ? '9+' : notificationCount}</span>
             )}
           </button>
           <button className="sidebar-icon-btn" onClick={onOpenSettings} aria-label="Settings" title="Settings">
-            <Settings size={15} aria-hidden="true" />
+            <Settings size={14} aria-hidden="true" />
           </button>
           <button
-            className="sidebar-icon-btn sidebar-collapse-btn"
+            className="sidebar-icon-btn"
             onClick={onToggle}
             aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
             title={collapsed ? 'Expand' : 'Collapse'}
           >
-            <ChevronLeft size={15} className={`sidebar-chevron ${collapsed ? 'rotated' : ''}`} aria-hidden="true" />
+            <ChevronLeft size={14} className={`sidebar-chevron ${collapsed ? 'rotated' : ''}`} aria-hidden="true" />
           </button>
         </div>
       </div>

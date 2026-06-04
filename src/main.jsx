@@ -381,19 +381,6 @@ const SupplierProcurementDashboard = React.lazy(() => import('./pages/SuppliersP
 const AutomationCenter      = React.lazy(() => import('./pages/AutomationPage.jsx'));
 const SecurityDashboard     = React.lazy(() => import('./pages/SecurityPage.jsx'));
 
-
-const navItems = [
-  { id: 'dashboard', label: 'Dashboard', icon: Command },
-  { id: 'price', label: 'Price Engine', icon: CircleDollarSign },
-  { id: 'co', label: 'CO Workflow', icon: ClipboardCheck },
-  { id: 'shipments', label: 'Shipment Tracking', icon: Route },
-  { id: 'reports', label: 'Reports & Analytics', icon: FileBarChart },
-  { id: 'learning-centre', label: 'Learning Centre', icon: BrainCircuit },
-  { id: 'orders', label: 'Orders', icon: Boxes },
-  { id: 'ai', label: 'AI Assistant Console', icon: Bot },
-  { id: 'admin', label: 'Admin Settings', icon: Settings }
-];
-
 const metrics = [];
 
 const alerts = [];
@@ -1386,54 +1373,6 @@ const invoiceLibraryItems = [
     approval_status: 'Revision Required'
   }
 ];
-
-const pages = {
-  dashboard: {
-    title: 'AI Executive Command Center',
-    subtitle: 'Live operating picture across pricing, clearance, logistics, orders, and AI control.',
-    status: 'SYSTEM ONLINE'
-  },
-  price: {
-    title: 'Price Engine',
-    subtitle: 'Computational core for margin simulation, landed cost intelligence, and route-adjusted pricing.',
-    status: 'CALCULATION CORE'
-  },
-  co: {
-    title: 'CO Workflow',
-    subtitle: 'Certificate of origin validation, chamber approvals, evidence bundles, and secure submission.',
-    status: 'VALIDATION ACTIVE'
-  },
-  shipments: {
-    title: 'Shipment Tracking',
-    subtitle: 'Multi-lane telemetry, route risk, container states, and customs event correlation.',
-    status: 'TRACKING LIVE'
-  },
-  reports: {
-    title: 'Reports & Analytics',
-    subtitle: 'Executive analytics for margin, clearance velocity, route exposure, and compliance throughput.',
-    status: 'ANALYTICS STREAM'
-  },
-  'learning-centre': {
-    title: 'Learning Centre',
-    subtitle: 'Read-only public research ingestion for executive knowledge summaries and source-traced findings.',
-    status: 'RESEARCH INGESTION'
-  },
-  orders: {
-    title: 'Orders',
-    subtitle: 'Export order command with contract values, risk states, and fulfillment workflow.',
-    status: 'ORDER MATRIX'
-  },
-  ai: {
-    title: 'AI Assistant Console',
-    subtitle: 'Secure reasoning console for recommendations, anomaly analysis, and operational commands.',
-    status: 'AI COPILOT ARMED'
-  },
-  admin: {
-    title: 'Admin Settings',
-    subtitle: 'Identity, policy, encryption, integrations, approval rails, and system governance.',
-    status: 'SECURE ADMIN'
-  }
-};
 
 function useRipple() {
   React.useEffect(() => {
@@ -2742,9 +2681,6 @@ function App() {
     ready: true,
     session: getLocalAuthSession()
   }));
-  const [activePage, setActivePage] = useState('dashboard');
-  const [drawerOpen, setDrawerOpen] = useState(false);
-  const [activeCommand, setActiveCommand] = useState('repricing');
   const [showSearch, setShowSearch] = useState(false);
   const [showShortcuts, setShowShortcuts] = React.useState(false);
   const [showTour, setShowTour] = React.useState(() => {
@@ -2754,7 +2690,6 @@ function App() {
       return false;
     }
   });
-  const current = pages[activePage];
   const isProtectedRoute = route === '/export-os' || route.startsWith('/export-os/');
   const handleSessionTimeout = React.useCallback(async () => {
     if (!isProtectedRoute || !authState.session) return;
@@ -3439,150 +3374,6 @@ function OSSelectionCard({ id, title, subtitle, description, icon: Icon, selecte
         <ChevronRight size={17} />
       </div>
     </motion.button>
-  );
-}
-
-function Sidebar({ activePage, setActivePage, drawerOpen, setDrawerOpen }) {
-  const [sidebarCollapsed, setSidebarCollapsed] = React.useState(false);
-
-  React.useEffect(() => {
-    function toggleSidebar() {
-      setSidebarCollapsed((prev) => !prev);
-    }
-    window.addEventListener('gopu:toggle-sidebar', toggleSidebar);
-    return () => window.removeEventListener('gopu:toggle-sidebar', toggleSidebar);
-  }, []);
-
-  return (
-    <>
-      <a href="#main-content" className="skip-link">Skip to main content</a>
-      <aside className={`sidebar ${drawerOpen ? 'open' : ''} ${sidebarCollapsed ? 'collapsed' : ''}`} aria-label="Primary navigation" data-tour="sidebar">
-        <div className="brand-block">
-          <GopuWordmark size="sm" />
-        </div>
-        <nav className="nav-list stagger-list">
-          {navItems.map((item) => {
-            const Icon = item.icon;
-            return (
-              <button
-                key={item.id}
-                className={`nav-item ${activePage === item.id ? 'active' : ''}`}
-                onClick={() => setActivePage(item.id)}
-                data-tour={item.id === 'reports' ? 'analytics-tab' : undefined}
-              >
-                <Icon size={18} />
-                <span>{item.label}</span>
-              </button>
-            );
-          })}
-        </nav>
-        <button
-          className="sidebar-collapse-btn"
-          onClick={() => setSidebarCollapsed((prev) => !prev)}
-          aria-label={sidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
-          title={sidebarCollapsed ? 'Expand' : 'Collapse'}
-        >
-          <Menu size={14} />
-          {!sidebarCollapsed && <span>Collapse</span>}
-        </button>
-        <div className="secure-core">
-          <div className="core-orbit"><ShieldCheck size={28} /></div>
-          <span>Secure Core</span>
-          <strong>Session encrypted</strong>
-          <small>All systems online</small>
-        </div>
-      </aside>
-      <nav className="mobile-bottom-nav" aria-label="Mobile navigation">
-        {navItems.slice(0, 5).map((item) => {
-          const Icon = item.icon;
-          return (
-            <button
-              key={item.id}
-              className={`mobile-nav-btn ${activePage === item.id ? 'active' : ''}`}
-              onClick={() => { setActivePage(item.id); setDrawerOpen(false); }}
-              aria-label={item.label}
-              aria-current={activePage === item.id ? 'page' : undefined}
-            >
-              <Icon size={20} />
-              <span>{item.label}</span>
-            </button>
-          );
-        })}
-      </nav>
-      <button className={`drawer-scrim ${drawerOpen ? 'visible' : ''}`} aria-label="Close navigation" onClick={() => setDrawerOpen(false)} />
-    </>
-  );
-}
-
-function Header({ current, setDrawerOpen }) {
-  return (
-    <header className="system-header">
-      <button className="icon-button mobile-menu" aria-label="Open navigation" onClick={() => setDrawerOpen(true)}>
-        <Menu size={20} />
-      </button>
-      <div className="header-title">
-        <span>{current.status}</span>
-        <strong>{current.title}</strong>
-      </div>
-      <div className="search-shell" role="search">
-        <Search size={16} />
-        <input aria-label="Command search" placeholder="Search orders, lanes, CO records..." />
-      </div>
-      <div className="header-cluster">
-        <LiveClock />
-        <StatusPill icon={LockKeyhole} label="Encrypted" tone="cyan" />
-        <StatusPill icon={RadioTower} label="Syncing" tone="blue" />
-      </div>
-    </header>
-  );
-}
-
-function PageHero({ current }) {
-  return (
-    <div className="page-hero">
-      <div>
-        <h1 id="page-title">{current.title}</h1>
-        <p>{current.subtitle}</p>
-      </div>
-      <button className="tactical-button">
-        <Zap size={16} />
-        Execute Command
-        <kbd className="kbd-hint">Ctrl K</kbd>
-      </button>
-    </div>
-  );
-}
-
-function Dashboard() {
-  const auditLog = approvalAuditEvents.map((event) => ({
-    ...event,
-    module: event.actor,
-    message: event.event,
-    type: event.status?.toLowerCase().includes('revision') ? 'warning' : 'success'
-  }));
-
-  return (
-    <>
-      <MetricGrid />
-      <div className="dashboard-layout">
-        <IntelligenceMap />
-        <AIRecommendation />
-        <OperationalAlerts />
-        <ShipmentTable />
-        <SystemStatus />
-        <ActivityFeed />
-        <section className="panel" aria-labelledby="activity-title">
-          <div className="approval-section-header">
-            <div>
-              <span>Live Feed</span>
-              <h2 id="activity-title">Recent Activity</h2>
-            </div>
-            <Activity size={18} aria-hidden="true" />
-          </div>
-          <ActivityTimeline events={auditLog || []} />
-        </section>
-      </div>
-    </>
   );
 }
 
