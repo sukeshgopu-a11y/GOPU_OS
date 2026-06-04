@@ -1143,6 +1143,51 @@ export function AppSidebar({ collapsed, onToggle, pathname, liveDataConnected, n
   );
 }
 
+export function ExecSuiteBar({ current, navigate }) {
+  const EXECS = [
+    { id: 'coo', label: 'COO', sub: 'Operations', route: '/export-os/executives/coo' },
+    { id: 'cfo', label: 'CFO', sub: 'Finance', route: '/export-os/executives/cfo' },
+    { id: 'cmo', label: 'CMO', sub: 'Marketing', route: '/export-os/executives/cmo' },
+    { id: 'cto', label: 'CTO', sub: 'Technology', route: '/export-os/executives/cto' },
+    { id: 'cio', label: 'CIO', sub: 'Intelligence', route: '/export-os/executives/cio' },
+  ];
+  function go(route) {
+    window.history.pushState({}, '', route);
+    window.dispatchEvent(new PopStateEvent('popstate'));
+  }
+  const handleNavigate = navigate || go;
+  return (
+    <section className="exec-suite-bar" aria-label="Executive suite">
+      <span className="exec-suite-label">Executive Suite</span>
+      <div className="exec-suite-links">
+        {EXECS.map((exec) => (
+          <button
+            key={exec.id}
+            className={`exec-suite-btn ${current === exec.id ? 'active' : ''}`}
+            onClick={() => handleNavigate(exec.route)}
+            disabled={current === exec.id}
+            aria-current={current === exec.id ? 'page' : undefined}
+            aria-label={`${exec.label} — ${exec.sub}`}
+          >
+            <span className="exec-suite-abbr">{exec.label}</span>
+            <span className="exec-suite-desc">{exec.sub}</span>
+          </button>
+        ))}
+        <button
+          className={`exec-suite-btn exec-suite-director ${current === 'director' ? 'active' : ''}`}
+          onClick={() => handleNavigate('/export-os/director')}
+          disabled={current === 'director'}
+          aria-current={current === 'director' ? 'page' : undefined}
+          aria-label="Director — Command"
+        >
+          <span className="exec-suite-abbr">DIR</span>
+          <span className="exec-suite-desc">Command</span>
+        </button>
+      </div>
+    </section>
+  );
+}
+
 const ShellControlsContext = React.createContext(null);
 
 export function PageHeader({ eyebrow, title, subtitle, children }) {

@@ -18,7 +18,7 @@ import { directorBranches, getDirectorCommandData } from '../services/directorSe
 import { createCOOFollowupTask, getCOOSummary } from '../services/cooService.js';
 import { addTaskComment, createTaskFromWorkflow, getTasks, updateTaskStatus as updateWorkflowTaskStatus, writeTaskAuditLog } from '../services/taskService.js';
 import { createAuditLog, listAuditLogs } from '../services/auditService.js';
-import { ExportOSShell } from '../shared/routeShell.jsx';
+import { ExportOSShell, ExecSuiteBar } from '../shared/routeShell.jsx';
 import { Breadcrumb, StatusBadge, TrendIndicator, EmptyState, SkeletonBlock, SkeletonCard, SkeletonTable, SkeletonKpiBar, MetricSkeletonGrid, HBarChart, SortableTableHeader, StatusPulse, PriorityBadge, SeverityBadge, Panel, StatusPill, StateChip, SignalList, MiniBars, BulkActionBar, FilterBar, VirtualList, useSortable } from '../shared/uiPrimitives.jsx';
 import { displayDateTime } from '../utils/dateTime.js';
 import { Pagination } from '../shared/dashboardPrimitives.jsx';
@@ -1493,6 +1493,7 @@ function FounderApprovalWall({ onBack, onOpenTasks }) {
       )}
       {Dialog}
       {ToastUI}
+      <ExecSuiteBar current="director" navigate={navigate} />
     </ExportOSShell>
   );
 }

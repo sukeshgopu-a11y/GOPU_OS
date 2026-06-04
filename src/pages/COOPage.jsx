@@ -3,13 +3,17 @@ import {
   Activity,
   AlertTriangle,
   ArrowLeft,
+  ArrowUpRight,
   Bell,
   BrainCircuit,
+  Calculator,
   CalendarClock,
   CheckCircle2,
   ChevronRight,
+  CircleDollarSign,
   ClipboardCheck,
   ClipboardList,
+  Database,
   FileCheck2,
   FileText,
   PackageCheck,
@@ -18,11 +22,12 @@ import {
   Settings,
   ShieldCheck,
   Target,
+  TrendingUp,
   TriangleAlert,
   Workflow,
   Zap
 } from 'lucide-react';
-import { ExportOSShell } from '../shared/routeShell.jsx';
+import { ExportOSShell, ExecSuiteBar } from '../shared/routeShell.jsx';
 import {
   Breadcrumb,
   EmptyState,
@@ -659,6 +664,7 @@ function COOCommandPage({ navigate, onBack, onOpenApprovalWall, onOpenTasks }) {
         onOpenApprovalWall={onOpenApprovalWall}
         onOpenTasks={onOpenTasks}
       />
+      <ExecSuiteBar current="coo" navigate={navigate} />
     </ExportOSShell>
   );
 }
@@ -1298,13 +1304,16 @@ function OperationalDetailDrawer({ item, note, setNote, onClose, onOpenWorkflow,
   if (!item) return null;
   const aiRecommendation = buildDirectorAIRecommendation(item);
   const linkedSystems = [
-    ['Open Full Workflow', item.route, ArrowUpRight],
+    item.route && ['Open Full Workflow', item.route, ArrowUpRight],
     ['Open Director Queue', '/export-os/director', ShieldCheck],
-    ['Open Shipment', '/export-os/shipments/SHP-UAE-001', Route],
+    ['CFO — Pricing', '/export-os/pricing-engine', Calculator],
+    ['CMO — Marketing', '/export-os/executives/cmo', TrendingUp],
+    ['CTO — Systems', '/export-os/executives/cto', Database],
+    ['CIO — Intelligence', '/export-os/executives/cio', BrainCircuit],
+    ['Open Shipments', '/export-os/shipments', Route],
     ['Open Invoice', '/export-os/invoices/new', FileText],
-    ['Open Pricing', '/export-os/pricing-engine', Calculator],
     ['Open Task', '/export-os/tasks', ClipboardList]
-  ];
+  ].filter(Boolean);
   return (
     <div className="coo-drawer-backdrop" onClick={onClose}>
       <aside className="coo-operational-drawer" role="dialog" aria-modal="true" aria-label="Operational detail" onClick={(event) => event.stopPropagation()}>
