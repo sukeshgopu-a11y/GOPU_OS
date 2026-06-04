@@ -1,5 +1,5 @@
 import { getCtoProviderSecret } from "../../../lib/ctoProviderVault.mjs";
-import { getCanvaConnectionStatus } from "../../../lib/cmoCanvaWorkflow.mjs";
+import { getChatGPTImageConnectionStatus } from "../../../lib/cmoChatGPTImageWorkflow.mjs";
 
 function hasEnv(...names: string[]) {
   return names.every((name) => Boolean(process.env[name]));
@@ -44,7 +44,7 @@ export default async function handler(req: any, res: any) {
   const twilioReady = areResolved(...twilioProviders);
   const twilioPartial = arePartiallyResolved(...twilioProviders);
   const vercelReady = isResolved("vercel") || hasEnv("VERCEL_URL") || hasEnv("VERCEL");
-  const canvaStatus = await getCanvaConnectionStatus();
+  const imageStatus = await getChatGPTImageConnectionStatus();
 
   const rows = [
     statusRow(
@@ -80,9 +80,9 @@ export default async function handler(req: any, res: any) {
       vercelReady ? "Vercel runtime detected" : "Local development runtime"
     ),
     statusRow(
-      "Canva",
-      ["live", "configured"].includes(canvaStatus.status) ? "live" : canvaStatus.status === "partial" ? "partial" : "unconfigured",
-      canvaStatus.error_message || "Canva Connect API configured for CMO template rendering"
+      "ChatGPT Image",
+      ["live", "configured"].includes(imageStatus.status) ? "live" : "unconfigured",
+      imageStatus.error_message || "ChatGPT image generation configured for CMO creative"
     )
   ];
 

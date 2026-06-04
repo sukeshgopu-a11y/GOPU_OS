@@ -1,7 +1,7 @@
 import { createClient } from "@supabase/supabase-js";
 import { getCmoContentSystemPrompt } from "../../../lib/contentQualityEngine.mjs";
 import { ensureLinkedInPostRules, isLinkedInPlatform } from "../../../lib/cmoLinkedInRules.mjs";
-import { ensureCmoCanvaApprovalRow, ensureCmoCanvaDesignForApproval } from "../../../lib/cmoCanvaWorkflow.mjs";
+import { ensureCmoCanvaApprovalRow, ensureCmoCanvaDesignForApproval } from "../../../lib/cmoChatGPTImageWorkflow.mjs";
 
 const DEMO_TENANT_ID = "11111111-1111-1111-1111-111111111111";
 
@@ -152,15 +152,14 @@ export default async function handler(req: any, res: any) {
         company_context: payload.company_context || "",
         style: payload.style || "",
         hashtags: Array.isArray(ai.content.hashtags) ? ai.content.hashtags : [],
-        canva_required: true,
-        no_ai_image_text: true,
+        chatgpt_image_required: true,
         director_approval_required: true,
-        canva_content: {
+        image_content: {
           headline: ai.content.headline || ai.topic,
           slides: Array.isArray(ai.content.slides) ? ai.content.slides : [],
           caption: finalText,
           hashtags: Array.isArray(ai.content.hashtags) ? ai.content.hashtags : [],
-          template_type: ai.content.canva_template_type || ""
+          content_type: ai.content.canva_template_type || ""
         },
         linkedin_knowledge_hub_template: isLinkedInPlatform(ai.platform) ? "linkedin_default_knowledge_post_template_v1" : null,
         linkedin_style_scope: isLinkedInPlatform(ai.platform) ? "linkedin_only" : null,
@@ -174,7 +173,7 @@ export default async function handler(req: any, res: any) {
     const canva = await ensureCmoCanvaDesignForApproval(data, { client });
     return res.status(200).json({
       ok: true,
-      status: canva.ok ? "generated_with_canva" : "generated_canva_pending",
+      status: canva.ok ? "generated_with_chatgpt_image" : "generated_image_pending",
       content_history: canva.content_history || data,
       canva: {
         ok: canva.ok,

@@ -1,5 +1,5 @@
 import { generateManualContent } from '../../../lib/contentQualityEngine.mjs';
-import { ensureCmoCanvaDesignForApproval } from '../../../lib/cmoCanvaWorkflow.mjs';
+import { ensureCmoCanvaDesignForApproval } from '../../../lib/cmoChatGPTImageWorkflow.mjs';
 import { createClient } from '@supabase/supabase-js';
 
 function env(name) {
@@ -31,21 +31,21 @@ export default async function handler(req, res) {
   }
 
   const result = await generateManualContent(payload);
-  const shouldGenerateCreative = payload.generate_image === true || payload.generateImage === true || payload.generate_canva === true || payload.generateCanva === true;
+  const shouldGenerateImage = payload.generate_image === true || payload.generateImage === true || payload.generate_canva === true || payload.generateCanva === true;
 
-  if (result?.ok && shouldGenerateCreative && result.content_history_id) {
+  if (result?.ok && shouldGenerateImage && result.content_history_id) {
     const client = getClient();
     if (client) {
       const latest = await client.from('content_history').select('*').eq('id', result.content_history_id).maybeSingle();
       if (!latest.error && latest.data) {
-        const canva = await ensureCmoCanvaDesignForApproval(latest.data, { client, force: payload.force_canva === true || payload.forceCanva === true });
-        result.canva = { ok: canva.ok, status: canva.status, message: canva.message || '', missing: canva.missing || [] };
-        result.content_history = canva.content_history || latest.data;
-        result.image_url = canva.content_history?.image_url || canva.content_history?.poster_url || '';
+        const imageResult = await ensureCmoCanvaDesignForApproval(latest.data, { client, force: payload.force_canva === true || payload.forceCanva === true || payload.force_image === true });
+        result.chatgpt_image = { ok: imageResult.ok, status: imageResult.status, message: imageResult.message || '', missing: imageResult.missing || [] };
+        result.content_history = imageResult.content_history || latest.data;
+        result.image_url = imageResult.content_history?.image_url || imageResult.content_history?.poster_url || '';
         result.generated_content.generated_image_url = result.image_url;
       }
     } else {
-      result.canva = { ok: false, status: 'not_configured', message: 'Supabase server env is missing.' };
+      result.chatgpt_image = { ok: false, status: 'not_configured', message: 'Supabase server env is missing.' };
     }
   }
 
