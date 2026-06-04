@@ -1137,6 +1137,37 @@ export function AppSidebar({ collapsed, onToggle, pathname, liveDataConnected, n
 
 const ShellControlsContext = React.createContext(null);
 
+export function PageHeader({ eyebrow, title, subtitle, children }) {
+  return (
+    <div className="deck-header">
+      <div className="deck-header-copy">
+        {eyebrow && <span>{eyebrow}</span>}
+        {title && <h1>{title}</h1>}
+        {subtitle && <p>{subtitle}</p>}
+      </div>
+      {children && <div className="deck-header-controls">{children}</div>}
+    </div>
+  );
+}
+
+export function PageBody({ children, className = '' }) {
+  return <div className={`page-body ${className}`} style={{ padding: 'var(--space-6) var(--space-8)', display: 'flex', flexDirection: 'column', gap: 'var(--space-5)', minHeight: 0 }}>{children}</div>;
+}
+
+export function SectionCard({ title, actions, children, className = '' }) {
+  return (
+    <div className={`panel ${className}`}>
+      {(title || actions) && (
+        <div className="panel-header">
+          {title && <h2>{title}</h2>}
+          {actions && <div className="deck-header-controls">{actions}</div>}
+        </div>
+      )}
+      {children}
+    </div>
+  );
+}
+
 export function ExportOSShell({ children, className = '', liveDataConnected = backendStatus.mode === 'Connected', statusMessage, loading = false }) {
   const isCtoShell = className.includes('cto-shell');
   const backendMessage = statusMessage || (isCtoShell && liveDataConnected ? 'Supabase live connected' : isCtoShell && !liveDataConnected ? 'No live data connected' : backendStatus.message);
