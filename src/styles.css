@@ -3494,9 +3494,32 @@ input[type="range"] {
   position: relative;
 }
 
-.executive-home-shell {
+/* ══════════════════════════════════════════════════
+   PAGE SHELL RESETS — all shells use shell-main bg
+   ══════════════════════════════════════════════════ */
+.executive-home-shell,
+.coo-command-home-shell,
+.cto-shell,
+.cmo-command-shell,
+.security-shell,
+.buyer-shell,
+.shipment-shell,
+.warehouse-shell,
+.supplier-shell,
+.task-engine-shell,
+.automation-shell,
+.cio-shell,
+.payment-vault-shell,
+.operational-export-shell,
+.pricing-engine-shell,
+.cfo-grade-pricing-shell,
+.approval-wall-shell,
+.invoice-system-shell,
+.director-command-shell {
   padding-top: 0;
   padding-inline: 0;
+  background: none !important;
+  min-height: 100vh;
 }
 
 .global-back-navigation {
@@ -3549,7 +3572,27 @@ input[type="range"] {
   text-transform: uppercase;
 }
 
-.deck-header,
+/* ══════════════════════════════════════════════════
+   DECK HEADER — universal sticky page header
+   ══════════════════════════════════════════════════ */
+.deck-header {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 20px 28px;
+  background: rgba(6, 8, 16, 0.9);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+  flex-wrap: wrap;
+  overflow: visible;
+}
+
+/* Legacy panel styles still used by some cards */
 .deck-hero,
 .executive-command-card,
 .deck-live-panel,
@@ -3560,81 +3603,76 @@ input[type="range"] {
   overflow: hidden;
   border: 1px solid var(--border);
   background:
-    linear-gradient(180deg, rgba(255,255,255,0.048), rgba(255,255,255,0.018)),
-    rgba(11, 15, 20, 0.78);
-  box-shadow: 0 24px 90px rgba(0, 0, 0, 0.28), inset 0 1px 0 rgba(46, 242, 255, 0.09);
+    linear-gradient(180deg, rgba(255,255,255,0.042), rgba(255,255,255,0.016)),
+    rgba(11, 15, 20, 0.8);
   backdrop-filter: blur(var(--blur-md));
 }
 
-.deck-header {
-  z-index: 2;
-  display: grid;
-  grid-template-columns: minmax(280px, 1fr) auto;
-  align-items: center;
-  gap: 18px;
-  padding: 18px;
-  overflow: visible;
+/* Override per-shell custom deck-header backgrounds */
+.executive-home-shell .deck-header,
+.cto-shell .deck-header,
+.cmo-command-shell .deck-header,
+.cio-shell .deck-header,
+.security-shell .deck-header,
+.buyer-shell .deck-header,
+.coo-command-home-shell .deck-header {
+  background: rgba(6, 8, 16, 0.9);
+  box-shadow: none;
+  border-color: rgba(255, 255, 255, 0.07);
 }
 
-.executive-home-shell .deck-header {
-  padding: 14px 16px;
-  border-color: rgba(255,255,255,0.075);
-  background:
-    linear-gradient(180deg, rgba(255,255,255,0.035), rgba(255,255,255,0.012)),
-    rgba(10, 14, 19, 0.78);
-  box-shadow: 0 18px 58px rgba(0,0,0,0.22), inset 0 1px 0 rgba(255,255,255,0.035);
-}
-
-.executive-home-shell .deck-header-copy h1 {
-  font-family: var(--font-mono);
-  font-size: clamp(1.25rem, 2.4vw, 2rem);
-  letter-spacing: 0;
-  text-transform: none;
-}
-
-.executive-home-shell .deck-header-copy p {
-  max-width: 620px;
-  margin-top: 6px;
-  font-size: 0.88rem;
-}
-
+/* Breadcrumb / eyebrow label */
 .deck-header-copy span,
 .deck-hero-copy span {
   display: block;
   color: var(--cyan);
-  font-size: 0.7rem;
-  font-weight: 900;
-  letter-spacing: 0.16em;
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.18em;
   text-transform: uppercase;
+  opacity: 0.9;
 }
 
+/* Page title */
 .deck-header-copy h1,
 .deck-hero-copy h1 {
-  margin: 8px 0 0;
+  margin: 5px 0 0;
   font-family: var(--font-display);
-  line-height: 1.02;
-  text-transform: uppercase;
+  font-size: clamp(1.3rem, 2.4vw, 1.9rem);
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  line-height: 1.1;
+  color: var(--text);
+  text-transform: none;
 }
 
-.deck-header-copy h1 {
-  font-size: clamp(1.55rem, 3.5vw, 3rem);
-}
-
+/* Subtitle / description */
 .deck-header-copy p,
 .deck-hero-copy p {
-  margin: 10px 0 0;
-  color: var(--muted);
-  line-height: 1.56;
+  margin: 5px 0 0;
+  font-size: var(--text-sm);
+  color: var(--dim);
+  line-height: 1.55;
+  max-width: 580px;
 }
 
+/* Executive / module override — keep uppercase for CTO/COO */
+.executive-home-shell .deck-header-copy h1,
+.cto-shell .deck-header-copy h1 {
+  font-family: var(--font-display);
+  font-size: clamp(1.3rem, 2.4vw, 1.9rem);
+  text-transform: none;
+  letter-spacing: -0.01em;
+}
+
+/* Action buttons row */
 .deck-header-controls {
   display: flex;
-  justify-content: end;
   align-items: center;
-  gap: 9px;
-  flex-wrap: nowrap;
-  overflow-x: auto;
+  gap: 8px;
+  flex-wrap: wrap;
   flex-shrink: 0;
+  padding-top: 4px;
 }
 
 .top-command-control {
@@ -36969,4 +37007,449 @@ td, th { max-width: 0; }
   .cmo-pipeline-mode {
     display: none;
   }
+}
+
+
+/* ════════════════════════════════════════════════════════════════
+   OS REBUILD OVERRIDE LAYER
+   Unifies all page-specific visual patterns under the new design
+   system. Zero logic changes — CSS only.
+   ════════════════════════════════════════════════════════════════ */
+
+/* ── Universal page header patterns ── */
+.coo-header,
+.cto-header,
+.cmo-header,
+.cfo-header,
+.cio-header,
+.security-header,
+.shipment-header,
+.warehouse-header,
+.supplier-header,
+.buyer-header,
+.payment-header,
+.task-header,
+.automation-header,
+.director-page-header,
+.director-page-title {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 20px 28px;
+  background: rgba(6, 8, 16, 0.9) !important;
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.07) !important;
+  flex-wrap: wrap;
+  box-shadow: none !important;
+}
+
+/* ── All page header eyebrow spans ── */
+.coo-header-copy span,
+.cto-header-copy span,
+.cmo-header-copy span,
+.cfo-header-copy span,
+.cio-header-copy span,
+.security-header-copy span,
+.shipment-header-copy span,
+.director-page-header span {
+  display: block;
+  color: var(--cyan);
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+
+/* ── All page h1 titles ── */
+.coo-header-copy h1,
+.cto-header-copy h1,
+.cmo-header-copy h1,
+.cfo-header-copy h1,
+.cio-header-copy h1,
+.security-header-copy h1,
+.shipment-header-copy h1,
+.director-page-title h1,
+.director-page-title .director-page-h1 {
+  margin: 5px 0 0 !important;
+  font-family: var(--font-display) !important;
+  font-size: clamp(1.3rem, 2.2vw, 1.85rem) !important;
+  font-weight: 800 !important;
+  letter-spacing: -0.01em !important;
+  line-height: 1.15 !important;
+  color: var(--text) !important;
+  text-transform: none !important;
+}
+
+/* ── All page subtitle text ── */
+.coo-header-copy p,
+.cto-header-copy p,
+.cmo-header-copy p,
+.cfo-header-copy p,
+.cio-header-copy p,
+.security-header-copy p,
+.shipment-header-copy p,
+.director-page-title p {
+  margin: 5px 0 0 !important;
+  font-size: var(--text-sm) !important;
+  color: var(--dim) !important;
+  line-height: 1.55 !important;
+  font-family: var(--font-ui) !important;
+}
+
+/* ── All header action control rows ── */
+.coo-header-controls,
+.cto-header-controls,
+.cmo-header-controls,
+.cfo-header-controls,
+.cio-header-controls,
+.security-header-controls,
+.shipment-header-controls,
+.director-page-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  flex-shrink: 0;
+  padding-top: 4px;
+}
+
+/* ── Universal card / panel ── */
+.coo-panel,
+.coo-metric-card,
+.coo-metric,
+.coo-command-card,
+.coo-section-panel,
+.cto-card,
+.cto-panel,
+.cto-integration-card,
+.cto-metric,
+.cmo-panel,
+.cmo-card,
+.cmo-metric,
+.cfo-panel,
+.cfo-card,
+.cio-panel,
+.security-panel,
+.security-card,
+.shipment-panel,
+.warehouse-panel,
+.supplier-panel,
+.buyer-panel,
+.payment-panel,
+.task-panel,
+.automation-panel,
+.director-card,
+.director-panel,
+.vault-health-card,
+.vault-section,
+.document-panel,
+.invoice-panel,
+.exec-card,
+.command-card,
+.control-panel,
+.panel {
+  background: rgba(255, 255, 255, 0.028) !important;
+  border: 1px solid rgba(255, 255, 255, 0.07) !important;
+  border-radius: var(--radius-md) !important;
+  backdrop-filter: none !important;
+  box-shadow: none !important;
+  overflow: hidden;
+  transition: border-color 0.18s;
+}
+
+.coo-panel:hover,
+.coo-metric-card:hover,
+.coo-section-panel:hover,
+.cto-card:hover,
+.cmo-panel:hover,
+.cfo-panel:hover,
+.cio-panel:hover,
+.security-panel:hover,
+.panel:hover {
+  border-color: rgba(255, 255, 255, 0.11) !important;
+}
+
+/* ── Section headings inside cards ── */
+.coo-panel-header,
+.cto-panel-header,
+.cmo-panel-header,
+.cfo-panel-header,
+.panel-header,
+.section-header,
+.control-header,
+.vault-section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px 18px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.055);
+}
+
+.coo-panel-header span,
+.cto-panel-header span,
+.panel-header span,
+.panel-header h2,
+.section-header h2,
+.control-header h2 {
+  font-size: var(--text-xs) !important;
+  font-weight: 700 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.1em !important;
+  color: var(--muted) !important;
+  font-family: var(--font-ui) !important;
+}
+
+/* ── Metric / KPI tiles ── */
+.coo-metric-value,
+.cto-metric-value,
+.cmo-metric-value,
+.kpi-value,
+.metric-value,
+.stat-value {
+  font-family: var(--font-display) !important;
+  font-size: var(--text-2xl) !important;
+  font-weight: 800 !important;
+  color: var(--text) !important;
+  line-height: 1.1 !important;
+}
+
+.coo-metric-label,
+.cto-metric-label,
+.kpi-label,
+.metric-label,
+.stat-label {
+  font-size: var(--text-xs) !important;
+  font-weight: 600 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.09em !important;
+  color: var(--dim) !important;
+}
+
+/* ── Section dividers and group headings ── */
+.approval-section-header h2,
+.director-section-heading h2,
+.command-section-title,
+.deck-section-title {
+  font-family: var(--font-ui) !important;
+  font-size: var(--text-sm) !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.06em !important;
+  text-transform: uppercase !important;
+  color: var(--muted) !important;
+}
+
+/* ── Status / badge chips ── */
+.status-badge,
+.state-chip,
+.priority-badge,
+.severity-badge,
+.status-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 10px;
+  border-radius: 99px;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+  border: 1px solid transparent;
+}
+
+/* ── Data table global upgrades ── */
+.data-table,
+.dir-decision-table,
+.coo-table,
+.cto-table,
+.shipment-table,
+.lead-table,
+.supplier-table,
+.buyer-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--text-sm);
+}
+
+.data-table th,
+.dir-decision-table th,
+.coo-table th,
+.cto-table th {
+  padding: 10px 14px !important;
+  font-size: 0.68rem !important;
+  font-weight: 700 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.1em !important;
+  color: var(--dim) !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.07) !important;
+  background: transparent !important;
+  white-space: nowrap;
+}
+
+.data-table td,
+.dir-decision-table td,
+.coo-table td,
+.cto-table td {
+  padding: 12px 14px !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04) !important;
+  color: var(--text) !important;
+  vertical-align: middle;
+}
+
+.data-table tbody tr:hover td,
+.dir-decision-table tbody tr:hover td,
+.coo-table tbody tr:hover td {
+  background: rgba(255, 255, 255, 0.025) !important;
+}
+
+.data-table tbody tr:last-child td,
+.dir-decision-table tbody tr:last-child td { border-bottom: none !important; }
+
+/* ── Filter/toolbar rows ── */
+.dir-table-toolbar,
+.filter-toolbar,
+.table-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 18px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.055);
+  flex-wrap: wrap;
+}
+
+/* ── Top command controls ── */
+.top-command-control {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 14px;
+  border: 1px solid rgba(46, 242, 255, 0.3);
+  border-radius: var(--radius-sm);
+  background: rgba(46, 242, 255, 0.08);
+  color: var(--cyan);
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s;
+  white-space: nowrap;
+}
+.top-command-control:hover {
+  border-color: rgba(46, 242, 255, 0.55);
+  background: rgba(46, 242, 255, 0.14);
+  box-shadow: 0 0 14px rgba(46, 242, 255, 0.15);
+}
+
+/* ── Page content body padding ── */
+.executive-home-shell > *:not(.deck-header):not(.coo-header):not(.cto-header):not(.cmo-header):not(.cio-header):not(.security-header),
+.cto-shell > *:not(.deck-header):not(.cto-header),
+.cmo-command-shell > *:not(.deck-header):not(.cmo-header),
+.coo-command-home-shell > *:not(.deck-header):not(.coo-header) {
+  padding-inline: 0;
+}
+
+/* ── Director page content ── */
+.director-command-page {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+  padding: var(--space-6) var(--space-8);
+  max-width: 1440px;
+  margin: 0 auto;
+  min-height: 0;
+}
+
+/* ── Sticky section headers inside content ── */
+.deck-section,
+.command-section,
+.vault-section-body,
+.page-section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+/* ── Empty state ── */
+.empty-state,
+.no-data-state,
+.director-empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 48px 24px;
+  gap: 12px;
+  color: var(--dim);
+  text-align: center;
+}
+.empty-state svg,
+.director-empty-state svg { opacity: 0.3; }
+.empty-state p,
+.director-empty-state p { font-size: var(--text-sm); }
+
+/* ── Connection / status banner ── */
+.connection-banner {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 28px;
+  background: rgba(245, 84, 84, 0.15);
+  border-bottom: 1px solid rgba(245, 84, 84, 0.3);
+  color: #ff9999;
+  font-size: var(--text-xs);
+  font-weight: 600;
+}
+
+/* ── Director glow header stays premium ── */
+.director-glow-header {
+  position: relative !important;
+  background: linear-gradient(135deg, rgba(46,242,255,0.05) 0%, rgba(6,8,14,0.98) 60%) !important;
+  border: 1px solid rgba(46,242,255,0.15) !important;
+  border-radius: var(--radius-md) !important;
+  margin: var(--space-6) var(--space-8);
+  backdrop-filter: blur(16px) !important;
+}
+
+.director-glow-title h1 {
+  font-family: var(--font-display) !important;
+  font-size: clamp(1.6rem, 3vw, 2.4rem) !important;
+  font-weight: 800 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.06em !important;
+  color: var(--text) !important;
+}
+
+/* ── Breadcrumb trail ── */
+.breadcrumb,
+.breadcrumb-trail {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: var(--text-xs);
+  color: var(--dim);
+  font-weight: 500;
+}
+.breadcrumb a,
+.breadcrumb span:not(:last-child) { color: var(--dim); }
+.breadcrumb span:last-child { color: var(--muted); }
+
+/* ── Mobile adjustments ── */
+@media (max-width: 860px) {
+  .coo-header,
+  .cto-header,
+  .cmo-header,
+  .deck-header {
+    padding: 14px 16px;
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .director-glow-header { margin: var(--space-4); }
+  .director-command-page { padding: var(--space-4); }
 }

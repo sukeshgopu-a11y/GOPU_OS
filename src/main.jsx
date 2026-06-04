@@ -2835,7 +2835,7 @@ function App() {
   }
 
   if (route === '/export-os/director' || route === '/export-os/director-console' || route === '/export-os/director-queue' || route === '/export-os/director-command-center') {
-    return withSessionWarning(<DirectorCommandCenter navigate={navigate} onBack={() => navigate('/export-os')} onOpenTasks={() => navigate('/export-os/tasks')} />);
+    return <ExportOSShell>{withSessionWarning(<DirectorCommandCenter navigate={navigate} onBack={() => navigate('/export-os')} onOpenTasks={() => navigate('/export-os/tasks')} />)}</ExportOSShell>;
   }
 
   if (route === '/export-os/operating-spine' || route === '/export-os/system-architecture') {
