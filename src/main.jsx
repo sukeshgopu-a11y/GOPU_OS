@@ -4619,18 +4619,26 @@ function UserChip({ session, onSettings }) {
 
 const COMMAND_ITEMS = [
   { id: 'nav-dashboard', label: 'Go to Dashboard', category: 'Navigate', icon: 'Gauge', page: 'dashboard' },
+  { id: 'nav-director', label: 'Open Director Console', category: 'Navigate', icon: 'Target', page: 'director' },
   { id: 'nav-shipments', label: 'Go to Shipments', category: 'Navigate', icon: 'Route', page: 'shipments' },
   { id: 'nav-approvals', label: 'Go to Approvals', category: 'Navigate', icon: 'ShieldCheck', page: 'approvals' },
   { id: 'nav-tasks', label: 'Go to Tasks', category: 'Navigate', icon: 'ClipboardList', page: 'tasks' },
-  { id: 'nav-cfo', label: 'Open CFO Finance', category: 'Navigate', icon: 'CircleDollarSign', page: 'cfo' },
+  { id: 'nav-leads', label: 'Go to Leads', category: 'Navigate', icon: 'UsersRound', page: 'leads' },
+  { id: 'nav-pricing', label: 'Go to Pricing Engine', category: 'Navigate', icon: 'CircleDollarSign', page: 'pricing' },
+  { id: 'nav-invoices', label: 'Go to Invoices', category: 'Navigate', icon: 'FileText', page: 'invoices' },
   { id: 'nav-coo', label: 'Open COO Operations', category: 'Navigate', icon: 'Workflow', page: 'coo' },
+  { id: 'nav-cfo', label: 'Open CFO Finance', category: 'Navigate', icon: 'CircleDollarSign', page: 'cfo' },
   { id: 'nav-cmo', label: 'Open CMO Marketing', category: 'Navigate', icon: 'TrendingUp', page: 'cmo' },
   { id: 'nav-cto', label: 'Open CTO Command', category: 'Navigate', icon: 'Database', page: 'cto' },
-  { id: 'nav-director', label: 'Open Director Console', category: 'Navigate', icon: 'Target', page: 'director' },
-  { id: 'nav-invoices', label: 'Go to Invoices', category: 'Navigate', icon: 'FileText', page: 'invoices' },
-  { id: 'nav-leads', label: 'Go to Leads / CIO', category: 'Navigate', icon: 'UsersRound', page: 'leads' },
+  { id: 'nav-cio', label: 'Open CIO Intelligence', category: 'Navigate', icon: 'BrainCircuit', page: 'cio' },
+  { id: 'nav-buyers', label: 'Go to Buyers', category: 'Navigate', icon: 'UsersRound', page: 'buyers' },
+  { id: 'nav-suppliers', label: 'Go to Suppliers', category: 'Navigate', icon: 'PackageCheck', page: 'suppliers' },
+  { id: 'nav-warehouse', label: 'Go to Warehouse', category: 'Navigate', icon: 'Boxes', page: 'warehouse' },
   { id: 'nav-vault', label: 'Go to Payment Vault', category: 'Navigate', icon: 'LockKeyhole', page: 'payment-vault' },
+  { id: 'nav-documents', label: 'Go to Document Factory', category: 'Navigate', icon: 'FileBarChart', page: 'documents' },
+  { id: 'nav-automation', label: 'Go to Automation Center', category: 'Navigate', icon: 'Zap', page: 'automation' },
   { id: 'nav-security', label: 'Go to Security', category: 'Navigate', icon: 'Fingerprint', page: 'security' },
+  { id: 'nav-company', label: 'Go to Company Master Data', category: 'Navigate', icon: 'Building2', page: 'company' },
   { id: 'nav-learning', label: 'Go to Learning Centre', category: 'Navigate', icon: 'BrainCircuit', page: 'learning' },
   { id: 'action-shipment', label: 'Create New Shipment', category: 'Actions', icon: 'PackageCheck', page: 'shipments' },
   { id: 'action-invoice', label: 'Create New Invoice', category: 'Actions', icon: 'FileBarChart', page: 'invoices' },
@@ -4644,7 +4652,7 @@ const ICON_MAP = {
   Gauge, Route, ShieldCheck, ClipboardList, CircleDollarSign,
   Workflow, TrendingUp, Database, Target, FileText, UsersRound,
   LockKeyhole, Fingerprint, BrainCircuit, PackageCheck,
-  FileBarChart, CheckCircle2, Zap, Settings,
+  FileBarChart, CheckCircle2, Zap, Settings, Boxes, Building2,
 };
 
 function CommandPalette({ open, onClose, onNavigate, onAction }) {
@@ -5073,19 +5081,27 @@ export function ExportOSShell({ children, className = '', liveDataConnected = ba
   function navigateCommandPage(page) {
     const routes = {
       dashboard: '/export-os',
+      director: '/export-os/director',
       shipments: '/export-os/shipments',
       approvals: '/export-os/director',
       tasks: '/export-os/tasks',
-      cfo: '/export-os/executives/cfo',
+      leads: '/export-os/leads',
+      pricing: '/export-os/pricing-engine',
+      invoices: '/export-os/invoices',
       coo: '/export-os/executives/coo',
+      cfo: '/export-os/executives/cfo',
       cmo: '/export-os/executives/cmo',
       cto: '/export-os/executives/cto',
-      director: '/export-os/director-console',
-      invoices: '/export-os/invoices',
-      leads: '/export-os/importers',
+      cio: '/export-os/executives/cio',
+      buyers: '/export-os/buyers',
+      suppliers: '/export-os/suppliers',
+      warehouse: '/export-os/warehouse',
       'payment-vault': '/export-os/payment-vault',
+      documents: '/export-os/document-factory',
+      automation: '/export-os/automation-center',
       security: '/export-os/security',
-      learning: '/export-os/learning-centre'
+      company: '/export-os/company-master-data',
+      learning: '/export-os/learning-centre',
     };
     const path = routes[page] || '/export-os';
     window.history.pushState({}, '', path);
