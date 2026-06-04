@@ -52,21 +52,6 @@ export function ExportOSIcon() {
   );
 }
 
-export function PlantOSIcon() {
-  return (
-    <svg width="52" height="52" viewBox="0 0 52 52" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-      <rect x="8" y="28" width="36" height="16" rx="1.5" stroke="currentColor" strokeWidth="1.6" />
-      <rect x="12" y="20" width="8" height="8" stroke="currentColor" strokeWidth="1.4" />
-      <rect x="24" y="20" width="8" height="8" stroke="currentColor" strokeWidth="1.4" />
-      <rect x="13" y="12" width="3" height="8" rx="1" fill="currentColor" opacity="0.5" />
-      <rect x="25" y="14" width="3" height="6" rx="1" fill="currentColor" opacity="0.5" />
-      <path d="M39 18 C39 10 45 8 45 8 C45 8 45 16 39 18Z" fill="currentColor" opacity="0.6" />
-      <path d="M39 18 C39 12 33 10 33 10 C33 10 35 18 39 18Z" fill="currentColor" opacity="0.4" />
-      <line x1="39" y1="18" x2="39" y2="28" stroke="currentColor" strokeWidth="1.4" />
-    </svg>
-  );
-}
-
 export function DirectorIcon() {
   return (
     <svg width="28" height="28" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
