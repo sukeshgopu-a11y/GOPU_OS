@@ -12,6 +12,7 @@ export default defineConfig({
     target: 'esnext',
     minify: true,
     cssMinify: true,
+    chunkSizeWarningLimit: 800,
     rolldownOptions: {
       output: {
         manualChunks(id) {
@@ -19,6 +20,11 @@ export default defineConfig({
           if (id.includes('node_modules/framer-motion')) return 'vendor-motion';
           if (id.includes('node_modules/lucide-react')) return 'vendor-lucide';
           if (id.includes('node_modules/@supabase')) return 'vendor-supabase';
+          if (id.includes('/pages/CMOPage')) return 'exec-cmo';
+          if (id.includes('/pages/CTOPage')) return 'exec-cto';
+          if (id.includes('/pages/PricingPage')) return 'exec-cfo';
+          if (id.includes('/pages/COOPage') || id.includes('/pages/COOLeadExecutionPage')) return 'exec-coo';
+          if (id.includes('/pages/DirectorPage')) return 'exec-director';
         },
       },
     },

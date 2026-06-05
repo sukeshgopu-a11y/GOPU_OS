@@ -17,7 +17,7 @@ import {
   Send,
   ShieldCheck
 } from 'lucide-react';
-import { ExportOSShell } from '../shared/routeShell.jsx';
+import { ExportOSShell, ExecSuiteBar } from '../shared/routeShell.jsx';
 import { Breadcrumb, EmptyState, StatusBadge } from '../shared/uiPrimitives.jsx';
 import { backendStatus } from '../lib/supabaseClient.js';
 import { demoTenantId } from '../services/demoData.js';
@@ -560,6 +560,7 @@ export default function COOLeadExecutionPage({ leadId, navigate, onBack }) {
         <Timeline entries={summary.timeline} />
         <DocumentPreview document={selectedDocument} summary={summary} onClose={() => setSelectedDocument(null)} previewRef={documentPreviewRef} />
       </section>
+      <ExecSuiteBar current="coo" navigate={navigate} />
     </ExportOSShell>
   );
 }

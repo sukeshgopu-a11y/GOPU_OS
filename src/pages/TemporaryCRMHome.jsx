@@ -20,7 +20,7 @@ import {
   UsersRound,
   Workflow
 } from 'lucide-react';
-import { ExportOSShell } from '../shared/routeShell.jsx';
+import { ExportOSShell, ExecSuiteBar } from '../shared/routeShell.jsx';
 import { StatusBadge } from '../shared/uiPrimitives.jsx';
 import { demoLeadId } from '../config/demoLeadProfile.js';
 import { getAgentHeartbeatSummary } from '../services/agentHeartbeatService.js';
@@ -379,6 +379,7 @@ export default function TemporaryCRMHome({ navigate, onLogout }) {
           <TomorrowRemindersPanel navigate={navigate} />
         </main>
       </div>
+      <ExecSuiteBar current={null} navigate={navigate} />
     </ExportOSShell>
   );
 }

@@ -352,7 +352,7 @@ import {
   sendSlackNotification
 } from './services/slackNotificationService.js';
 import { getTrustCenterData } from './services/trustCenterService.js';
-import { AppSidebar, ExecSuiteBar } from './shared/routeShell.jsx';
+import { AppSidebar, ExecSuiteBar, COMMAND_ITEMS } from './shared/routeShell.jsx';
 import './styles.css';
 import './premium.css';
 
@@ -3018,7 +3018,7 @@ function App() {
   }
 
   if (route === '/export-os/executives/cto/integrations' || route === '/export-os/platform-monitoring/integrations') {
-    return <IntegrationsVault onBack={() => navigate('/export-os/executives/cto')} />;
+    return <IntegrationsVault onBack={() => navigate('/export-os/executives/cto')} navigate={navigate} />;
   }
 
   if (route === '/export-os/executives/cto' || route === '/export-os/platform-monitoring') {
@@ -4616,37 +4616,6 @@ function UserChip({ session, onSettings }) {
     </button>
   );
 }
-
-const COMMAND_ITEMS = [
-  { id: 'nav-dashboard', label: 'Go to Dashboard', category: 'Navigate', icon: 'Gauge', page: 'dashboard' },
-  { id: 'nav-director', label: 'Open Director Console', category: 'Navigate', icon: 'Target', page: 'director' },
-  { id: 'nav-shipments', label: 'Go to Shipments', category: 'Navigate', icon: 'Route', page: 'shipments' },
-  { id: 'nav-approvals', label: 'Go to Approvals', category: 'Navigate', icon: 'ShieldCheck', page: 'approvals' },
-  { id: 'nav-tasks', label: 'Go to Tasks', category: 'Navigate', icon: 'ClipboardList', page: 'tasks' },
-  { id: 'nav-leads', label: 'Go to Leads', category: 'Navigate', icon: 'UsersRound', page: 'leads' },
-  { id: 'nav-pricing', label: 'Go to Pricing Engine', category: 'Navigate', icon: 'CircleDollarSign', page: 'pricing' },
-  { id: 'nav-invoices', label: 'Go to Invoices', category: 'Navigate', icon: 'FileText', page: 'invoices' },
-  { id: 'nav-coo', label: 'Open COO Operations', category: 'Navigate', icon: 'Workflow', page: 'coo' },
-  { id: 'nav-cfo', label: 'Open CFO Finance', category: 'Navigate', icon: 'CircleDollarSign', page: 'cfo' },
-  { id: 'nav-cmo', label: 'Open CMO Marketing', category: 'Navigate', icon: 'TrendingUp', page: 'cmo' },
-  { id: 'nav-cto', label: 'Open CTO Command', category: 'Navigate', icon: 'Database', page: 'cto' },
-  { id: 'nav-cio', label: 'Open CIO Intelligence', category: 'Navigate', icon: 'BrainCircuit', page: 'cio' },
-  { id: 'nav-buyers', label: 'Go to Buyers', category: 'Navigate', icon: 'UsersRound', page: 'buyers' },
-  { id: 'nav-suppliers', label: 'Go to Suppliers', category: 'Navigate', icon: 'PackageCheck', page: 'suppliers' },
-  { id: 'nav-warehouse', label: 'Go to Warehouse', category: 'Navigate', icon: 'Boxes', page: 'warehouse' },
-  { id: 'nav-vault', label: 'Go to Payment Vault', category: 'Navigate', icon: 'LockKeyhole', page: 'payment-vault' },
-  { id: 'nav-documents', label: 'Go to Document Factory', category: 'Navigate', icon: 'FileBarChart', page: 'documents' },
-  { id: 'nav-automation', label: 'Go to Automation Center', category: 'Navigate', icon: 'Zap', page: 'automation' },
-  { id: 'nav-security', label: 'Go to Security', category: 'Navigate', icon: 'Fingerprint', page: 'security' },
-  { id: 'nav-company', label: 'Go to Company Master Data', category: 'Navigate', icon: 'Building2', page: 'company' },
-  { id: 'nav-learning', label: 'Go to Learning Centre', category: 'Navigate', icon: 'BrainCircuit', page: 'learning' },
-  { id: 'action-shipment', label: 'Create New Shipment', category: 'Actions', icon: 'PackageCheck', page: 'shipments' },
-  { id: 'action-invoice', label: 'Create New Invoice', category: 'Actions', icon: 'FileBarChart', page: 'invoices' },
-  { id: 'action-approvals', label: 'Review Pending Approvals', category: 'Actions', icon: 'CheckCircle2', page: 'approvals' },
-  { id: 'action-briefing', label: 'Run Daily Briefing', category: 'Actions', icon: 'Zap', page: 'dashboard' },
-  { id: 'action-settings', label: 'Open Settings', category: 'Settings', icon: 'Settings', action: 'settings' },
-  { id: 'action-signout', label: 'Sign Out', category: 'Settings', icon: 'LockKeyhole', action: 'signout' },
-];
 
 const ICON_MAP = {
   Gauge, Route, ShieldCheck, ClipboardList, CircleDollarSign,
