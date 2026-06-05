@@ -265,7 +265,7 @@ async function saveCtoProviderEnvValue(serviceId, apiKey) {
   }
 }
 
-function IntegrationsVault({ onBack }) {
+function IntegrationsVault({ onBack, navigate }) {
   const [savedSecrets, setSavedSecrets] = useState(() => readCtoSavedSecrets());
   const [serviceOverrides, setServiceOverrides] = useState({});
   const [providerStatuses, setProviderStatuses] = useState({});
@@ -466,6 +466,7 @@ function IntegrationsVault({ onBack }) {
           onSave={saveIntegration}
         />
       )}
+      <ExecSuiteBar current="cto" navigate={navigate} />
     </ExportOSShell>
   );
 }

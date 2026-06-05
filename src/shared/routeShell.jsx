@@ -630,7 +630,7 @@ function UserChip({ session, onSettings }) {
   );
 }
 
-const COMMAND_ITEMS = [
+export const COMMAND_ITEMS = [
   { id: 'nav-dashboard', label: 'Go to Dashboard', category: 'Navigate', icon: 'Gauge', page: 'dashboard' },
   { id: 'nav-director', label: 'Open Director Console', category: 'Navigate', icon: 'Target', page: 'director' },
   { id: 'nav-shipments', label: 'Go to Shipments', category: 'Navigate', icon: 'Route', page: 'shipments' },
