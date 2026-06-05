@@ -6920,7 +6920,7 @@ function DocumentFactoryPage({ navigate, onBack }) {
     navigate('/export-os/director');
   }
   return (
-    <InvoiceSystemShell onBack={onBack} onOpenTasks={() => navigate('/export-os/tasks')} title="Document Factory" subtitle="LUT invoice drafts, document validation, PDF preview, and approval routing.">
+    <InvoiceSystemShell onBack={onBack} onOpenTasks={() => navigate('/export-os/tasks')} navigate={navigate} title="Document Factory" subtitle="LUT invoice drafts, document validation, PDF preview, and approval routing.">
       <DocumentCoveragePanel />
       <section className="document-factory-grid">
         {[
@@ -6975,7 +6975,7 @@ function DocumentCoveragePanel() {
   );
 }
 
-function InvoiceSystemShell({ children, onBack, onOpenTasks, title, subtitle }) {
+function InvoiceSystemShell({ children, onBack, onOpenTasks, navigate, title, subtitle }) {
   const [now, setNow] = useState(() => new Date());
   useEffect(() => {
     const timer = window.setInterval(() => setNow(new Date()), 1000);
@@ -6999,6 +6999,7 @@ function InvoiceSystemShell({ children, onBack, onOpenTasks, title, subtitle }) 
       </header>
       <div className="invoice-model-strip">{invoiceModels.map((model) => <code key={model}>{model}</code>)}</div>
       {children}
+      {navigate && <ExecSuiteBar current={null} navigate={navigate} />}
     </ExportOSShell>
   );
 }
@@ -7014,7 +7015,7 @@ function InvoiceLibrary({ navigate, onBack, onOpenTasks }) {
     return invoice.status === filter || invoice.approval_status === filter;
   });
   return (
-    <InvoiceSystemShell onBack={onBack} onOpenTasks={onOpenTasks} title="Invoice Library" subtitle="Draft-first invoice control with LUT mode, validation state, and approval status.">
+    <InvoiceSystemShell onBack={onBack} onOpenTasks={onOpenTasks} navigate={navigate} title="Invoice Library" subtitle="Draft-first invoice control with LUT mode, validation state, and approval status.">
       <div className="invoice-library-actions">
         <div className="approval-filter-row">{filters.map((item) => <button className={filter === item ? 'active' : ''} key={item} onClick={() => setFilter(item)}>{item}</button>)}</div>
         <button className="tactical-button" onClick={() => navigate('/export-os/invoices/new')}>Create LUT Invoice Draft</button>
@@ -7140,7 +7141,7 @@ function InvoiceBuilder({ navigate, invoiceId, onBack, onOpenTasks }) {
         workflow_source: 'Invoice System',
         linked_record_id: invoice.id,
         linked_label: invoice.invoice_number,
-        linked_route: blocker.group === 'LUT' || blocker.group === 'Company' ? '/export-os/company-master-data' : '/export-os/invoices/new',
+        linked_route: blocker.group === 'LUT' || blocker.group === 'Company' ? '/export-os/company-master-data' : invoice.id && invoice.id !== 'new' ? `/export-os/invoices/${invoice.id}` : '/export-os/invoices',
         department: blocker.group === 'LUT' || blocker.group === 'Company' ? 'Finance' : blocker.group === 'Product' || blocker.group === 'Export' ? 'Documentation' : 'Operations',
         owner_command: blocker.owner || (blocker.group === 'LUT' ? 'Founder / Finance' : 'COO Command'),
         assigned_role: blocker.owner || 'COO',
@@ -7176,7 +7177,7 @@ function InvoiceBuilder({ navigate, invoiceId, onBack, onOpenTasks }) {
       workflow_source: 'Invoice System',
       linked_record_id: invoice.id,
       linked_label: invoice.invoice_number,
-      linked_route: '/export-os/invoices/new',
+      linked_route: invoice.id && invoice.id !== 'new' ? `/export-os/invoices/${invoice.id}` : '/export-os/invoices',
       department: stage === 'CFO' ? 'Finance' : 'Operations',
       owner_command: `${stage} Command`,
       assigned_role: stage,
@@ -7244,7 +7245,7 @@ function InvoiceBuilder({ navigate, invoiceId, onBack, onOpenTasks }) {
   }
 
   return (
-    <InvoiceSystemShell onBack={onBack} onOpenTasks={onOpenTasks} title="Export Invoice System" subtitle="LUT-first invoice builder with validation, approval routing, and print-ready preview.">
+    <InvoiceSystemShell onBack={onBack} onOpenTasks={onOpenTasks} navigate={navigate} title="Export Invoice System" subtitle="LUT-first invoice builder with validation, approval routing, and print-ready preview.">
       <InvoiceWorkspaceHeader invoice={invoice} blockers={blockers} canRelease={canRelease} onSaveDraft={() => addAudit('draft saved', 'Draft', 'Invoice draft saved.')} onValidate={validateInvoice} onCfo={() => requestReview('CFO')} onCoo={() => requestReview('COO')} onFounder={routeInvoiceApproval} onDraftPdf={() => addAudit('PDF draft generated', 'PDF Draft Ready', 'Draft PDF preview prepared.')} onEmail={prepareEmail} />
       {blockers.length > 0 && <div className="invoice-blocker-strip"><TriangleAlert size={16} /><strong>Release blocked:</strong><span>{topBlockerSummary}</span></div>}
       <section className="invoice-builder-layout">
